@@ -1,14 +1,31 @@
-from utils import select_files
 import os
+import numpy as np
+
+
 #import pandas as pd # Is this required?
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
 from parcels.tools.converters import Geographic, GeographicPolar 
-import numpy as np
 
-from plastic_kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, permanent_biofouling
+from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, permanent_biofouling
+from utils import select_files
+
 
 ## Fieldset creation
 def create_fieldset(model_settings, particle_settings):
+    """ Helper function to create a Parcels.Fieldset
+
+    Parameters
+    ----------
+    model_settings :
+        A dictionary of model settings used to create the fieldset
+    particle_settings :
+        A dictionary of particle settings used to define some ....
+
+    Returns
+    -------
+    fieldset
+        A parcels.FieldSet object
+    """     
     
     ## Directories and arrays of files
     dirread_model = os.path.join(model_settings['input_data_dir'], model_settings['ocean_dir'], model_settings['ocean_filename'])
@@ -209,6 +226,20 @@ def create_fieldset(model_settings, particle_settings):
 
 
 def create_particleset(fieldset, particle_settings):
+    """ Helper function to create a Parcels.ParicleSet
+
+    Parameters
+    ----------
+    model_settings :
+        A dictionary of model settings used to create the fieldset
+    particle_settings :
+        A dictionary of particle settings used to define some ....
+
+    Returns
+    -------
+    fieldset
+        A parcels.FieldSet object
+    """    
     release_locations = particle_settings['release_locations']
     
     ## Set the longitude, latitude, depth and time of the particles
@@ -306,6 +337,20 @@ def create_particleset(fieldset, particle_settings):
     return pset
         
 def create_kernel(fieldset, pset):
+    """_summary_
+
+    Parameters
+    ----------
+    fieldset : _type_
+        _description_
+    pset : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     kernels = []
     kernels.append(pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
 
