@@ -297,19 +297,29 @@ def create_particleset(fieldset, particle_settings):
 
     ## Add variables to particle based on fieldset flags
     PlasticParticle = JITParticle
-    PlasticParticle.particle_diameter = Variable('particle_diameter', dtype=np.float32, to_write=to_write_all)                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
-    PlasticParticle.particle_density = Variable('particle_density', dtype=np.float32, to_write=to_write_all)                            # Particle Density [kg/m^3] (rho_pl)
-    PlasticParticle.settling_velocity = Variable('settling_velocity', dtype=np.float64, initial=0., to_write=to_write_dynamic)              # Particle Sinking Velocity [m/s] (v_s)
-    PlasticParticle.seawater_density = Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic)
-    #PlasticParticle.conservative_temperature = Variable('conservative_temperature', dtype=np.float32, to_write=to_write_tracer)
-    #PlasticParticle.absolute_salinity = Variable('absolute_salinity', dtype=np.float32, to_write=to_write_tracer)
+    #PlasticParticle.particle_diameter = Variable('particle_diameter', dtype=np.float32, to_write=to_write_all)                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
+    #PlasticParticle.particle_density = Variable('particle_density', dtype=np.float32, to_write=to_write_all)                            # Particle Density [kg/m^3] (rho_pl)
+    #PlasticParticle.settling_velocity = Variable('settling_velocity', dtype=np.float64, initial=0., to_write=to_write_dynamic)              # Particle Sinking Velocity [m/s] (v_s)
+    #PlasticParticle.seawater_density = Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic)
+    #PlasticParticle.algae_amount = Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic)
+    #PlasticParticle.windage_coefficient = Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all)
+    PlasticParticle = JITParticle
+    variables = []
+    variables.append(Variable('particle_diameter', dtype=np.float32, to_write=to_write_all))                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
+    variables.append(Variable('particle_density', dtype=np.float32, to_write=to_write_all))                            # Particle Density [kg/m^3] (rho_pl)
+    variables.append(Variable('settling_velocity', dtype=np.float64, initial=0., to_write=to_write_dynamic))              # Particle Sinking Velocity [m/s] (v_s)
+    variables.append(Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic))
+    variables.append(Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic))
+    variables.append(Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all))
+    
+    for variable in variables:
+        setattr(PlasticParticle, variable.name, variable)
 
     # Add kernel specific variables
-    if fieldset.biofouling_f:
-        PlasticParticle.algae_amount = Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic)
-    
-    if fieldset.wind_f:
-        PlasticParticle.windage_coefficient = Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all)
+    # TODO
+    #if fieldset.biofouling_f:
+    #if fieldset.wind_f:
+        
     
 
     ## Create the particle set
@@ -341,15 +351,15 @@ def create_kernel(fieldset, pset):
 
     Parameters
     ----------
-    fieldset : _type_
-        _description_
+    fieldset :
+        A parcels.FieldSet object
     pset : _type_
-        _description_
+        A parcels.ParticleSet object
 
     Returns
     -------
-    _type_
-        _description_
+    kernels :
+        A list of kernels used in the execution of the particle set
     """    
     kernels = []
     kernels.append(pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable

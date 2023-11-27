@@ -6,7 +6,7 @@
 ## @date: 2023-08-09
 
 
-from parcels import ParcelsRandom, Variable, JITParticle
+from parcels import Variable, JITParticle, ParcelsRandom
 import math
 import numpy as np
 
@@ -17,8 +17,8 @@ def Stokes_drift(particle, fieldset, time):
     
     Description
     ----------
-    Using the Breivik (2016) approach assuming a Phillips wave spectrum to determine the depth dependent Stokes drift.
-    See https://doi.org/10.1016/j.ocemod.2016.01.005 - specifically Eq. (19)
+    Using the approach in [1] assuming a Phillips wave spectrum to determine the depth dependent Stokes drift.
+    Specifically, the 'Stokes drift velocity' (u_s) is computed as per Eq. (19) in [1]
 
     We treat the Stokes drift as a linear addition to the velocity field
         u(x,t) = u_c(x,t) + C_s * u_s(x,t)
@@ -34,6 +34,11 @@ def Stokes_drift(particle, fieldset, time):
     ----------
     Order of Operations:
         None
+        
+    References
+    ----------
+    [1] Breivik (2016) - https://doi.org/10.1016/j.ocemod.2016.01.005
+
 
     """
 
@@ -95,9 +100,6 @@ def windage_drift(particle, fieldset, time):
     Order of Operations:
         None          
         
-
-
-    ## TO DO: should it be particle.depth == 0, or something like particle.depth = fieldset.surfaceLayerOfSomeSort?
     """
 
     # Sample the U / V components of wind
@@ -199,21 +201,16 @@ def settling_velocity(particle, fieldset, time):
     
     Description
     ----------
-    A kernel to calculate the settling velocity of a particle based on its size and density, and the surrounding seawater properties (density and kinematic viscosity)
-
-    ##TODO: What are the assumptions here? ALSO - why would a biofouled particle use this kernel? they should use the biofouling kernel no? can remove the whole biofouling stuff from this!
-    ##DONE: removed biofouling parts - commented out to copy to biofouling kernel when I get to it...
-
-
-    Based on the settling velocity paper of [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615 as implemented in [2] Kooi (2017) - https://doi.org/10.1021/acs.est.6b04702
+    A kernel to calculate the settling velocity of a particle based on its size and density, 
+    and the surrounding seawater properties (density and kinematic viscosity). Based on the
+    settling velocity paper of [1] as implemented in [2].
     
     Calculation steps:
-        We first compute the seawater dynamic viscosity from Eq. (27) in [2] (variable - )
-        Next, we compute the kinematic viscosity from Eq. (25) in [2] (variable - )
-        Next, we compute the volume and radius of the particle (with/without a biofilm) using Eq. (6-9) in [2] (variables - )
-        Next, we compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1] (variable - )
-        Next, we compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1] (variable - )
-        Finally, we compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1] (variable - )
+        1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
+        2. Compute the kinematic viscosity from Eq. (25) in [2]
+        3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
+        4. Compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1]
+        5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
 
 
     Parameter Requirements
@@ -231,9 +228,16 @@ def settling_velocity(particle, fieldset, time):
     Kernel Requirements:
     ----------
     Order of Operations:
-        - Must run the PolyTEOS kernel to set the surrounding particle.seawater_density variable before this kernel is run
+        - Must run after the PolyTEOS kernel which sets the surrounding particle.seawater_density variable which this kernel relies on
+        - Must run before any kernel that uses the particle.settling_velocty variable
 
-    TODO: Add units to each variable
+        
+    References:
+    ----------
+    [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
+    [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
+
+    TODO: Add units to each variable, and the TODO's below.
     """
 
     # Define constants and sample fieldset variables
@@ -242,19 +246,7 @@ def settling_velocity(particle, fieldset, time):
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
     seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000 # TODO: Check that we should convert here and not in the fieldset
     particle_diameter = particle.particle_diameter
-    particle_radius = 0.5 * particle_diameter
     particle_density = particle.particle_density
-
-    # If the particle experiences biofouling we compute the biofilm volume and density
-    # if particle.biofouling_f > 0:
-    #     algae_cell_volume = fieldset.algae_cell_volume  # Volume of 1 algal cell [m-3]
-    #     algal_amount = particle.algal_amount  # Number of attached algae per square meter of particle surface [number m-2]
-    #     biofilm_density = fieldset.biofilm_density #
-    # else:
-    #     algae_cell_volume = 0.
-    #     algal_amount = 0.
-    #     biofilm_density = 0.
-
 
     # Compute the kinematic viscosity of seawater 
     water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296)) # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
@@ -263,21 +255,8 @@ def settling_velocity(particle, fieldset, time):
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2) # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / seawater_density # Eq. (25) from [2]
 
-
-    # Compute the volume of the particle
-    particle_volume = (4. / 3.) * math.pi * particle_radius ** 3.  # volume of plastic [m3]
-    # particle_surface_area = 4. * math.pi * particle_radius ** 2.  # surface area of plastic particle [m2]
-    # biofilm_volume = algae_cell_volume * algal_amount * particle_surface_area  # volume of living biofilm [m3]
-
-    # total_volume = biofilm_volume + particle_volume  # volume of total (biofilm + plastic) [m3]
-    # total_radius = ((total_volume * (3. / (4. * math.pi))) ** (1. / 3.)) # total radius [m]    
-    # biofilm_thickness = total_radius - particle_radius  # biofilm thickness [m]
-
-    # total_density = (particle_volume * particle_density + biofilm_volume * biofilm_density) / total_volume  # total density [kg m-3]
-    
-    # Compute the equivalent spherical diameter and density differences (used in Eq. (4) of [2])
-    # total_diameter = 2. * total_radius  # equivalent spherical diameter [m], calculated from Dietrich (1982) from A = pi/4 * total_diameter**2
-    normalised_density_difference = (particle_density - seawater_density) / seawater_density  # normalised difference in density between the plastic particle and seawater[-]
+    # Compute the density difference of the particle
+    normalised_density_difference = (particle_density - seawater_density) / seawater_density  # normalised difference in density between the plastic particle and seawater [-]
     
     # Compute the dimensionless particle diameter D_* using Eq. (4) from [2]
     dimensionless_diameter = (math.fabs(particle_density - seawater_density) * g * particle_diameter ** 3.) / (seawater_density * seawater_kinematic_viscosity ** 2.)  # [-]
@@ -295,6 +274,7 @@ def settling_velocity(particle, fieldset, time):
     sign_of_density_difference = math.copysign(1., normalised_density_difference) #normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
     settling_velocity = sign_of_density_difference * (g * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
+    # Update the settling velocity
     particle.settling_velocity = settling_velocity   
 
     # Update particle depth
@@ -306,15 +286,16 @@ def settling_velocity(particle, fieldset, time):
 
 
 
-
-
 def biofouling(particle, fieldset, time):
-    """
-    Kernel to compute the vertical velocity (Vs) of particles due to changes in ambient algal concentrations, growth and death of attached algae based on Kooi et al. 2017 
-    model settling velocity and MEDUSA 2.0 biofilm dynamics, including modelling of the 3D mesozooplankton grazing of diatoms
-    
+    """ Biofouling kernel
+
     Description
     ----------
+    Kernel to compute the vertical velocity of particles due to changes in ambient algal concentrations,
+    growth and death of attached algae based on Kooi et al. 2017
+
+    model settling velocity and MEDUSA 2.0 biofilm dynamics, including modelling of the 3D mesozooplankton grazing of diatoms
+    
     A kernel to calculate the settling velocity of a particle based on its size and density, and the surrounding seawater properties (density and kinematic viscosity)
 
     TODO: What are the assumptions here? ALSO - why would a biofouled particle use this kernel? they should use the biofouling kernel no? can remove the whole biofouling stuff from this!
@@ -374,6 +355,8 @@ def biofouling(particle, fieldset, time):
     particle_radius = 0.5 * particle.particle_diameter
     particle_density = particle.particle_density
 
+
+    # This needs to be computed as in the settling velocity kernel? Or, at least the initial settling velocity must be set?
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
 
@@ -481,22 +464,38 @@ def biofouling(particle, fieldset, time):
 
 
 def PolyTEOS10_bsq(particle, fieldset, time):
-    '''
-    # calculates density based on the polyTEOS10-bsq algorithm from Appendix A.2 of
-    # https://www.sciencedirect.com/science/article/pii/S1463500315000566
-    # requires fieldset.abs_salinity and fieldset.cons_temperature Fields in the fieldset
-    # and a particle.density Variable in the ParticleSet
-    #
-    # References:
-    #  Roquet, F., Madec, G., McDougall, T. J., Barker, P. M., 2014: Accurate
-    #   polynomial expressions for the density and specific volume of
-    #   seawater using the TEOS-10 standard. Ocean Modelling.
-    #  McDougall, T. J., D. R. Jackett, D. G. Wright and R. Feistel, 2003:
-    #   Accurate and computationally efficient algorithms for potential
-    #   temperature and density of seawater.  Journal of Atmospheric and
-    #   Oceanic Technology, 20, 730-741.
-    '''
+    """ A seawater density kernel
 
+    Description:
+    ----------
+    A kernel to calculate the seawater density surrounding a particle based on the polyTEOS10-bsq algorithm
+    from Appendix A.2 of https://doi.org/10.1016/j.ocemod.2015.04.002
+
+    Parameter Requirements
+    ----------
+    particle :
+        seawater_density
+    fieldset : _type_
+        absolute_salinity
+        conservative_temperature
+
+    Kernel Requirements:
+    ----------
+    Order of Operations:
+        This kernel must be run before any kernel that requires particle.seawater_density
+
+    
+    
+    References:
+     Roquet, F., Madec, G., McDougall, T. J., Barker, P. M., 2014: Accurate
+      polynomial expressions for the density and specific volume of
+      seawater using the TEOS-10 standard. Ocean Modelling.
+     McDougall, T. J., D. R. Jackett, D. G. Wright and R. Feistel, 2003:
+      Accurate and computationally efficient algorithms for potential
+      temperature and density of seawater.  Journal of Atmospheric and
+      Oceanic Technology, 20, 730-741.
+    """
+    
     Z = - particle.depth  # note: use negative depths!
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
     CT = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
