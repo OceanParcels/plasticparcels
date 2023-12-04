@@ -302,15 +302,15 @@ def biofouling(particle, fieldset, time):
 
     Based on the settling velocity paper of [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615 as implemented in [2] Kooi (2017) - https://doi.org/10.1021/acs.est.6b04702
     
-    Steps:
-        We first compute the seawater dynamic viscosity from Eq. (27) in [2] (variable - )
-        Next, we compute the kinematic viscosity from Eq. (25) in [2] (variable - )
-        Next, we compute the volume and radius of the particle (with/without a biofilm) using Eq. (6-9) in [2] (variables - )
-        Next, we compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1] (variable - )
-        Next, we compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1] (variable - )
-        Finally, we compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1] (variable - )
+    Calculation steps:
+        1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
+        2. Compute the kinematic viscosity from Eq. (25) in [2]
+        3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
+        4. Compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1]
+        5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
 
-        
+
+
 
     Parameter Requirements
     ----------
@@ -333,6 +333,14 @@ def biofouling(particle, fieldset, time):
     TODO: Add units to each variable
     Hard to generalise this without something like fieldset.biofouling == True? to determine if we need to compute the biofilm component
      ----- WELL we don't since anything with biofouling would use the biofouling kernel.... 
+
+
+
+    References:
+    ----------
+    [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
+    [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
+    [3] Menden-Deuer, Lessard (2000) - https://doi.org/10.4319/lo.2000.45.3.0569
     """
 
 
@@ -359,9 +367,6 @@ def biofouling(particle, fieldset, time):
     # This needs to be computed as in the settling velocity kernel? Or, at least the initial settling velocity must be set?
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
-
-
-
     # ------ sample fields ------
     water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296)) # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2 # Eq. (28) from [2]
@@ -369,29 +374,36 @@ def biofouling(particle, fieldset, time):
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2) # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / seawater_density # Eq. (25) from [2]
 
-    
 
-    med_C_cell = 2726e-9 # mg of C per cell
-    wt_C_ = fieldset.Wt_C # grams C per mol of C 
+    median_mg_carbon_per_cell = 2726e-9 # Median mg of Carbon per cell from [3]. From [2] pg7966 - "The conversion from carbon to algae cells is highly variable, ranging between 35339 to 47.76 pg per carbon cell [3]. We choose the median value, 2726 x 10^-9 mg per carbon cell."
+    carbon_molecular_weight= fieldset.carbon_molecular_weight # grams C per mol of C #Wt_C
     
     
     ###---------------Growth--------------------###
-    mmol_conc_diatom = fieldset.bio_diatom[time, particle.depth, particle.lat, particle.lon]
-    mmol_conc_nondiat = fieldset.bio_nanophy[time, particle.depth, particle.lat, particle.lon] #nanophytoplankton
-    
-    no_conc_diatom = mmol_conc_diatom * (wt_C_ / med_C_cell) # conversion from [mmol C m-3] to [mg C m-3] to [no. m-3]
-    no_conc_nondiat = mmol_conc_nondiat * (wt_C_ / med_C_cell)
-    no_conc_total = no_conc_diatom + no_conc_nondiat
+    #Mole concentration of Diatoms expressed as carbon in sea water
+    mol_concentration_diatoms = fieldset.bio_diatom[time, particle.depth, particle.lat, particle.lon]
 
-    if no_conc_total < 0:
-        no_conc_total = 0.
+    #Mole concentration of Nanophytoplankton expressed as carbon in seawater
+    mol_concentration_nanophytoplankton = fieldset.bio_nanophy[time, particle.depth, particle.lat, particle.lon] #nanophytoplankton
+    
+    number_concentration_diatoms = mol_concentration_diatoms * (carbon_molecular_weight / median_mg_carbon_per_cell) # conversion from [mmol C m-3] to [mg C m-3] to [no. m-3]
+    number_concentration_nanophytoplankton = mol_concentration_nanophytoplankton * (carbon_molecular_weight / median_mg_carbon_per_cell)
+    number_concentration_total = number_concentration_diatoms + number_concentration_nanophytoplankton
+
+
+    #I don't like this bit below, it does not make sense...
+    if number_concentration_total < 0:
+        number_concentration_total = 0.
         print('negative diat/non-diat. concentration')
-        
-    pp_phyto_ = fieldset.pp_phyto[time, particle.depth, particle.lat, particle.lon] # mg C /m3/day
     
-    pp_per_cell = pp_phyto_ / no_conc_total # primary productivity per cell, in mg C / cell / day
+
     
-    pp_ncell_per_cell = pp_per_cell * (1 / med_C_cell) #primary productivity in terms of amount of cells per cell, in cells / cell / day
+    total_primary_production_of_phyto = fieldset.pp_phyto[time, particle.depth, particle.lat, particle.lon] # mg C /m3/day #pp_phyto_ 
+    
+    primary_production_per_cell = total_primary_production_of_phyto / number_concentration_total # primary productivity per cell, in mg C / cell / day
+    
+    #pp_ncell_per_cell = pp_per_cell * (1 / median_mg_carbon_per_cell) #primary productivity in terms of amount of cells per cell, in cells / cell / day
+    pp_ncell_per_cell = primary_production_per_cell / median_mg_carbon_per_cell #primary productivity in terms of amount of cells per cell, in cells / cell / day
     
     if pp_ncell_per_cell < 0:
         mu_a = 0
@@ -426,7 +438,7 @@ def biofouling(particle, fieldset, time):
     beta_a = beta_abrown + beta_ashear + beta_aset  # collision rate [m3 s-1]
 
     # ------ Attached algal growth (Eq. 11 in Kooi et al. 2017) -----
-    a_coll = (beta_a * no_conc_diatom) / particle_surface_area * fieldset.collision_probability  # [no. m-2 s-1] collisions with diatoms
+    a_coll = (beta_a * number_concentration_diatoms) / particle_surface_area * fieldset.collision_probability  # [no. m-2 s-1] collisions with diatoms
 
 
     ### ------------Respiration-------------- ###

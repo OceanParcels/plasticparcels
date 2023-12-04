@@ -107,6 +107,8 @@ def create_fieldset(model_settings, particle_settings):
 
 
     if fieldset.biofouling_f: # or do_permanent_fouling:
+        #MOi glossary: https://www.mercator-ocean.eu/wp-content/uploads/2021/11/Glossary.pdf
+        
         dirread_bgc = os.path.join(model_settings['input_data_dir'], model_settings['bgc_dir'], model_settings['bgc_filename'])
         bgc_mesh = os.path.join(model_settings['input_data_dir'], model_settings['bgc_mesh'])   #mesh_mask_4th
 
@@ -119,9 +121,9 @@ def create_fieldset(model_settings, particle_settings):
                         'bio_nanophy': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': phy1files},
                         'bio_diatom': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': phy2files}}
 
-        variables_bio = {'pp_phyto': 'nppv',
-                        'bio_nanophy': 'phy',
-                        'bio_diatom': 'phy2'}
+        variables_bio = {'pp_phyto': 'nppv', # Primary Production
+                        'bio_nanophy': 'phy', # Mole concentration of NanoPhytoplankton expressed as carbon in sea water
+                        'bio_diatom': 'phy2'} # Mole concentration of Diatoms expressed as carbon in sea water
 
         dimensions_bio = {'pp_phyto': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
                             'bio_nanophy': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
@@ -136,7 +138,7 @@ def create_fieldset(model_settings, particle_settings):
 
         fieldset.add_constant('Q10', model_settings['bgc_respiration_temperature_coefficient'])
         fieldset.add_constant('Gamma', model_settings['bgc_shear_frequency'])
-        fieldset.add_constant('Wt_C', model_settings['bgc_carbon_atomic_weight'])
+        fieldset.add_constant('carbon_molecular_weight', model_settings['bgc_carbon_atomic_weight'])
         fieldset.add_constant('algae_cell_volume', model_settings['bgc_algae_cell_volume'])
         fieldset.add_constant('biofilm_density', model_settings['bgc_biofilm_density'])    # density of biofilm [g m-3]
 
