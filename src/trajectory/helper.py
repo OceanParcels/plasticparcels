@@ -108,6 +108,7 @@ def create_fieldset(model_settings, particle_settings):
 
     if fieldset.biofouling_f: # or do_permanent_fouling:
         #MOi glossary: https://www.mercator-ocean.eu/wp-content/uploads/2021/11/Glossary.pdf
+        # and https://catalogue.marine.copernicus.eu/documents/PUM/CMEMS-GLO-PUM-001-028.pdf
         
         dirread_bgc = os.path.join(model_settings['input_data_dir'], model_settings['bgc_dir'], model_settings['bgc_filename'])
         bgc_mesh = os.path.join(model_settings['input_data_dir'], model_settings['bgc_mesh'])   #mesh_mask_4th
@@ -121,7 +122,7 @@ def create_fieldset(model_settings, particle_settings):
                         'bio_nanophy': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': phy1files},
                         'bio_diatom': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': phy2files}}
 
-        variables_bio = {'pp_phyto': 'nppv', # Primary Production
+        variables_bio = {'pp_phyto': 'nppv', # Total Primary Production of Phyto - 'Net primary prodution of biomass expressed as arbon per unit volume in sea water' [mg m-3 day-1] or [milligrams of Carbon per cubic meter per day]
                         'bio_nanophy': 'phy', # Mole concentration of NanoPhytoplankton expressed as carbon in sea water
                         'bio_diatom': 'phy2'} # Mole concentration of Diatoms expressed as carbon in sea water
 
@@ -141,7 +142,8 @@ def create_fieldset(model_settings, particle_settings):
         fieldset.add_constant('carbon_molecular_weight', model_settings['bgc_carbon_atomic_weight'])
         fieldset.add_constant('algae_cell_volume', model_settings['bgc_algae_cell_volume'])
         fieldset.add_constant('biofilm_density', model_settings['bgc_biofilm_density'])    # density of biofilm [g m-3]
-
+        fieldset.add_constant('algae_mortality_rate', model_settings['bgc_algae_mortality_rate'])
+        fieldset.add_constant('algae_respiration_f', model_settings['bgc_algae_respiration_f'])
         bio_fieldset = FieldSet.from_nemo(filenames_bio,variables_bio,dimensions_bio)
 
         fieldset.add_field(bio_fieldset.pp_phyto)    #phytoplankton primary productivity 
