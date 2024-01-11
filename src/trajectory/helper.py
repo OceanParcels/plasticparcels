@@ -4,9 +4,10 @@ import numpy as np
 
 #import pandas as pd # Is this required?
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
-from parcels.tools.converters import Geographic, GeographicPolar 
+from parcels.tools.converters import Geographic, GeographicPolar
+from datetime import datetime, timedelta
 
-from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, permanent_biofouling
+from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, vertical_mixing
 from utils import select_files
 
 
@@ -92,14 +93,17 @@ def create_fieldset(model_settings, particle_settings):
         
         bathymetry_mesh = os.path.join(model_settings['input_data_dir'], model_settings['bathymetry_mesh'])
 
-        filenames['mixing_kz'] = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
+        filenames_mixing = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
 
-        variables['mixing_kz'] = 'votkeavt'
+        variables_mixing = {'mixing_kz' : 'votkeavt'}
 
-        dimensions['mixing_kz'] = {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}
+        dimensions_mixing = {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}
 
-        fieldset.add_constant('z_start',0.5)
-        
+        mixing_fieldset = FieldSet.from_nemo(filenames_mixing,variables_mixing,dimensions_mixing)
+        fieldset.add_field(mixing_fieldset.mixing_kz)    #phytoplankton primary productivity        
+
+        # Add in bathymetry
+        fieldset.add_constant('z_start',0.5)        
         variables = ('bathymetry', 'Bathymetry')
         dimensions = {'lon': 'nav_lon', 'lat': 'nav_lat'}
         bathymetry_field = Field.from_netcdf(bathymetry_mesh, variables, dimensions)
@@ -164,8 +168,8 @@ def create_fieldset(model_settings, particle_settings):
                         'Stokes_V': 'vst',
                         'wave_Tp': 'pp1d'}
 
-        dimensions_S = {'lat': 'lat',
-                        'lon': 'lon',
+        dimensions_S = {'lat': 'latitude', # when not using the converted datasets, use 'longitude' otherwise use 'lon'
+                        'lon': 'longitude',
                         'time': 'time'}
         
         fieldset_Stokes = FieldSet.from_netcdf(filenames_S, variables_S, dimensions_S, mesh='spherical')
@@ -189,8 +193,8 @@ def create_fieldset(model_settings, particle_settings):
         variables_wind = {'wind_U': 'u10',
                         'wind_V': 'v10'}
 
-        dimensions_wind = {'lat': 'lat',
-                        'lon': 'lon',
+        dimensions_wind = {'lat': 'latitude', # when not using the converted datasets, use 'longitude' otherwise use 'lon'
+                        'lon': 'longitude',
                         'time': 'time'}
         fieldset_wind = FieldSet.from_netcdf(filenames_wind, variables_wind, dimensions_wind, mesh='spherical')
         fieldset_wind.wind_U.units = GeographicPolar()
@@ -202,7 +206,8 @@ def create_fieldset(model_settings, particle_settings):
 
 
     ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
-    if fieldset.stokes_f or fieldset.wind_f > 0:
+    ## TODO: Add unbeaching
+    """if fieldset.stokes_f or fieldset.wind_f > 0:
         ## TODO: UPDATE LOCATION OF DIRECTORIES ONCE DATA HAS BEEN MOVED - &&write a readme for data locations
         unbeachfiles = os.path.join(model_settings['input_data_dir_3'], '00_data_files/land_current_NEMO0083.nc')
         filenames_unbeach = {'unbeach_U': unbeachfiles, 
@@ -221,7 +226,7 @@ def create_fieldset(model_settings, particle_settings):
 
         fieldset.add_field(fieldset_unbeach.unbeach_U)
         fieldset.add_field(fieldset_unbeach.unbeach_V)
-
+    """
 
     ## TODO: Write a comment for this
     fieldset.add_constant('verbose_delete',model_settings['verbose_delete'])
@@ -300,14 +305,6 @@ def create_particleset(fieldset, particle_settings):
 
 
     ## Add variables to particle based on fieldset flags
-    PlasticParticle = JITParticle
-    #PlasticParticle.particle_diameter = Variable('particle_diameter', dtype=np.float32, to_write=to_write_all)                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
-    #PlasticParticle.particle_density = Variable('particle_density', dtype=np.float32, to_write=to_write_all)                            # Particle Density [kg/m^3] (rho_pl)
-    #PlasticParticle.settling_velocity = Variable('settling_velocity', dtype=np.float64, initial=0., to_write=to_write_dynamic)              # Particle Sinking Velocity [m/s] (v_s)
-    #PlasticParticle.seawater_density = Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic)
-    #PlasticParticle.algae_amount = Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic)
-    #PlasticParticle.windage_coefficient = Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all)
-    PlasticParticle = JITParticle
     variables = []
     variables.append(Variable('particle_diameter', dtype=np.float32, to_write=to_write_all))                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
     variables.append(Variable('particle_density', dtype=np.float32, to_write=to_write_all))                            # Particle Density [kg/m^3] (rho_pl)
@@ -315,7 +312,10 @@ def create_particleset(fieldset, particle_settings):
     variables.append(Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic))
     variables.append(Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic))
     variables.append(Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all))
-    
+    variables.append(Variable('algae_amount', dtype=np.float64, initial=0., to_write=to_write_dynamic))
+
+    # Create PlasticParticle class
+    PlasticParticle = JITParticle
     for variable in variables:
         setattr(PlasticParticle, variable.name, variable)
 
@@ -366,23 +366,83 @@ def create_kernel(fieldset, pset):
         A list of kernels used in the execution of the particle set
     """    
     kernels = []
-    kernels.append(pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
+    kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
 
     if fieldset.mode: # 3D mode = on
-        kernels.append(pset.Kernel(AdvectionRK4_3D))
+        kernels.append(AdvectionRK4_3D)#pset.Kernel(AdvectionRK4_3D))
     else:
-        kernels.append(pset.Kernel(AdvectionRK4))
+        kernels.append(AdvectionRK4)#pset.Kernel(AdvectionRK4))
     
 
-    if fieldset.mixing_f:
-        kernels.append(pset.Kernel(vertical_mixing))
-        if not fieldset.biofouling_f:
-            kernels.append(pset.Kernel(settling_velocity))
-    if fieldset.biofouling_f:
-        kernels.append(pset.Kernel(biofouling))
+    if not fieldset.biofouling_f:
+        kernels.append(settling_velocity)#pset.Kernel(settling_velocity))            
+    elif fieldset.biofouling_f:
+        kernels.append(biofouling)#pset.Kernel(biofouling))
+
     if fieldset.stokes_f:
-        kernels.append(pset.Kernel(Stokes_drift))
+        kernels.append(Stokes_drift)#pset.Kernel(Stokes_drift))
     if fieldset.wind_f:
-        kernels.append(pset.Kernel(windage_drift))
+        kernels.append(windage_drift)#pset.Kernel(windage_drift))
+    
+    if fieldset.mixing_f:
+        kernels.append(vertical_mixing)#pset.Kernel(vertical_mixing))
 
     return kernels
+
+def load_default_settings():
+    model_settings = {#'input_data_dir': '/storage/shared/oceanparcels/input_data/',
+                    #'input_data_dir_2': '/storage/shared/oceanparcels/output_data/data_Michael/',
+                    #'input_data_dir_3': '/storage/shared/oceanparcels/output_data/data_Mikael/',
+                    'input_data_dir': '../../data/input_data/',
+                    'input_data_dir_2': '../../data/input_data/',
+                    'input_data_dir_3': '../../data/input_data/',
+                    
+                    'mode': '3D', # Options [3D, 2D]
+                    
+                    # Ocean model
+                    'ocean_dir': 'MOi/psy4v3r1/',                 # Directory of ocean model data
+                    'ocean_filename': 'psy4v3r1-daily_',          # Filename style of ocean model data
+                    'ocean_mesh': 'MOi/domain_ORCA0083-N006/coordinates.nc',                               # File location of ocean mesh
+                    'bathymetry_mesh': 'MOi/domain_ORCA0083-N006/bathymetry_ORCA12_V3.3.nc', # File location of bathymetry mesh
+                    'mixing_f': True,                             # Turn on/off vertical turbulent mixing
+                    
+                    # Biogeochemistry model
+                    'biofouling_f': True,                         # Turn on/off biofouling of particles
+                    'bgc_dir': 'MOi/biomer4v2r1/',                # Directory of biogeochemistry model
+                    'bgc_filename': 'biomer4v2r1-weekly_',
+                    'bgc_mesh': 'MOi/domain_ORCA025-N006/mesh_hgr_PSY4V3_deg.nc', # File location of biogeochemistry model mesh
+
+                    'bgc_biofilm_density': 1388.,                 # Biofilm density [g m-3]
+                    'bgc_algae_cell_volume': 2.0E-16,             # Volume of 1 algal cell [m3]
+                    'bgc_boltzmann_constant': 1.0306E-13 / (86400. ** 2.),  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
+                    'bgc_respiration_rate': 0.1 / 86400.,         # Respiration rate, now [s-1]
+                    'bgc_respiration_temperature_coefficient': 2.13,# temperature coefficient respiration [-]
+                    'bgc_shear_frequency': 1.728E5 / 86400.,      # Shear [d-1], now [s-1]
+                    'bgc_carbon_atomic_weight': 12.,              # Atomic weight of Carbon
+                    'bgc_collision_probability': 1.,              # Collision probability [-]
+                    'bgc_algae_mortality_rate': 1.,               # TODO: Add description
+                    'bgc_algae_respiration_f': 1.,                # TODO: Add description
+
+
+                    # Waves model
+                    'stokes_f': True,                             # Turn on/off Stokes Drift
+                    'stokes_dir': 'ERA5/waves/',                  # Directory of Stokes drift model data
+                    'stokes_filename': 'ERA5_global_waves_monthly_',
+
+                    # Wind model
+                    'wind_f': True,                               # Turn on/off Windage
+                    'wind_dir': 'ERA5/wind/',                     # Directory of Wind model data
+                    'wind_filename': 'ERA5_global_wind_monthly_',
+
+                    'allow_time_extrapolation': False,            # Allow extrapolation of time for fieldset
+                    'verbose_delete': False,                      # Print extra information when executing delete operations
+                    }
+
+    particle_settings = {'start_date': datetime.strptime('2019-01-10-00:00:00', '%Y-%m-%d-%H:%M:%S'), # Start date of simulation
+                        'runtime': timedelta(days=5),             # Runtime of simulation, use negative if releasing particles backwards in time
+                        'dt_write': timedelta(days=1),             # Timestep of output
+                        'dt_timestep': timedelta(minutes=5),       # Timestep of advection
+                        # TODO: Could create own particle class with own sampling kernels to append after helper?
+                        #'particle_class': PlasticParticle, # Particle class to use, feel free to create your own based on the base PlasticParticle class
+                        }
+    return model_settings, particle_settings
