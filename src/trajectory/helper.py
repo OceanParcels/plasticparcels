@@ -439,9 +439,9 @@ def load_default_settings():
                     }
 
     particle_settings = {'start_date': datetime.strptime('2019-01-10-00:00:00', '%Y-%m-%d-%H:%M:%S'), # Start date of simulation
-                        'runtime': timedelta(days=5),             # Runtime of simulation, use negative if releasing particles backwards in time
+                        'runtime': timedelta(days=4),             # Runtime of simulation, use negative if releasing particles backwards in time
                         'dt_write': timedelta(days=1),             # Timestep of output
-                        'dt_timestep': timedelta(minutes=5),       # Timestep of advection
+                        'dt_timestep': timedelta(minutes=20),       # Timestep of advection
                         # TODO: Could create own particle class with own sampling kernels to append after helper?
                         #'particle_class': PlasticParticle, # Particle class to use, feel free to create your own based on the base PlasticParticle class
                         }
