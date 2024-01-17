@@ -107,8 +107,8 @@ def windage_drift(particle, fieldset, time):
     """
 
     # Sample the U / V components of wind
-    wind_U = fieldset.wind_U[time, particle.depth, particle.lat, particle.lon]
-    wind_V = fieldset.wind_V[time, particle.depth, particle.lat, particle.lon]
+    wind_U = fieldset.Wind_U[time, particle.depth, particle.lat, particle.lon]
+    wind_V = fieldset.Wind_V[time, particle.depth, particle.lat, particle.lon]
 
     # Apply windage to particles that have some exposed surface above the ocean surface
     if particle.depth < 0.5*particle.particle_diameter:
@@ -365,22 +365,22 @@ def biofouling(particle, fieldset, time):
 
 
     # Define constants and algal properties, and sample fieldset variables
-    g = fieldset.G  # gravitational acceleration [m s-2]
-    k = fieldset.K  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
+    #g = fieldset.G  # gravitational acceleration [m s-2]
+    #k = fieldset.K  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
 
-    algae_cell_volume = fieldset.algae_cell_volume  # Volume of 1 algal cell [m-3]    - V_a
+    #algae_cell_volume = fieldset.algae_cell_volume  # Volume of 1 algal cell [m-3]    - V_a
     #algae_amount = particle.algae_amount  # Number of attached algae per square meter of particle surface [number m-2]
-    algae_mortality_rate = fieldset.algae_mortality_rate
-    biofilm_density = fieldset.biofilm_density
-    r20 = fieldset.R20  # respiration rate [s-1]
-    q10 = fieldset.Q10  # temperature coefficient respiration [-]
-    gamma = fieldset.Gamma  # shear rate [s-1]
+    #algae_mortality_rate = fieldset.algae_mortality_rate
+    #biofilm_density = fieldset.biofilm_density
+    #r20 = fieldset.R20  # respiration rate [s-1]
+    #q10 = fieldset.Q10  # temperature coefficient respiration [-]
+    #gamma = fieldset.Gamma  # shear rate [s-1]
 
-    seawater_density = particle.seawater_density  # [kg m-3]
+    #seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
     seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000 # TODO: Check that we should convert here and not in the fieldset
     particle_radius = 0.5 * particle.particle_diameter
-    particle_density = particle.particle_density
+    #particle_density = particle.particle_density
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
 
@@ -389,7 +389,7 @@ def biofouling(particle, fieldset, time):
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2 # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2 # Eq. (29) from [2]
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2) # Eq. (27) from [2]
-    seawater_kinematic_viscosity = seawater_dynamic_viscosity / seawater_density # Eq. (25) from [2]
+    seawater_kinematic_viscosity = seawater_dynamic_viscosity / particle.seawater_density # Eq. (25) from [2]
 
     
     # ------ Compute the algal growth component ------
@@ -398,12 +398,12 @@ def biofouling(particle, fieldset, time):
     mol_concentration_nanophytoplankton = fieldset.bio_nanophy[time, particle.depth, particle.lat, particle.lon] #Mole concentration of Nanophytoplankton expressed as carbon in seawater
     total_primary_production_of_phyto = fieldset.pp_phyto[time, particle.depth, particle.lat, particle.lon] # mg C /m3/day #pp_phyto_
     median_mg_carbon_per_cell = 2726e-9 # Median mg of Carbon per cell selected from [3]. From [2] pg7966 - "The conversion from carbon to algae cells is highly variable, ranging between 35339 to 47.76 pg per carbon cell [3]. We choose the median value, 2726 x 10^-9 mg per carbon cell."
-    carbon_molecular_weight= fieldset.carbon_molecular_weight # grams C per mol of C #Wt_C
+    #carbon_molecular_weight = fieldset.carbon_molecular_weight # grams C per mol of C #Wt_C
     
     # Compute concentration numbers
-    number_concentration_diatoms = mol_concentration_diatoms * (carbon_molecular_weight / median_mg_carbon_per_cell) # conversion from [mmol C m-3] to [mg C m-3] to [no. m-3]
+    number_concentration_diatoms = mol_concentration_diatoms * (fieldset.carbon_molecular_weight / median_mg_carbon_per_cell) # conversion from [mmol C m-3] to [mg C m-3] to [no. m-3]
     number_concentration_diatoms = max(number_concentration_diatoms, 0.) # Ensure non-negative
-    number_concentration_nanophytoplankton = mol_concentration_nanophytoplankton * (carbon_molecular_weight / median_mg_carbon_per_cell)
+    number_concentration_nanophytoplankton = mol_concentration_nanophytoplankton * (fieldset.carbon_molecular_weight / median_mg_carbon_per_cell)
     number_concentration_nanophytoplankton = max(number_concentration_nanophytoplankton, 0.) # Ensure non-negative
     number_concentration_total = number_concentration_diatoms + number_concentration_nanophytoplankton #conversion from [mmol C m-3] to [mg C m-3] to [no. m-3]
     
@@ -427,21 +427,21 @@ def biofouling(particle, fieldset, time):
     # Compute the radius, surface area, volume and thickness of the particle including potential biofilm
     particle_volume = (4. / 3.) * math.pi * particle_radius ** 3.  # volume of plastic [m3]
     particle_surface_area = 4. * math.pi * particle_radius ** 2.  # surface area of plastic particle [m2]
-    algal_cell_radius = ((3. / 4.) * (algae_cell_volume / math.pi)) ** (1. / 3.)  # radius of an algal cell [m]
-    biofilm_volume = algae_cell_volume * particle.algae_amount * particle_surface_area  # volume of living biofilm [m3]
+    algal_cell_radius = ((3. / 4.) * (fieldset.algae_cell_volume / math.pi)) ** (1. / 3.)  # radius of an algal cell [m]
+    biofilm_volume = fieldset.algae_cell_volume * particle.algae_amount * particle_surface_area  # volume of living biofilm [m3]
     
     total_volume = biofilm_volume + particle_volume  # volume of total (biofilm + plastic) [m3]
     total_radius = ((total_volume * (3. / (4. * math.pi))) ** (1. / 3.)) # total radius [m]    
     biofilm_thickness = total_radius - particle_radius  # biofilm thickness [m]
   
     # Compute diffusivities
-    total_density = (particle_volume * particle_density + biofilm_volume * biofilm_density) / total_volume  # total density [kg m-3]
-    plastic_diffusivity = k * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * total_radius)  # diffusivity of plastic particle [m2 s-1]
-    algae_diffusivity = k * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * algal_cell_radius)  # diffusivity of algal cells [m2 s-1]
+    total_density = (particle_volume * particle.particle_density + biofilm_volume * fieldset.biofilm_density) / total_volume  # total density [kg m-3]
+    plastic_diffusivity = fieldset.K * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * total_radius)  # diffusivity of plastic particle [m2 s-1]
+    algae_diffusivity = fieldset.K * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * algal_cell_radius)  # diffusivity of algal cells [m2 s-1]
 
     # Compute the encounter rates
     beta_abrown = 4. * math.pi * (plastic_diffusivity + algae_diffusivity) * (total_radius + algal_cell_radius)  # Brownian motion [m3 s-1]
-    beta_ashear = 1.3 * gamma * ((total_radius + algal_cell_radius) ** 3.)  # advective shear [m3 s-1]
+    beta_ashear = 1.3 * fieldset.Gamma * ((total_radius + algal_cell_radius) ** 3.)  # advective shear [m3 s-1]
     beta_aset = (1. / 2.) * math.pi * total_radius ** 2. * math.fabs(initial_settling_velocity)  # differential settling [m3 s-1]
     beta_a = beta_abrown + beta_ashear + beta_aset  # collision rate [m3 s-1]
 
@@ -449,10 +449,10 @@ def biofouling(particle, fieldset, time):
     a_collision = fieldset.collision_probability * (beta_a * number_concentration_diatoms) / particle_surface_area  # [no. m-2 s-1] collisions with diatoms (Eq. 11 in [2])
 
     ### ------ Compute the algal decay due to respiration ------
-    a_respiration = fieldset.algae_respiration_f * (q10 ** ((temperature - 20.) / 10.)) * r20 * particle.algae_amount  # [no. m-2 s-1] respiration
+    a_respiration = fieldset.algae_respiration_f * (fieldset.Q10 ** ((temperature - 20.) / 10.)) * fieldset.R20 * particle.algae_amount  # [no. m-2 s-1] respiration
 
     ### ------ Compute the algal decay due to grazing ------
-    a_grazing = algae_mortality_rate * particle.algae_amount
+    a_grazing = fieldset.algae_mortality_rate * particle.algae_amount
 
     ### ------ Compute the final algal amount ------
     particle.algae_amount += (a_collision + algae_growth - a_grazing - a_respiration) * particle.dt
@@ -461,10 +461,10 @@ def biofouling(particle, fieldset, time):
     particle_diameter = 2. * (total_radius)  # equivalent spherical diameter [m], calculated from Dietrich (1982) from A = pi/4 * dn**2
     
     # Compute the density difference of the particle
-    normalised_density_difference = (total_density - seawater_density) / seawater_density  # normalised difference in density between the plastic particle and seawater [-]
+    normalised_density_difference = (total_density - particle.seawater_density) / particle.seawater_density  # normalised difference in density between the plastic particle and seawater [-]
     
     # Compute the dimensionless particle diameter D_* using Eq. (4) from [2]
-    dimensionless_diameter = (math.fabs(total_density - seawater_density) * g * particle_diameter ** 3.) / (seawater_density * seawater_kinematic_viscosity ** 2.)  # [-]
+    dimensionless_diameter = (math.fabs(total_density - particle.seawater_density) * fieldset.G * particle_diameter ** 3.) / (particle.seawater_density * seawater_kinematic_viscosity ** 2.)  # [-]
 
     # Compute the dimensionless settling velocity w_*
     if dimensionless_diameter > 5E9: # "The boundary layer around the sphere becomes fully turbulent, causing a reduction in drag and an increase in settling velocity" - [1]
@@ -478,7 +478,7 @@ def biofouling(particle, fieldset, time):
 
     # Compute the settling velocity of the particle using Eq. (5) from [1] (solving for the settling velocity)
     sign_of_density_difference = math.copysign(1., normalised_density_difference) #normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
-    settling_velocity = sign_of_density_difference * (g * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
+    settling_velocity = sign_of_density_difference * (fieldset.G * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
     # Update the settling velocity
     particle.settling_velocity = settling_velocity   

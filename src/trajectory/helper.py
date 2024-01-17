@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import xarray as xr
 
 
 #import pandas as pd # Is this required?
@@ -8,7 +9,7 @@ from parcels.tools.converters import Geographic, GeographicPolar
 from datetime import datetime, timedelta
 
 from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, vertical_mixing
-from utils import select_files
+from utils import select_files, getclosest_ij
 
 
 ## Fieldset creation
@@ -68,10 +69,30 @@ def create_fieldset(model_settings, particle_settings):
                     'conservative_temperature': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'},
                     'absolute_salinity': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'}}
 
-    
+    # Setup indices for specific regions if required
+    if 'ocean_region' not in model_settings.keys():
+        indices = {}
+    elif model_settings['ocean_region'] == 'MED': # Mediterranean
+        minlat = 25
+        maxlat = 50
+        minlon = -5
+        maxlon = 38
+
+        test_data = xr.open_dataset(ufiles[0])
+        latvals = test_data['nav_lat'].values
+        lonvals = test_data['nav_lon'].values
+        
+        iy_min, ix_min = getclosest_ij(latvals, lonvals, minlat, minlon)
+        iy_max, ix_max = getclosest_ij(latvals, lonvals, maxlat, maxlon)
+        iy_min -= 1
+        ix_min -= 1
+        iy_max += 1
+        ix_max += 1
+        indices = {'lat': range(iy_min, iy_max), 'lon': range(ix_min, ix_max)}
+        test_data.close()
 
     ## Load the fieldset
-    fieldset = FieldSet.from_nemo(filenames, variables, dimensions, allow_time_extrapolation=model_settings['allow_time_extrapolation'])
+    fieldset = FieldSet.from_nemo(filenames, variables, dimensions, indices=indices, allow_time_extrapolation=model_settings['allow_time_extrapolation'])
 
     ## Create flags for custom particle behaviour
     fieldset.add_constant('mixing_f', model_settings['mixing_f'])
@@ -187,22 +208,22 @@ def create_fieldset(model_settings, particle_settings):
 
         windfiles = select_files(dirread_wind,'%4i*.nc',start_date,runtime,dt_margin=32)
 
-        filenames_wind = {'wind_U': windfiles,
-                        'wind_V': windfiles}
+        filenames_wind = {'Wind_U': windfiles,
+                        'Wind_V': windfiles}
 
-        variables_wind = {'wind_U': 'u10',
-                        'wind_V': 'v10'}
+        variables_wind = {'Wind_U': 'u10',
+                        'Wind_V': 'v10'}
 
         dimensions_wind = {'lat': 'latitude', # when not using the converted datasets, use 'longitude' otherwise use 'lon'
                         'lon': 'longitude',
                         'time': 'time'}
         fieldset_wind = FieldSet.from_netcdf(filenames_wind, variables_wind, dimensions_wind, mesh='spherical')
-        fieldset_wind.wind_U.units = GeographicPolar()
-        fieldset_wind.wind_V.units = Geographic() 
+        fieldset_wind.Wind_U.units = GeographicPolar()
+        fieldset_wind.Wind_V.units = Geographic() 
         fieldset_wind.add_periodic_halo(zonal=True)
         
-        fieldset.add_field(fieldset_wind.wind_U)
-        fieldset.add_field(fieldset_wind.wind_V)
+        fieldset.add_field(fieldset_wind.Wind_U)
+        fieldset.add_field(fieldset_wind.Wind_V)
 
 
     ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
@@ -439,10 +460,17 @@ def load_default_settings():
                     }
 
     particle_settings = {'start_date': datetime.strptime('2019-01-10-00:00:00', '%Y-%m-%d-%H:%M:%S'), # Start date of simulation
-                        'runtime': timedelta(days=4),             # Runtime of simulation, use negative if releasing particles backwards in time
+                        'runtime': timedelta(days=3),             # Runtime of simulation, use negative if releasing particles backwards in time
                         'dt_write': timedelta(days=1),             # Timestep of output
                         'dt_timestep': timedelta(minutes=20),       # Timestep of advection
                         # TODO: Could create own particle class with own sampling kernels to append after helper?
                         #'particle_class': PlasticParticle, # Particle class to use, feel free to create your own based on the base PlasticParticle class
                         }
+    return model_settings, particle_settings
+
+def load_test_settings():
+    # Use the mediterranean as a test region for faster IO
+    model_settings, particle_settings = load_default_settings()
+    model_settings['ocean_region'] = 'MED'
+    
     return model_settings, particle_settings
