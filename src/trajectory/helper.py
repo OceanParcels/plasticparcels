@@ -36,9 +36,9 @@ def create_fieldset(model_settings, particle_settings):
     runtime = int(np.ceil(particle_settings['runtime'].total_seconds()/86400.)) # convert to days
 
     ## If running backward simulations, we need to change the start date and runtime for loading the fieldset
-    if np.sign(runtime) < 0:
-        start_date = start_date + particle_settings['runtime']
-        runtime = -runtime
+    #if np.sign(runtime) < 0:
+    #    start_date = start_date + particle_settings['runtime']
+    #    runtime = -runtime
     
     
     ## Mesh masks
@@ -423,7 +423,7 @@ def load_default_settings():
                     # Ocean model
                     'ocean_dir': 'MOi/psy4v3r1/',                 # Directory of ocean model data
                     'ocean_filename': 'psy4v3r1-daily_',          # Filename style of ocean model data
-                    'ocean_mesh': 'MOi/domain_ORCA0083-N006/coordinates.nc',                               # File location of ocean mesh
+                    'ocean_mesh': 'MOi/domain_ORCA0083-N006/coordinates.nc', # File location of ocean mesh
                     'bathymetry_mesh': 'MOi/domain_ORCA0083-N006/bathymetry_ORCA12_V3.3.nc', # File location of bathymetry mesh
                     'mixing_f': True,                             # Turn on/off vertical turbulent mixing
                     
