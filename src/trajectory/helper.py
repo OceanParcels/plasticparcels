@@ -8,7 +8,7 @@ from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, Advecti
 from parcels.tools.converters import Geographic, GeographicPolar
 from datetime import datetime, timedelta
 
-from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, vertical_mixing
+from kernels import PolyTEOS10_bsq, Stokes_drift, windage_drift, settling_velocity, biofouling, vertical_mixing, unbeaching, periodicBC, checkErrorThroughSurface, deleteParticle, checkThroughBathymetry
 from utils import select_files, getclosest_ij
 
 
@@ -106,29 +106,26 @@ def create_fieldset(model_settings, particle_settings):
         mode_3D_f = True
     fieldset.add_constant('mode', mode_3D_f)
     
+    # Add in bathymetry
+    fieldset.add_constant('z_start',0.5)        
+    variables = ('bathymetry', 'Bathymetry')
+    dimensions = {'lon': 'nav_lon', 'lat': 'nav_lat'}
+    bathymetry_mesh = os.path.join(model_settings['input_data_dir'], model_settings['bathymetry_mesh'])
+    bathymetry_field = Field.from_netcdf(bathymetry_mesh, variables, dimensions)
+    fieldset.add_field(bathymetry_field) 
 
   
     ## Add fields for different model settings
     if fieldset.mixing_f:
         kzfiles = select_files(dirread_model,'KZ_%4i*.nc',start_date,runtime,dt_margin=3)
-        
-        bathymetry_mesh = os.path.join(model_settings['input_data_dir'], model_settings['bathymetry_mesh'])
-
         filenames_mixing = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
-
         variables_mixing = {'mixing_kz' : 'votkeavt'}
-
         dimensions_mixing = {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}
 
         mixing_fieldset = FieldSet.from_nemo(filenames_mixing,variables_mixing,dimensions_mixing)
         fieldset.add_field(mixing_fieldset.mixing_kz)    #phytoplankton primary productivity        
 
-        # Add in bathymetry
-        fieldset.add_constant('z_start',0.5)        
-        variables = ('bathymetry', 'Bathymetry')
-        dimensions = {'lon': 'nav_lon', 'lat': 'nav_lat'}
-        bathymetry_field = Field.from_netcdf(bathymetry_mesh, variables, dimensions)
-        fieldset.add_field(bathymetry_field) 
+        
 
 
     if fieldset.biofouling_f: # or do_permanent_fouling:
@@ -227,10 +224,8 @@ def create_fieldset(model_settings, particle_settings):
 
 
     ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
-    ## TODO: Add unbeaching
-    """if fieldset.stokes_f or fieldset.wind_f > 0:
-        ## TODO: UPDATE LOCATION OF DIRECTORIES ONCE DATA HAS BEEN MOVED - &&write a readme for data locations
-        unbeachfiles = os.path.join(model_settings['input_data_dir_3'], '00_data_files/land_current_NEMO0083.nc')
+    if fieldset.stokes_f or fieldset.wind_f > 0:
+        unbeachfiles = os.path.join(model_settings['input_data_dir_3'], '../../data/output_data/masks/land_current_NEMO0083.nc')
         filenames_unbeach = {'unbeach_U': unbeachfiles, 
                             'unbeach_V': unbeachfiles}
 
@@ -247,7 +242,7 @@ def create_fieldset(model_settings, particle_settings):
 
         fieldset.add_field(fieldset_unbeach.unbeach_U)
         fieldset.add_field(fieldset_unbeach.unbeach_V)
-    """
+    
 
     ## TODO: Write a comment for this
     fieldset.add_constant('verbose_delete',model_settings['verbose_delete'])
@@ -387,6 +382,10 @@ def create_kernel(fieldset, pset):
         A list of kernels used in the execution of the particle set
     """    
     kernels = []
+    ## Add the unbeaching kernel to the beginning
+    if fieldset.stokes_f or fieldset.wind_f:
+        kernels.append(unbeaching)
+
     kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
 
     if fieldset.mode: # 3D mode = on
@@ -395,7 +394,7 @@ def create_kernel(fieldset, pset):
         kernels.append(AdvectionRK4)#pset.Kernel(AdvectionRK4))
     
 
-    if not fieldset.biofouling_f:
+    if not fieldset.biofouling_f and fieldset.mode:
         kernels.append(settling_velocity)#pset.Kernel(settling_velocity))            
     elif fieldset.biofouling_f:
         kernels.append(biofouling)#pset.Kernel(biofouling))
@@ -404,9 +403,17 @@ def create_kernel(fieldset, pset):
         kernels.append(Stokes_drift)#pset.Kernel(Stokes_drift))
     if fieldset.wind_f:
         kernels.append(windage_drift)#pset.Kernel(windage_drift))
-    
+
     if fieldset.mixing_f:
         kernels.append(vertical_mixing)#pset.Kernel(vertical_mixing))
+
+    kernels.append(checkThroughBathymetry)
+
+    # Add statuscode kernels
+    kernels.append(periodicBC)
+    if fieldset.mode:
+        kernels.append(checkErrorThroughSurface)
+    kernels.append(deleteParticle)
 
     return kernels
 

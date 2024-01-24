@@ -10,7 +10,7 @@
 
 
 
-from parcels import Variable, JITParticle, ParcelsRandom
+from parcels import Variable, JITParticle, ParcelsRandom, StatusCode
 import math
 import numpy as np
 
@@ -738,22 +738,32 @@ def vertical_mixing(particle, fieldset, time):
 
 
 
+def unbeaching(particle, fieldset, time):
+    """ A kernel to unbeach particles"""
+    # Measure the velocity field at the final particle location
+    (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+    
+    if math.fabs(vel_u) < 1e-14 and math.fabs(vel_v) < 1e-14:
+        U_ub = fieldset.unbeach_U[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+        V_ub = fieldset.unbeach_V[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+
+        dlon = U_ub * particle.dt
+        dlat = V_ub * particle.dt  
+
+        particle_dlon += dlon
+        particle_dlat += dlat
 
 
 
 
+def checkThroughBathymetry(particle, fieldset, time):
+    bathym = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
 
+    # If the particle is below the bathymetry
+    if particle.depth + particle_ddepth > bathym:
+        particle_ddepth = bathym - particle.depth - 5 # Move the particle 5 metres above the model bathymetry
 
-
-
-
-
-
-
-
-
-
-
+    
 
 
 
@@ -773,19 +783,36 @@ def vertical_mixing(particle, fieldset, time):
 ## @date: 2023-08-09
 
 def periodicBC(particle, fieldset, time):
-    if particle.lon <= -180.:
-        particle.lon += 360.
-    elif particle.lon >= 180.:
-        particle.lon -= 360.
+    """ Kernel to keep the particle between [-180,180] longitude
+        To be run after all movement kernels
+    """
+    if particle.lon + particle_dlon <= -180.:
+        particle_dlon += 360.
+    elif particle.lon + particle_dlon > 180.:
+        particle_dlon -= 360.
 
-def delete_particle(particle, fieldset, time):
-    """Kernel for deleting particles if they are out of bounds."""
-    if fieldset.verbose_delete == 1:
-        print('particle is deleted out of bounds at lon = ' + str(particle.lon) + ', lat =' + str(
-            particle.lat) + ', depth =' + str(particle.depth))
-        
+
+def checkErrorThroughSurface(particle, fieldset, time):
+    """ Kernel to set the particle depth to the particle surface if it goes through the surface
+    """
+    if particle.state == StatusCode.ErrorThroughSurface:
+        particle_ddepth = - particle.depth # Set so that final depth = 0
+        particle.state = StatusCode.Success
+
+
+def deleteParticle(particle, fieldset, time):
+    """ Kernel for deleting particles if they throw an error other than through the surface
+    """
+    if particle.state >= 50 and particle.state != StatusCode.ErrorThroughSurface:
+        particle.delete()
+
+
+
+
+
+
 def delete_particle_interp(particle, fieldset, time):
-    """Kernel for deleting particles if they are out of bounds."""
+    """Kernel for deleting particles if they throw an interpolation error."""
     if fieldset.verbose_delete == 1:
         print('particle is deleted due to an interpolation error at lon = ' + str(particle.lon) + ', lat =' + str(
             particle.lat) + ', depth =' + str(particle.depth))
