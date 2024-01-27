@@ -741,7 +741,7 @@ def vertical_mixing(particle, fieldset, time):
 def unbeaching(particle, fieldset, time):
     """ A kernel to unbeach particles"""
     # Measure the velocity field at the final particle location
-    (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+    (vel_u, vel_v) = fieldset.UV[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
     
     if math.fabs(vel_u) < 1e-14 and math.fabs(vel_v) < 1e-14:
         U_ub = fieldset.unbeach_U[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]

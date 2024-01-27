@@ -50,16 +50,16 @@ def create_fieldset(model_settings, particle_settings):
     wfiles = select_files(dirread_model,'W_%4i*_med_subset.nc',start_date,runtime,i_date_s=-24, i_date_e=-14,dt_margin=3)   
 
     filenames = {'U': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': ufiles},
-                    'V': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': vfiles},
-                    'W': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': wfiles}}
+                    'V': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': vfiles}}
+                    #'W': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': wfiles}}
 
     variables = {'U': 'vozocrtx',
-                    'V': 'vomecrty',
-                    'W': 'vovecrtz'}
+                    'V': 'vomecrty'}
+                    #'W': 'vovecrtz'}
 
     dimensions = {'U': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}, #time_centered
-                    'V': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                    'W': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}}
+                    'V': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}}
+                    #'W': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}}
 
     # Setup indices for specific regions if required
     if 'ocean_region' not in model_settings.keys():
@@ -217,7 +217,7 @@ def create_fieldset(model_settings, particle_settings):
 
     ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
     if fieldset.stokes_f or fieldset.wind_f > 0:
-        unbeachfiles = os.path.join(model_settings['input_data_dir_3'], '../../data/output_data/masks/land_current_NEMO0083_med_subset.nc')
+        unbeachfiles = './data/land_current_NEMO0083_med_subset.nc'
         filenames_unbeach = {'unbeach_U': unbeachfiles, 
                             'unbeach_V': unbeachfiles}
 
@@ -374,11 +374,7 @@ def create_kernel(fieldset, pset):
         A list of kernels used in the execution of the particle set
     """    
     kernels = []
-    ## Add the unbeaching kernel to the beginning
-    if fieldset.stokes_f or fieldset.wind_f:
-        kernels.append(unbeaching)
-
-    kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
+    #kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
 
     if fieldset.mode: # 3D mode = on
         kernels.append(AdvectionRK4_3D)#pset.Kernel(AdvectionRK4_3D))
@@ -396,15 +392,20 @@ def create_kernel(fieldset, pset):
     if fieldset.wind_f:
         kernels.append(windage_drift)#pset.Kernel(windage_drift))
 
+
+    if fieldset.stokes_f or fieldset.wind_f:
+        kernels.append(unbeaching)
+
+
     if fieldset.mixing_f:
         kernels.append(vertical_mixing)#pset.Kernel(vertical_mixing))
 
-    kernels.append(checkThroughBathymetry)
+    #kernels.append(checkThroughBathymetry)
 
     # Add statuscode kernels
     kernels.append(periodicBC)
-    if fieldset.mode:
-        kernels.append(checkErrorThroughSurface)
+    #if fieldset.mode:
+    #    kernels.append(checkErrorThroughSurface)
     kernels.append(deleteParticle)
 
     return kernels
