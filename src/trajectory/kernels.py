@@ -378,7 +378,7 @@ def biofouling(particle, fieldset, time):
 
     #seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
-    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000 # TODO: Check that we should convert here and not in the fieldset
+    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000. # TODO: Check that we should convert here and not in the fieldset
     particle_radius = 0.5 * particle.particle_diameter
     #particle_density = particle.particle_density
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
@@ -455,7 +455,12 @@ def biofouling(particle, fieldset, time):
     a_grazing = fieldset.algae_mortality_rate * particle.algae_amount
 
     ### ------ Compute the final algal amount ------
-    particle.algae_amount += (a_collision + algae_growth - a_grazing - a_respiration) * particle.dt
+    algae_amount_change = (a_collision + algae_growth - a_grazing - a_respiration) * particle.dt
+    if particle.algae_amount + algae_amount_change < 0.:
+        particle.algae_amount = 0.
+    else:
+        particle.algae_amount += algae_amount_change
+
 
     ### ------ Compute the new settling velocity
     particle_diameter = 2. * (total_radius)  # equivalent spherical diameter [m], calculated from Dietrich (1982) from A = pi/4 * dn**2
@@ -470,7 +475,7 @@ def biofouling(particle, fieldset, time):
     if dimensionless_diameter > 5E9: # "The boundary layer around the sphere becomes fully turbulent, causing a reduction in drag and an increase in settling velocity" - [1]
         dimensionless_velocity = 265000. # Set a maximum dimensionless settling velocity
     elif dimensionless_diameter < 0.05: # "At values of D_* less than 0.05, (9) deviates signficantly ... from Stokes' law and (8) should be used." - [1]
-        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832 # Using Eq. (8) in [1]
+        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832. # Using Eq. (8) in [1]
     else:
         dimensionless_velocity = 10. ** (-3.76715 + (1.92944 * math.log10(dimensionless_diameter)) - (0.09815 * math.log10(dimensionless_diameter) ** 2.) - (
                     0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.)) # Using Eq. (9) in [1]
@@ -757,18 +762,19 @@ def unbeaching(particle, fieldset, time):
 
 
 def checkThroughBathymetry(particle, fieldset, time):
-    bathym = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
-
-    # If the particle is below the bathymetry
-    if particle.depth + particle_ddepth > bathym:
-        particle_ddepth = bathym - particle.depth - 5 # Move the particle 5 metres above the model bathymetry
-
+    bathymetry_local = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+    potential_depth = particle.depth + particle_ddepth
+    min_depth = 0.5 #meters - maybe set this as a fieldset variable?
     
-
-
-
+    if potential_depth < min_depth:
+        particle_ddepth = fieldset.z_start - particle.depth # Stick particle to surface
+    elif potential_depth > bathymetry_local:
+        particle_ddepth = bathymetry_local - particle.depth # Stick particle at bottom of ocean
+    elif particle.depth > 100 and potential_depth > (bathymetry_local*0.99): # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
+        particle_ddepth = bathymetry_local*0.99 - particle.depth # Stick particle at the 99% point
     
-
+    elif potential_depth > 3900: # If particle >3.9km deep, stick it there
+        particle_ddepth = 3900 - particle.depth
 
 
 

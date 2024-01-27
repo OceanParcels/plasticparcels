@@ -382,9 +382,6 @@ def create_kernel(fieldset, pset):
         A list of kernels used in the execution of the particle set
     """    
     kernels = []
-    ## Add the unbeaching kernel to the beginning
-    if fieldset.stokes_f or fieldset.wind_f:
-        kernels.append(unbeaching)
 
     kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
 
@@ -407,12 +404,16 @@ def create_kernel(fieldset, pset):
     if fieldset.mixing_f:
         kernels.append(vertical_mixing)#pset.Kernel(vertical_mixing))
 
-    kernels.append(checkThroughBathymetry)
+    ## Add the unbeaching kernel to the beginning
+    if fieldset.stokes_f or fieldset.wind_f:
+        kernels.append(unbeaching)
+
+    if fieldset.mode:
+        kernels.append(checkThroughBathymetry)
+        kernels.append(checkErrorThroughSurface)
 
     # Add statuscode kernels
     kernels.append(periodicBC)
-    if fieldset.mode:
-        kernels.append(checkErrorThroughSurface)
     kernels.append(deleteParticle)
 
     return kernels
