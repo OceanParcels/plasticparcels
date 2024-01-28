@@ -143,8 +143,6 @@ def create_fieldset(model_settings, particle_settings):
                             'bio_nanophy': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
                             'bio_diatom': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}}
         
-        #if not fieldset.mixing_f:
-        #    raise RuntimeError('Mixing must be enabled for biofouling model to work') ## We can remove this as displacement from settling velocity is now applied in the kernel
         
         fieldset.add_constant('collision_probability', model_settings['bgc_collision_probability'])
         fieldset.add_constant('K', model_settings['bgc_boltzmann_constant'])
