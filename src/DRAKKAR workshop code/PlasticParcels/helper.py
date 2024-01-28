@@ -3,7 +3,6 @@ import numpy as np
 import xarray as xr
 
 
-#import pandas as pd # Is this required?
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
 from parcels.tools.converters import Geographic, GeographicPolar
 from datetime import datetime, timedelta
