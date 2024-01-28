@@ -335,6 +335,7 @@ def create_particleset(fieldset, particle_settings):
     for variable in variables:
         setattr(PlasticParticle, variable.name, variable)
 
+
     # Add kernel specific variables
     # TODO
     #if fieldset.biofouling_f:
