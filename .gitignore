@@ -1,2 +1,5 @@
 data/
 fig/
+**.code-workspace*
+**.DS_store**
+**.pyc**
