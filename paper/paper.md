@@ -1,5 +1,5 @@
 ---
-title:  'Seaduck: A python package for Eulerian and Lagrangian interpolation on ocean datasets'
+title:  'PlasticParcels: A python package for marine plastic dispersal simulations using Parcels'
 tags:
   - Tag 1
   - Tag 2
