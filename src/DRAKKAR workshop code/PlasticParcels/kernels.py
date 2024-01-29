@@ -455,7 +455,12 @@ def biofouling(particle, fieldset, time):
     a_grazing = fieldset.algae_mortality_rate * particle.algae_amount
 
     ### ------ Compute the final algal amount ------
-    particle.algae_amount += (a_collision + algae_growth - a_grazing - a_respiration) * particle.dt
+    algae_amount_change = (a_collision + algae_growth - a_grazing - a_respiration) * particle.dt
+    if particle.algae_amount + algae_amount_change < 0.:
+        particle.algae_amount = 0.
+    else:
+        particle.algae_amount += algae_amount_change
+
 
     ### ------ Compute the new settling velocity
     particle_diameter = 2. * (total_radius)  # equivalent spherical diameter [m], calculated from Dietrich (1982) from A = pi/4 * dn**2
@@ -757,23 +762,24 @@ def unbeaching(particle, fieldset, time):
 
 
 def checkThroughBathymetry(particle, fieldset, time):
-    bathym = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
-
-    # If the particle is below the bathymetry
-    if particle.depth + particle_ddepth > bathym:
-        particle_ddepth = bathym - particle.depth - 5 # Move the particle 5 metres above the model bathymetry
-
+    bathymetry_local = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]
+    potential_depth = particle.depth + particle_ddepth
+    min_depth = 0.5 #meters - maybe set this as a fieldset variable?
+    
+    if potential_depth < min_depth:
+        particle_ddepth = fieldset.z_start - particle.depth # Stick particle to surface
+    elif potential_depth > bathymetry_local:
+        particle_ddepth = bathymetry_local - particle.depth # Stick particle at bottom of ocean
+    elif particle.depth > 100 and potential_depth > (bathymetry_local*0.99): # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
+        particle_ddepth = bathymetry_local*0.99 - particle.depth # Stick particle at the 99% point
+    
+    elif potential_depth > 3900: # If particle >3.9km deep, stick it there
+        particle_ddepth = 3900 - particle.depth
     
 
 
 
     
-
-
-
-
-
-
 
 
 
