@@ -501,12 +501,12 @@ def load_default_settings():
 
                     # Waves model
                     'stokes_f': True,                             # Turn on/off Stokes Drift
-                    'stokes_dir': '',                  # Directory of Stokes drift model data
+                    'stokes_dir': 'ERA5',                  # Directory of Stokes drift model data
                     'stokes_filename': 'ERA5_global_waves_monthly_',
 
                     # Wind model
                     'wind_f': True,                               # Turn on/off Windage
-                    'wind_dir': '',                     # Directory of Wind model data
+                    'wind_dir': 'ERA5',                     # Directory of Wind model data
                     'wind_filename': 'ERA5_global_wind_monthly_',
 
                     'allow_time_extrapolation': False,            # Allow extrapolation of time for fieldset
