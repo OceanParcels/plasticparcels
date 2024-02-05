@@ -9,7 +9,6 @@
 ## Add a sea-ice kernel https://github.com/AnnekeV/thesis_plastic_seaice/blob/master/kernels.py
 
 
-
 from parcels import Variable, JITParticle, ParcelsRandom, StatusCode
 import math
 import numpy as np
