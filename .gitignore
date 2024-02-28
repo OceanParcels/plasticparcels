@@ -1,5 +1,6 @@
 data/
 fig/
+paper/
 **.code-workspace*
 **.DS_store**
 **.pyc**
