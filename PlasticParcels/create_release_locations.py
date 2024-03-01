@@ -11,6 +11,7 @@ import urllib.request as urlr
 import cartopy.io.shapereader as shpreader
 import geopandas as gpd
 import glob
+from scipy import spatial
 
 from utils import distance, get_coords_from_polygon
 
@@ -297,7 +298,7 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
     return river_emissions_df
 
 
-def create_fisheries_gfwv2_release_map(fisheries_filepath):
+def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     """
     Description
     ----------
@@ -310,6 +311,8 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath):
     ----------
     fisheries_filepath : str
         File path to the Global Fishing Watch v2 dataset.
+    mask_land_filepath : str
+        File path to the land mask generated in ...TODO
 
     Returns
     -------
@@ -371,11 +374,37 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath):
                                                                       'geartype' : 'Geartype',
                                                                       'month' : "Month"})
 
-    return agg_data_fisheries_info
+
+    # Create a smaller dataset where the fishing hours are matched to the model grid
+    model_agg_data_fisheries_info = agg_data_fisheries_info.copy(deep=True)
+    data_mask_land = xr.open_dataset(mask_land_filepath)
+
+    lats_ocean = data_mask_land['lat'].data[np.where(~data_mask_land['mask_land'])]
+    lons_ocean = data_mask_land['lon'].data[np.where(~data_mask_land['mask_land'])]
+
+    # A list of ocean points
+    ocean_points = np.array([lons_ocean, lats_ocean]).T
+
+    # Find closest ocean cell to the fisheries data
+    fishing_points = np.array(model_agg_data_fisheries_info[['Longitude', 'Latitude']])
+    distances_deg, indices = spatial.KDTree(ocean_points).query(fishing_points)
+
+    mapped_ocean_points = ocean_points[indices]
+
+    # Add these mapped points to the fisheries data as extra columns
+    model_agg_data_fisheries_info.insert(0, "ModelLongitude", mapped_ocean_points[:,0])
+    model_agg_data_fisheries_info.insert(1, "ModelLatitude", mapped_ocean_points[:,1])
+
+    # Create a data set where longitude and latitude are from the model
+    model_agg_data_fisheries_info = model_agg_data_fisheries_info.groupby(['ModelLongitude', 'ModelLatitude', 'Flag', 'Geartype', 'Month', 'Continent', 'Region', 'Subregion', 'Country'])['fishing_hours'].agg('sum').reset_index()
+
+    # Return both raw and model datasets
+    return agg_data_fisheries_info, model_agg_data_fisheries_info
 
 
 #input_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/input_data/'
 output_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/generated_files/'
+mask_land_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_land_NEMO0083.nc'
 mask_coast_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_coast_NEMO0083.nc'
 coords_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/input_data/MOi/domain_ORCA0083-N006/coordinates.nc'
 
@@ -409,11 +438,13 @@ else:
 
 # Create fisheries release data
 fisheries_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/GlobalFishingWatch/'
-output_name = output_data+'agg_data_fisheries_info.csv'
+output_name = output_data+'agg_data_fisheries_info_raw.csv'
+output_on_model_name = output_data+'agg_data_fisheries_info_NEMO0083.csv'
 
-if not os.path.isfile(output_name):
-    fisheries_dataset = create_fisheries_gfwv2_release_map(fisheries_filepath=fisheries_filepath)
+if not os.path.isfile(output_name) and not os.path.isfile(output_on_model_name):
+    fisheries_dataset, fisheries_on_model_grid = create_fisheries_gfwv2_release_map(fisheries_filepath=fisheries_filepath, mask_land_filepath=mask_land_filepath)
     fisheries_dataset.to_csv(output_name)
-    print("Fishing related plastic waste file created:", output_name)
+    fisheries_on_model_grid.to_csv(output_on_model_name)
+    print("Fishing related plastic waste file created:", output_name, 'and', output_on_model_name)
 else:
     print("Fishing related plastic waste file already exists:", output_name)

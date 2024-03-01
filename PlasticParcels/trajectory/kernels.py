@@ -812,10 +812,6 @@ def deleteParticle(particle, fieldset, time):
         particle.delete()
 
 
-
-
-
-
 def delete_particle_interp(particle, fieldset, time):
     """Kernel for deleting particles if they throw an interpolation error."""
     if fieldset.verbose_delete == 1:
