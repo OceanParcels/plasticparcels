@@ -66,8 +66,8 @@ def create_fieldset(model_settings, particle_settings):
     dimensions = {'U': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}, #time_centered
                     'V': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
                     'W': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                    'conservative_temperature': {'lon': 'glamt', 'lat': 'gphit','depth': 'depthw', 'time': 'time_counter'},
-                    'absolute_salinity': {'lon': 'glamt', 'lat': 'gphit','depth': 'depthw', 'time': 'time_counter'}}
+                    'conservative_temperature': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'},
+                    'absolute_salinity': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'}}
 
     # Setup indices for specific regions if required
     if 'ocean_region' not in model_settings.keys():
@@ -148,9 +148,9 @@ def create_fieldset(model_settings, particle_settings):
                         'bio_nanophy': 'phy', # Mole concentration of NanoPhytoplankton expressed as carbon in sea water
                         'bio_diatom': 'phy2'} # Mole concentration of Diatoms expressed as carbon in sea water
 
-        dimensions_bio = {'pp_phyto': {'lon': 'glamt', 'lat': 'gphit', 'depth': 'depthw', 'time': 'time_counter'},
-                            'bio_nanophy': {'lon': 'glamt', 'lat': 'gphit', 'depth': 'depthw', 'time': 'time_counter'},
-                            'bio_diatom': {'lon': 'glamt', 'lat': 'gphit', 'depth': 'depthw', 'time': 'time_counter'}}
+        dimensions_bio = {'pp_phyto': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
+                            'bio_nanophy': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
+                            'bio_diatom': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}}
         
         #if not fieldset.mixing_f:
         #    raise RuntimeError('Mixing must be enabled for biofouling model to work') ## We can remove this as displacement from settling velocity is now applied in the kernel
