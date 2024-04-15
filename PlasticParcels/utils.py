@@ -28,8 +28,16 @@ def select_files(dirread,string_,date_current,dt_sim,i_date_s=-13,i_date_e=-3, d
     
     time_start = date_current - timedelta(days=dt_margin)
     time_end = date_current + timedelta(days=dt_sim) + timedelta(days=dt_margin)
+    yrEnd = time_end.year
+
+    ragged_files = [glob(dirread + string_ % (yr0+i)) for i in range(-1,yrEnd-yr0+1)]
+    possible_files = []
+
+    for i in range(len(ragged_files)):
+        for file_ in ragged_files[i]:
+            possible_files.append(file_)
     
-    possible_files = sorted( glob(dirread + string_ % (yr0-1)) + glob(dirread + string_ % yr0) + glob(dirread + string_ % (yr0+1)) )
+    possible_files = sorted(possible_files)
     
     indices_use = []
     for i1,file_ in enumerate(possible_files):
