@@ -42,7 +42,7 @@ To better understand and predict the effects of plastic pollution on the marine 
 **Paragraph on approach to solve said problem**
 Lagrangian ocean analysis, where virtual particles are tracked in hydrodynamic flow fields, is widely used to uncover and investigate the pathways and timescales of the dispersion of plastic particulates in the ocean [@Lebreton2012, @Hardesty2017, @JalonRojas2019, @Chassignet2021, @Kaandorp2023]. However, two important questions arise when performing such Lagrangian simulations. Firstly, what physical processes drive the transport and dispersal of a plastic particle? The properties of plastic particles (e.g., size, shape, and density) determine what the dominant physical processes are at play, and due to the chaotic nature of the ocean, plastics of different properties will have unique dispersal patterns and transport behaviours. Current state-of-the-art ocean models are either too coarse in resolution to capture these processes, or disregard these processes entirely, and so parameterising these processes is important in modelling their effects. Secondly, what are the initial release locations and concentrations of marine plastic pollution? Predicting spatial maps of future plastic concentrations is, in effect, an initial value problem, relying on accurate initial conditions for a realistic simulation output.
 
-The past decade has seen a growing number of community-developed software packages for Lagrangian simulations [@Paris2013, @Fredj2016, @Lange2017, @Doos2017, @Dagestad2018, @JalonRojas2019, @Delandmeter2019]. In many cases, these packages are specific to particular particle classes, or hydrodynamic models, and can be inflexible or difficult to integrate into different applications. In the case of plastic dispersal simulations, where the physical processes are still under research and development [@vanSebille2020], a flexible and modular approach to performing Lagrangian simulations is necessary for rapid plastic disperal simulations, as well as for prototyping, developing, and testing new physical process parameterisations.
+The past decade has seen a growing number of community-developed software packages for performing Lagrangian simulations [@Paris2013, @Fredj2016, @Lange2017, @Doos2017, @Dagestad2018, @JalonRojas2019, @Delandmeter2019]. In many cases, these packages are specific to particular particle classes, or hydrodynamic models, and can be inflexible or difficult to integrate into different applications. In the case of plastic dispersal simulations, where the physical processes are still under research and development [@vanSebille2020], a flexible and modular approach to performing Lagrangian simulations is necessary for rapid plastic disperal simulations, as well as for prototyping, developing, and testing new physical process parameterisations.
 
 **Who is PP designed for (maybe for summary?)**
 Here, we have developed `PlasticParcels` to unify plastic dispersion modelling into one easy-to-use (user friendly?) code. While `PlasticParcels` has been designed for researchers who perform plastic particle dispersion simulations, it is equally useful to ... (finish off paragraph).
@@ -50,43 +50,78 @@ Here, we have developed `PlasticParcels` to unify plastic dispersion modelling i
 
 
 # Description of the software
-`PlasticParcels` has been designed as a layer over the `Parcels` Lagrangian framework [@Lange2017, @Delandmeter2019]. The core functionality of `Parcels` are it's `FieldSets`, `Kernels` and `ParticleSets`. These objects are designed to be as flexible and customisable as possible, so that users can perform Lagrangian simulations of a wide variety of objects, such as (Tuna, Plastic, Plankton, etc. etc. + CITATIONS). However, due to how flexible the software is, it can be difficult for new users to perform quick simulations (something something). Here, we have developed `PlasticParcels` as a user-friendly tool specific to plastic dispersal simulations. (more....)
+`PlasticParcels` has been designed as a layer over the `Parcels` Lagrangian framework [@Lange2017, @Delandmeter2019].
+The core functionality of `Parcels` are it's `FieldSets`, `Kernels` and `ParticleSets`.
+These objects are designed to be as flexible and customisable as possible so that users can perform Lagrangian simulations of a wide variety of particulates, such as tuna, plastic, plankton, etc. etc. + CITATIONS).
+However, due to the flexible nature of the software, there is a steep learning curve for new users, who often find it difficult to setup their simulations in a rapid fashion. We have developed `PlasticParcels` as user-friendly tool specifically designed for easy to generate plastic dispersal simulations. While `PlasticParcels` is primarily designed for use in the cloud and in HPC environments (due to the ever increasing size of hydrodynamic datasets generated from ocean general circulation models), it can be easily installed and run on local machines.
+
+The core features of PlasticParcels are: 1) a user-friendly python notebook layer on top of `Parcels` that provides a streamlined workflow for performing plastic dispersal simulations, 2) custom `Parcels` kernels designed to simulate the fine-scale physical forces that influence the transport of nano- and microplastic particulates, and 3) particle inisialisation maps which represent the best-guess locations of emissions from coastal sources, river sources, open ocean fishing activity related emission sources, and a current best estimate of buoyant plastic concentrations.
+
+In addition, due to the flexibility of the package, users may use the the functions and modular design of `PlasticParcels` to enhance their existing `Parcels` simulations and workflow.
+For example, users may use the particle initialisation maps and associated `ParticleSet` creation methods, and/or the custom physics kernels with their own `Parcels` simulations.
+Post-processing and analysis of these trajectory datasets is purposefully left to the user, however some tutorials are provided in the `PlasticParcels` github repository, along with the tutorials on the `Parcels` github repository. Below we detail the specific kernels implemented, as well as describe how the particle initialisation maps are generated. We also provide an example of how `PlasticParcels` may be used, modelled from an `ipynb` tutorial notebook.
+
+![`PlasticParcels` schematic](schematic.png "PlasticParcels` schematic")
+
+## Physics kernels
+The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
+$$
+\begin{equation}
+\mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B},
+\end{equation}
+$$
+where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v}$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any changes to the particle position due to any additional behaviour the particle exhibits. Examples of these additional behaviours are described below.
+
+Numerically, we solve Eq (1) using a time-stepping approach, effectively solving
+
+$$
+\begin{equation}
+\frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \frac{\text{d}\mathbf{B}}{\text{d}t}.
+\end{equation}
+$$
+For simplicity, we use the default fourth-order Runge-Kutta scheme of parcels to solve the advection of the particle from the hydrodynamic model velocity field $\mathbf{v}$, and a Euler-forward scheme for all other additional behaviours $\mathbf{B}$. 
 
 
+### Stokes Drift
+We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016]. Specifically, we model the additional behaviour of a particle as $\mathbf{B}_{\text{Stokes}}$, where the change in the particle position is described by
+$$
+\begin{equation}
+\frac{\text{d}\mathbf{B}_{\text{Stokes}}}{\text{d}t} = \mathbf{v}_{\text{Stokes}}(\mathbf{x}(t), t) =\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)\bigg(e^{2k_p z} - \beta\sqrt{-2\pi k_p z}\text{ erfc}(-2k_p z) \bigg).
+\end{equation}
+$$
+Here, $z$ is the vertical component of the particle position, $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$ is the surface Stokes drift velocity, $\beta=1$ (as we assume a Phillips spectrum), and erfc is the complementary error function. $k_p$ is the peak wave number, computed as $k_p = \omega_{p}^2/9.81$, with $\omega_p = 2 \pi / T_p$, where $\omega_p$ is the peak wave freaquency computed from the peak wave period $T_p$. 
 
-While `PlasticParcels` is primarily designed for use in the cloud and in HPC environments, due to the ever increasing size of hydrodynamic datasets generated from ocean general circulation models, 
+! Include where this kernel has been used before
+[@Onink2021] uses Stokes drift at the surface only, and uses SummedFields (so RK4 approach), and not an explicit kernel.
 
+### Wind-induced drift
+$$\mathbf{B}_{\text{Wind}} = $$
 
-As a layer over the `Parcels` framework [@Lange2017, @Delandmeter2019], `PlasticParcels` takes netCDF files as input, and produces trajectory data in the form of `zarr` folders. In addition, due to the flexibility of the package, users may use the the functions and modular design of `PlasticParcels` to enhance their existing `Parcels` simulations and workflow. For example, users may use the particle initialisation maps and associated `ParticleSet` creation methods, and/or the custom physics kernels with their own `Parcels` simulations. Post-processing and analysis of these trajectory datasets is left to the user.
+! Include where this kernel has been used before
 
-The core features of PlasticParcels are: 1) a user-friendly python notebook layer on top of `Parcels` that provides a streamlined <mark>something</mark>, 2) custom `Parcels` kernels designed to simulate the fine-scale physical forces that influence the transport of nano- and microplastic, and 3) particle inisialisation maps which represent the best-guess locations of emissions from coastal, river, and open ocean plastic emission sources. Below we detail the specific kernels implemented, as well as describe how the particle initialisation maps are generated. We also provide an example of how `PlasticParcels` may be used, which includes an example `ipynb` notebook.
-
-Figure 1 - `PlasticParcels` schematic
-
-
-## Kernels
-<mark> A sentence or two on custom kernel behaviour etc. </mark>
-
-Stokes Drift
-@Breivik2016
-
-Wind-induced Drift
-CITATION?
-
-Biofouling kernel
+### Biofouling kernel
 @Lobelle2021
 @Fischer2022
 @Kaandorp2023
 based on @Kooi2017
+$$\mathbf{B}_{\text{Biofouling}} = $$
 
-Vertical mixing kernel
+This kernel has been used in multiple forms in ...
+
+### Vertical mixing kernel
 @Onink2022
+$$\mathbf{B}_{\text{Vertical Mixing}} = $$
 
-Sea-ice capture
 
-In development:
+
+### Sea-ice capture
+
+$$\mathbf{B}_{\text{Sea-ice Capture}} = $$
+
+### In development:
 -beaching, fragmentation, degradation, etc.
 
+When performing a plastic dispersal simulation with `PlasticParcels`, users have the explicit option of choosing which additional behaviour to include. For example, when solving 
 
 
 
@@ -111,7 +146,7 @@ Description of creating current map + image
 ## Installation
 
 1) Download software
-2) Download <mark> Jambeck, Kroodsma, Meijer datasets </mark>
+2) Download <mark> Jambeck, Kroodsma, Meijer, Kaandorp datasets </mark>
 3) Update `settings.txt` <mark> give more description </mark>
 4) Run `create_masks.py` and `create_release_locations.py` <mark> wrap this into a single script? </mark>
 5) Open and run `PlasticParcels_tutorial.ipynb`
@@ -130,6 +165,8 @@ export PYTHONPATH="$PYTHONPATH:$PWD"
 Ensure that you have updated `settings.txt` with the required directories and filenames.
 
 # Usage Examples
+The `PlasticParcels` github repository provides several useful tutorials. Here, we briefly demonstrate how `PlasticParcels` can be used for a microplastic dispersal simulation in the Mediterranean Sea.
+
 Dispersal of plastic in the Mediterranean? <mark> Include as an example, `PlasticParcels_Mediterranean_example.ipynb`? </mark>
 
 2 plots - a) dispersal pathways b) heatmap/concentrations
