@@ -50,52 +50,58 @@ Here, we have developed `PlasticParcels` to unify plastic dispersion modelling i
 
 
 # Description of the software
-`PlasticParcels` has been designed as a layer over the `Parcels` Lagrangian framework [@Lange2017, @Delandmeter2019].
-The core functionality of `Parcels` are it's `FieldSets`, `Kernels` and `ParticleSets`.
-These objects are designed to be as flexible and customisable as possible so that users can perform Lagrangian simulations of a wide variety of particulates, such as tuna, plastic, plankton, etc. etc. + CITATIONS).
-However, due to the flexible nature of the software, there is a steep learning curve for new users, who often find it difficult to setup their simulations in a rapid fashion. We have developed `PlasticParcels` as user-friendly tool specifically designed for easy to generate plastic dispersal simulations. While `PlasticParcels` is primarily designed for use in the cloud and in HPC environments (due to the ever increasing size of hydrodynamic datasets generated from ocean general circulation models), it can be easily installed and run on local machines.
+`PlasticParcels` has been designed as a layer over the `Parcels` Lagrangian framework [@Lange2017, @Delandmeter2019]. The core functionality of `Parcels` are it's `FieldSets`, `Kernels` and `ParticleSets`. These objects are designed to be as flexible and customisable as possible so that users can perform Lagrangian simulations of a wide variety of particulates, such as tuna, plastic, plankton, etc. etc. + CITATIONS). However, due to the flexible nature of the software, there is a steep learning curve for new users, who often find it difficult to setup their simulations in a rapid fashion. We have developed `PlasticParcels` as user-friendly tool specifically designed for easy to generate plastic dispersal simulations. While `PlasticParcels` is primarily designed for use in the cloud and in HPC environments (due to the ever increasing size of hydrodynamic datasets generated from ocean general circulation models), it can be easily installed and run on local machines.
 
 The core features of PlasticParcels are: 1) a user-friendly python notebook layer on top of `Parcels` that provides a streamlined workflow for performing plastic dispersal simulations, 2) custom `Parcels` kernels designed to simulate the fine-scale physical forces that influence the transport of nano- and microplastic particulates, and 3) particle inisialisation maps which represent the best-guess locations of emissions from coastal sources, river sources, open ocean fishing activity related emission sources, and a current best estimate of buoyant plastic concentrations.
 
-In addition, due to the flexibility of the package, users may use the the functions and modular design of `PlasticParcels` to enhance their existing `Parcels` simulations and workflow.
-For example, users may use the particle initialisation maps and associated `ParticleSet` creation methods, and/or the custom physics kernels with their own `Parcels` simulations.
-Post-processing and analysis of these trajectory datasets is purposefully left to the user, however some tutorials are provided in the `PlasticParcels` github repository, along with the tutorials on the `Parcels` github repository. Below we detail the specific kernels implemented, as well as describe how the particle initialisation maps are generated. We also provide an example of how `PlasticParcels` may be used, modelled from an `ipynb` tutorial notebook.
+In addition, due to the flexibility of the package, users may use the the functions and modular design of `PlasticParcels` to enhance their existing `Parcels` simulations and workflow. For example, users may use the particle initialisation maps and associated `ParticleSet` creation methods, and/or the custom physics kernels with their own `Parcels` simulations. Post-processing and analysis of these trajectory datasets is purposefully left to the user, however some tutorials are provided in the `PlasticParcels` github repository, along with the tutorials on the `Parcels` github repository. Below we detail the specific kernels implemented, as well as describe how the particle initialisation maps are generated. We also provide an example of how `PlasticParcels` may be used, modelled from an `ipynb` tutorial notebook.
 
 ![`PlasticParcels` schematic](schematic.png "PlasticParcels` schematic")
 
 ## Physics kernels
-The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
+The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
 $$
 \begin{equation}
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B},
 \end{equation}
 $$
-where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v}$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any changes to the particle position due to any additional behaviour the particle exhibits. Examples of these additional behaviours are described below.
+where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v} = (u,v,w)$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. Examples of these additional behaviours are described below.
 
-Numerically, we solve Eq (1) using a time-stepping approach, effectively solving
-
+Numerically, we solve Eq (1) using a time-stepping approach, where we compute the displacements in the particle position as
 $$
 \begin{equation}
-\frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \frac{\text{d}\mathbf{B}}{\text{d}t}.
+\frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \frac{\text{d}\mathbf{B}}{\text{d}t},
 \end{equation}
 $$
-For simplicity, we use the default fourth-order Runge-Kutta scheme of parcels to solve the advection of the particle from the hydrodynamic model velocity field $\mathbf{v}$, and a Euler-forward scheme for all other additional behaviours $\mathbf{B}$. 
+updating the particle position at each timestep. For simplicity, we use by default the fourth-order Runge-Kutta scheme of `Parcels` to solve the advection of the particle from the hydrodynamic model velocity field $\mathbf{v}$, and an Euler-forward scheme for all other additional behaviours realised by $\mathbf{B}$. Additionally, we assume all plastic particles are spherical in shape. (where should this sentence go?)
 
 
 ### Stokes Drift
-We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016]. Specifically, we model the additional behaviour of a particle as $\mathbf{B}_{\text{Stokes}}$, where the change in the particle position is described by
+An important process that affects plastic particle dispersal in the upper ocean is the Stokes drift, whereby a particle proximal to a surface wave (subjected to a surface wave?) will experience a net displacement in the direction of wave propogation. We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016]. Specifically, we model the additional behaviour of a particle as $\mathbf{B}_{\text{Stokes}}$, where the change in the particle position is described by
 $$
 \begin{equation}
 \frac{\text{d}\mathbf{B}_{\text{Stokes}}}{\text{d}t} = \mathbf{v}_{\text{Stokes}}(\mathbf{x}(t), t) =\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)\bigg(e^{2k_p z} - \beta\sqrt{-2\pi k_p z}\text{ erfc}(-2k_p z) \bigg).
 \end{equation}
 $$
-Here, $z$ is the vertical component of the particle position, $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$ is the surface Stokes drift velocity, $\beta=1$ (as we assume a Phillips spectrum), and erfc is the complementary error function. $k_p$ is the peak wave number, computed as $k_p = \omega_{p}^2/9.81$, with $\omega_p = 2 \pi / T_p$, where $\omega_p$ is the peak wave freaquency computed from the peak wave period $T_p$. 
+Here, $z$ is the depth of the particle, $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$ is the surface Stokes drift velocity, $\beta=1$ (as we assume a Phillips spectrum), and erfc is the complementary error function. The peak wave number $k_p$ is computed as $k_p = \omega_{p}^2/9.81$, where $\omega_p$ is the peak wave frequency $\omega_p = 2 \pi / T_p$, using the peak wave period $T_p = T_p(\mathbf{x}_{z=0}(t),t)$.
+
+Our particular implementation of the Stokes drift kernel requires a surface Stokes velocity field $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$, as well as a peak wave period field $T_p(\mathbf{x}_{z=0}(t),t)$. Earlier versions of this kernel have been used in the following research articles (INCLUDE CITATIONS).
 
 ! Include where this kernel has been used before
 [@Onink2021] uses Stokes drift at the surface only, and uses SummedFields (so RK4 approach), and not an explicit kernel.
 
-### Wind-induced drift
-$$\mathbf{B}_{\text{Wind}} = $$
+### Wind-induced drift / Leeway
+Plastic particles at the ocean surface that are not completely submersed will experience a force from the relative wind due to a wind drag, leading to a wind-induced drift. This wind-induced drift of the particle is called leeway [@Allen1999], which can be decomposed into a downwind component (in the direction of the wind), and a crosswind component (which is typically non-zero for asymmetric objects). As we assume that each plastic particle is spherical, we can ignore the crosswind component of leeway, and only consider the the downwind component of leeway. The downwind component follows an almost linear relationship with the relative 10m wind speed [@Allen2005], so we model the leeway as
+
+$$
+\begin{equation}
+\frac{\text{d}\mathbf{B}_{\text{Wind}}}{\text{d}t} = c \cdot \big(\mathbf{v}_{\text{Wind}}(\mathbf{x}(t),t) - \mathbf{v}(\mathbf{x}(t),t)\big),
+\end{equation}
+$$
+
+where $\mathbf{v}_{\text{Wind}}$ is the 10m wind velocity, and $c$ is the leeway rate (a percentage of wind speed, which we refer to in the code as the windage coefficient). Ignoring all additional behaviour of the particle, then $\mathbf{v}_{\text{Wind}} - \mathbf{v}$ is the relative wind acting on the particle.
+
+?? On discussion with Knut, we should really use $\mathbf{v}_{\text{Wind}} - \mathbf{v}$ since it should be the wind experienced by the particle and not the Eulerian wind! So I've written it as such ??
 
 ! Include where this kernel has been used before
 
