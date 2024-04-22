@@ -49,24 +49,30 @@ In addition, due to the flexibility of the package, users may use the the functi
 ![`PlasticParcels` schematic](schematic.png "PlasticParcels` schematic")
 
 ## Physics kernels
+
 The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
+
 $$
 \begin{equation}
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B},
 \end{equation}
 $$
+
 where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v} = (u,v,w)$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. Examples of these additional behaviours are described below.
 
 Numerically, we solve Eq (1) using a time-stepping approach, where we compute the displacements in the particle position as
+
 $$
 \begin{equation}
 \frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \frac{\text{d}\mathbf{B}}{\text{d}t},
 \end{equation}
 $$
+
 updating the particle position at each timestep. For simplicity, we use by default the fourth-order Runge-Kutta scheme of `Parcels` to solve the advection of the particle from the hydrodynamic model velocity field $\mathbf{v}$, and an Euler-forward scheme for all other additional behaviours realised by $\mathbf{B}$. Additionally, we assume all plastic particles are spherical in shape. (where should this sentence go?)
 
 
 ### Stokes Drift
+
 An important process that affects plastic particle dispersal in the upper ocean is the Stokes drift, whereby a particle proximal to a surface wave (subjected to a surface wave?) will experience a net displacement in the direction of wave propogation. We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016]. Specifically, we model the additional behaviour of a particle as $\mathbf{B}_{\text{Stokes}}$, where the change in the particle position is described by
 $$
 \begin{equation}
@@ -222,3 +228,7 @@ Dispersal of plastic in the Mediterranean? <mark> Include as an example, `Plasti
 We would like to thank ...
 
 # References
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });</script>
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ tex2jax: {inlineMath: [['$$', '$$']]}, messageStyle: "none" });</script>
