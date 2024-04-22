@@ -27,25 +27,15 @@ The current version supports nano- and microplastic behavior, with support for m
 
 
 # Statement of need
-**General statement on plastic in the ocean**
-Marine plastic debris can be found almost anywhere in the ocean.
-**Quantify and give location to the statement**
-A recent study estimates that there is approximately 3,200 kilotonnes of (initially) positively buoyant plastics in the global ocean in the year 2020 [@Kaandorp2023], where 59-62\% of these plastics are found at the ocean surface, 36-39\% within the deeper ocean, and 1.5-1.9\% along the coastline. They estimate that 500 kilotonnes of positively buoyant plastic enters the ocean each year, where 39-42\% originate from mismanaged waste along coastlines, 45-48\% originate from fishing-related activities (e.g. fishing lines, nets, traps, and crates), and 12-13\% from mismanaged waste entering the ocean via rivers. These estimates are for positively buoyant plastics, which make up only a fraction of the total production of virgin plastics each year (Citation for percentage breakdown?).
+Marine plastic debris can be found almost anywhere in the ocean. A recent study estimates that there is approximately 3,200 kilotonnes of (initially) positively buoyant plastics in the global ocean in the year 2020 [@Kaandorp2023], where 59-62\% of these plastics are found at the ocean surface, 36-39\% within the deeper ocean, and 1.5-1.9\% along the coastline. They estimate that 500 kilotonnes of positively buoyant plastic enters the ocean each year, where 39-42\% originate from mismanaged waste along coastlines, 45-48\% originate from fishing-related activities (e.g. fishing lines, nets, traps, and crates), and 12-13\% from mismanaged waste entering the ocean via rivers. These estimates are for positively buoyant plastics, which make up only a fraction of the total production of virgin plastics each year (Citation for percentage breakdown?).
 
-**Description of the impacts to marine ecology**
-Due to it's durable, inert, and cheap-to-manufacture nature, plastic has become one of the most abundant man-made materials on Earth. Between 1950 and 2017 an estimated 8,300 million tonnes [@Geyer2017] of virgin plastic was produced, with the rate of production only set to increase. It's durability is of primary concern to the marine environment, where, without intervention, plastics will remain for millenia to come, and will likely degrade and fragment into smaller pieces that will disperse across ever larger distances. These plastics interact and interfere with marine wildlife, either entangling, or being accidently ingested, with over 900 species documented so far [Kuhn2020].
-**Statement on why understanding dispersal patterns, pathways, transport, fate, is important**
-To better understand and predict the effects of plastic pollution on the marine environment, it is of paramount importance that we understand where and how plastic enters our oceans, and the pathways of transport, dispersal patterns, and ultimate fate of these plastics.
+Due to it's durable, inert, and cheap-to-manufacture nature, plastic has become one of the most abundant man-made materials on Earth. Between 1950 and 2017 an estimated 8,300 million tonnes [@Geyer2017] of virgin plastic was produced, with the rate of production only set to increase. It's durability is of primary concern to the marine environment, where, without intervention, plastics will remain for millenia to come, and will likely degrade and fragment into smaller pieces that will disperse across ever larger distances. These plastics interact and interfere with marine wildlife, either entangling, or being accidently ingested, with over 900 species documented so far [Kuhn2020]. To better understand and predict the effects of plastic pollution on the marine environment, it is of paramount importance that we understand where and how plastic enters our oceans, and the pathways of transport, dispersal patterns, and ultimate fate of these plastics.
 
-
-
-**Paragraph on approach to solve said problem**
 Lagrangian ocean analysis, where virtual particles are tracked in hydrodynamic flow fields, is widely used to uncover and investigate the pathways and timescales of the dispersion of plastic particulates in the ocean [@Lebreton2012, @Hardesty2017, @JalonRojas2019, @Chassignet2021, @Kaandorp2023]. However, two important questions arise when performing such Lagrangian simulations. Firstly, what physical processes drive the transport and dispersal of a plastic particle? The properties of plastic particles (e.g., size, shape, and density) determine what the dominant physical processes are at play, and due to the chaotic nature of the ocean, plastics of different properties will have unique dispersal patterns and transport behaviours. Current state-of-the-art ocean models are either too coarse in resolution to capture these processes, or disregard these processes entirely, and so parameterising these processes is important in modelling their effects. Secondly, what are the initial release locations and concentrations of marine plastic pollution? Predicting spatial maps of future plastic concentrations is, in effect, an initial value problem, relying on accurate initial conditions for a realistic simulation output.
 
 The past decade has seen a growing number of community-developed software packages for performing Lagrangian simulations [@Paris2013, @Fredj2016, @Lange2017, @Doos2017, @Dagestad2018, @JalonRojas2019, @Delandmeter2019]. In many cases, these packages are specific to particular particle classes, or hydrodynamic models, and can be inflexible or difficult to integrate into different applications. In the case of plastic dispersal simulations, where the physical processes are still under research and development [@vanSebille2020], a flexible and modular approach to performing Lagrangian simulations is necessary for rapid plastic disperal simulations, as well as for prototyping, developing, and testing new physical process parameterisations.
 
-**Who is PP designed for (maybe for summary?)**
-Here, we have developed `PlasticParcels` to unify plastic dispersion modelling into one easy-to-use (user friendly?) code. While `PlasticParcels` has been designed for researchers who perform plastic particle dispersion simulations, it is equally useful to ... (finish off paragraph).
+Here, we have developed `PlasticParcels` to unify plastic dispersion modelling into one easy-to-use (user friendly?) code. While `PlasticParcels` has been designed for researchers who perform plastic particle dispersion simulations, it is equally useful to ... (finish off paragraph....).
 
 
 
@@ -106,48 +96,98 @@ where $\mathbf{v}_{\text{Wind}}$ is the 10m wind velocity, and $c$ is the leeway
 ! Include where this kernel has been used before
 
 ### Biofouling kernel
-@Lobelle2021
+Plastic particles in the ocean can be a hotbed for the accumulation and growth of organisms, known as biofouling. The formation of a biofilm on the surface of a plastic particle can result in a density change, affecting the buoyancy of a particle. An initially buoyant particle may become negatively buoyant, and sink or settle, depending on the surrounding seawater density.
+
+We model the biofouling of a plastic particle following the approach of [@Kooi2017], where the settling velocity of a particle is computed from the relative density difference of the plastic particle and the surrounding seawater. Here, we assume the biofilm growth (and decay) is primarily microbial algae, and is distributed homogeneously over the particle. The density of the biofouled plastic particle depends on the radius and density of the plastic particle, and the thickness and density of the algal biofilm.
+
+The primary component of the biofouling kernel is the equation modelling the change in the number of attached algae (denoted by $A$) on the surface of the plastic particle. As in [@Kooi2017], we model the attached algal growth as
+
+$$
+\begin{equation}
+\frac{\text{d}A}{\text{d}t} = \underbrace{\frac{A_A \beta_A}{\theta_\text{Plastic}}}_{\text{Collisions}} + \overbrace{\mu_A A}^{\text{Algal growth}} - \underbrace{m_A A}_{\text{Mortality}} - \overbrace{Q_{10}^{(T-20)/10}R_{20}A}^{\text{Respiration}}.
+\end{equation}
+$$
+
+The first term models growth of algae due to collisions of the particle with algae in the surrounding seawater, where $A_A$ is the ambient algal amount, $\beta_A$ is the encounter kernel rate, $\theta_{\text{Plastic}}$ is the surface area of the plastic particle. The second term models the growth of the biofilm, where the growth term $\mu_A$ is computed from the total productivity provided by model output. The third and fourth terms model the (grazing) mortality and respiration of the biofilm respectively. As in [@Kooi2017], we use constant mortality $\mu_A$ and respiration $R_{20}$ rates, with a temperature dependent term $\big(Q_{10}^{(T-20)/10}\big)$ included in the respiration term (see [@Kooi2017] for more details).
+
+As described above, the modelled attached algal growth drives a change in the settling velocity of the biofouled particle, $\mathbf{v}_{\text{Biofouling}}$. Hence, we model the additional behaviour of the particle due to biofouling as
+
+$$
+\begin{equation}
+\frac{\text{d}\mathbf{B}_{\text{Biofouling}}}{\text{d}t} = \mathbf{v}_{\text{Biofouling}}.
+\end{equation}
+$$
+
+
+This kernel has been used in multiple forms in @Lobelle2021
 @Fischer2022
 @Kaandorp2023
-based on @Kooi2017
-$$\mathbf{B}_{\text{Biofouling}} = $$
-
-This kernel has been used in multiple forms in ...
 
 ### Vertical mixing kernel
-@Onink2022
-$$\mathbf{B}_{\text{Vertical Mixing}} = $$
+An important process that is unresolved in high-resolution ocean models is the wind-driven turbulent mixing, which occurs at scales far smaller than a typical model ocean grid cell. In the vertical direction, this turbulent mixing can distribute even positively buoyant plastic particles throughout the mixed layer. To model this process, we take the approach of [@Onink2022], by using a Markov-0 styled stochastic parameterisation. 
 
+Denote by $K_z = K_z(\mathbf{x}(t))$ the vertical diffusion coefficient profile based on a $K$-profile parameterisation (KPP) model [@Large1994]. Then the displacement of a particle (in the vertical direction) with a settling velocity $w$ can be modeled as an SDE [@Grawe2012] ,
+$$
+\begin{equation}
+\frac{\text{d}\mathbf{B}_{\text{Vertical Mixing}}}{\text{d}t} = \bigg(w + \frac{\partial K_z}{\partial z}\bigg)\text{d}t + \sqrt{2 K_z}\text{d}W(t),
+\end{equation}
+$$
+where $\text{d}W(t)$ is a Wiener noise increment with zero mean and a variance of $\text{d}t$. In our case, the displacement due to the settling velocity of a particle is already accounted for in the biofouling kernel, so we only model the stochastic term (and set $w=0$). To numerically solve this equation, we use the SDE-analogue of the Euler-forward scheme called the Euler-Maruyama scheme [@Maruyama1955]. 
 
 
 ### Sea-ice capture
+TODO
 
 $$\mathbf{B}_{\text{Sea-ice Capture}} = $$
 
 ### In development:
+TODO
 -beaching, fragmentation, degradation, etc.
 
 When performing a plastic dispersal simulation with `PlasticParcels`, users have the explicit option of choosing which additional behaviour to include. For example, when solving 
 
 
 
-## Description of algorithms for particle release location maps
-Datasets:
-Coastal
-@Jambeck2015
-Description of creating coastal [@Jambeck2015] + image
+## Description of algorithms for particle initialisation maps
+Included in the `PlasticParcels` package are four algorithms to create particle initialisation maps, which represent the best estimates for plastic pollution emmisions along with the current state of plastic concentrations in our oceans globally. Below we describe each of these algorithms. Each initialisation map, however, requires that particles be placed in ocean grid cells, hence we provide algorithms to generate these intilisation maps, rather than the maps themselves. These maps are land mask dependent, we include scripts to generate a land mask file, as well as a coast mask file, if the model does not provide one.
 
-Rivers
-@Meijer2021
-Description of creating rivers [@Meijer2021] + image
 
-Fisheries
-@Kroodsma2018
-Description of creating fisheries [@Kroodsma2018] + image
+### Current global ocean plastic concentrations 
+[@Kaandorp2023]
 
-Current concentrations
-@Kaandorp2023
-Description of creating current map + image
+
+
+### Coastal mismanaged plastic waste emissions
+To generate an particle initialisation map of plastic pollution that enters the ocean from coastal communities, we use a global mismanaged plastic waste dataset provided per country [@Jambeck2015]. Specifically, for each country, we use the 'Mismanaged plastic waste [kg/person/day]' data to identify the amount of plastic entering the ocean along a coastline. The algorithm is as follows:
+
+
+**Coastal emissions initialisation map algorithm**
+1. Load the coast mask file.
+2. Load the Natural Earth country boundaries shapefile at 1:50m resolution [@NaturalEarth].
+3. Load the GPW.... [@NASA].
+4. For each country in the country boundaries shapefile:
+  a. Extract the coordinates of the vertices of the country border (border vertices).
+  b. Compute the distance between each border vertex, and every coastal model grid-cell center.
+  c. Create a list of coastal model grid-cells that are within $r$ km of a border vertex.
+  d. For each identified coastal model grid-cell, identify the maximum population density from the GPW data within a specified distance $\phi$ north/south or east/west from the coastal model grid-cell center.
+  e. Create an array with the coastal model grid-cell and it's associated area, the country name, continent name, region name, and subregion name from the shapefile, and the identified population density.
+5. Append all entries generated in Step 4.a. into one array.
+6. Left join the global mismanaged plastic waste data [@Jambeck2015] to the array generated in Step 5., joining on country name$^*$.
+7. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
+
+
+$^*$We pre-process the country names in the [@Jambeck2015] data to account for small differences in the naming conventions of each country. Here, we use $r=50$ km, and $\phi$ is chosen as the model grid width in degrees. A sample plot of the initialisation map is shown in Figure X.
+
+### Riverine mismanaged plastic waste emissions
+To generate a particle initialisation map of plastic pollution that enters the ocean from river sources......
+[@Meijer2021]
+
+
+### Open-sea fishing-related plastic emissions
+[@Kroodsma2018]
+
+
+!! Include a figure with 4 subfigures of the initialisation maps
 
 ## Installation
 
