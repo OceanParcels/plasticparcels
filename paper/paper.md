@@ -52,21 +52,21 @@ In addition, due to the flexibility of the package, users may use the the functi
 
 The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
 
-$$
+
 \begin{equation}
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B},
 \end{equation}
-$$
+
 
 where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v} = (u,v,w)$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. Examples of these additional behaviours are described below.
 
 Numerically, we solve Eq (1) using a time-stepping approach, where we compute the displacements in the particle position as
 
-$$
+
 \begin{equation}
 \frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \frac{\text{d}\mathbf{B}}{\text{d}t},
 \end{equation}
-$$
+
 
 updating the particle position at each timestep. For simplicity, we use by default the fourth-order Runge-Kutta scheme of `Parcels` to solve the advection of the particle from the hydrodynamic model velocity field $\mathbf{v}$, and an Euler-forward scheme for all other additional behaviours realised by $\mathbf{B}$. Additionally, we assume all plastic particles are spherical in shape. (where should this sentence go?)
 
@@ -74,11 +74,11 @@ updating the particle position at each timestep. For simplicity, we use by defau
 ### Stokes Drift
 
 An important process that affects plastic particle dispersal in the upper ocean is the Stokes drift, whereby a particle proximal to a surface wave (subjected to a surface wave?) will experience a net displacement in the direction of wave propogation. We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016]. Specifically, we model the additional behaviour of a particle as $\mathbf{B}_{\text{Stokes}}$, where the change in the particle position is described by
-$$
+
 \begin{equation}
 \frac{\text{d}\mathbf{B}_{\text{Stokes}}}{\text{d}t} = \mathbf{v}_{\text{Stokes}}(\mathbf{x}(t), t) =\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)\bigg(e^{2k_p z} - \beta\sqrt{-2\pi k_p z}\text{ erfc}(-2k_p z) \bigg).
 \end{equation}
-$$
+
 Here, $z$ is the depth of the particle, $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$ is the surface Stokes drift velocity, $\beta=1$ (as we assume a Phillips spectrum), and erfc is the complementary error function. The peak wave number $k_p$ is computed as $k_p = \omega_{p}^2/9.81$, where $\omega_p$ is the peak wave frequency $\omega_p = 2 \pi / T_p$, using the peak wave period $T_p = T_p(\mathbf{x}_{z=0}(t),t)$.
 
 Our particular implementation of the Stokes drift kernel requires a surface Stokes velocity field $\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)$, as well as a peak wave period field $T_p(\mathbf{x}_{z=0}(t),t)$. Earlier versions of this kernel have been used in the following research articles (INCLUDE CITATIONS).
@@ -89,11 +89,11 @@ Our particular implementation of the Stokes drift kernel requires a surface Stok
 ### Wind-induced drift / Leeway
 Plastic particles at the ocean surface that are not completely submersed will experience a force from the relative wind due to a wind drag, leading to a wind-induced drift. This wind-induced drift of the particle is called leeway [@Allen1999], which can be decomposed into a downwind component (in the direction of the wind), and a crosswind component (which is typically non-zero for asymmetric objects). As we assume that each plastic particle is spherical, we can ignore the crosswind component of leeway, and only consider the the downwind component of leeway. The downwind component follows an almost linear relationship with the relative 10m wind speed [@Allen2005], so we model the leeway as
 
-$$
+
 \begin{equation}
 \frac{\text{d}\mathbf{B}_{\text{Wind}}}{\text{d}t} = c \cdot \big(\mathbf{v}_{\text{Wind}}(\mathbf{x}(t),t) - \mathbf{v}(\mathbf{x}(t),t)\big),
 \end{equation}
-$$
+
 
 where $\mathbf{v}_{\text{Wind}}$ is the 10m wind velocity, and $c$ is the leeway rate (a percentage of wind speed, which we refer to in the code as the windage coefficient). Ignoring all additional behaviour of the particle, then $\mathbf{v}_{\text{Wind}} - \mathbf{v}$ is the relative wind acting on the particle.
 
@@ -108,21 +108,21 @@ We model the biofouling of a plastic particle following the approach of [@Kooi20
 
 The primary component of the biofouling kernel is the equation modelling the change in the number of attached algae (denoted by $A$) on the surface of the plastic particle. As in [@Kooi2017], we model the attached algal growth as
 
-$$
+
 \begin{equation}
 \frac{\text{d}A}{\text{d}t} = \underbrace{\frac{A_A \beta_A}{\theta_\text{Plastic}}}_{\text{Collisions}} + \overbrace{\mu_A A}^{\text{Algal growth}} - \underbrace{m_A A}_{\text{Mortality}} - \overbrace{Q_{10}^{(T-20)/10}R_{20}A}^{\text{Respiration}}.
 \end{equation}
-$$
+
 
 The first term models growth of algae due to collisions of the particle with algae in the surrounding seawater, where $A_A$ is the ambient algal amount, $\beta_A$ is the encounter kernel rate, $\theta_{\text{Plastic}}$ is the surface area of the plastic particle. The second term models the growth of the biofilm, where the growth term $\mu_A$ is computed from the total productivity provided by model output. The third and fourth terms model the (grazing) mortality and respiration of the biofilm respectively. As in [@Kooi2017], we use constant mortality $\mu_A$ and respiration $R_{20}$ rates, with a temperature dependent term $\big(Q_{10}^{(T-20)/10}\big)$ included in the respiration term (see [@Kooi2017] for more details).
 
 As described above, the modelled attached algal growth drives a change in the settling velocity of the biofouled particle, $\mathbf{v}_{\text{Biofouling}}$. Hence, we model the additional behaviour of the particle due to biofouling as
 
-$$
+
 \begin{equation}
 \frac{\text{d}\mathbf{B}_{\text{Biofouling}}}{\text{d}t} = \mathbf{v}_{\text{Biofouling}}.
 \end{equation}
-$$
+
 
 
 This kernel has been used in multiple forms in @Lobelle2021
@@ -133,11 +133,11 @@ This kernel has been used in multiple forms in @Lobelle2021
 An important process that is unresolved in high-resolution ocean models is the wind-driven turbulent mixing, which occurs at scales far smaller than a typical model ocean grid cell. In the vertical direction, this turbulent mixing can distribute even positively buoyant plastic particles throughout the mixed layer. To model this process, we take the approach of [@Onink2022], by using a Markov-0 styled stochastic parameterisation. 
 
 Denote by $K_z = K_z(\mathbf{x}(t))$ the vertical diffusion coefficient profile based on a $K$-profile parameterisation (KPP) model [@Large1994]. Then the displacement of a particle (in the vertical direction) with a settling velocity $w$ can be modeled as an SDE [@Grawe2012] ,
-$$
+
 \begin{equation}
 \frac{\text{d}\mathbf{B}_{\text{Vertical Mixing}}}{\text{d}t} = \bigg(w + \frac{\partial K_z}{\partial z}\bigg)\text{d}t + \sqrt{2 K_z}\text{d}W(t),
 \end{equation}
-$$
+
 where $\text{d}W(t)$ is a Wiener noise increment with zero mean and a variance of $\text{d}t$. In our case, the displacement due to the settling velocity of a particle is already accounted for in the biofouling kernel, so we only model the stochastic term (and set $w=0$). To numerically solve this equation, we use the SDE-analogue of the Euler-forward scheme called the Euler-Maruyama scheme [@Maruyama1955]. 
 
 
