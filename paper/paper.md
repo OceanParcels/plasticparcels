@@ -53,7 +53,7 @@ In addition, due to the flexibility of the package, users may use the functions 
 The `Parcels` Lagrangian framework is a tool for advecting virtual particles. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
 
 \begin{equation}
-\mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B},
+\mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) \text{d}s + \mathbf{B},
 \end{equation}
 
 where $\mathbf{x}(t)$ describes the particle position at time $t$, $\mathbf{v} = (u,v,w)$ is the hydrodynamic model velocity field, and $\mathbf{B}$ describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. When performing a plastic dispersal simulation with `PlasticParcels`, users have the explicit option of choosing which additional behaviour to include. Examples of these additional behaviours are described below.
