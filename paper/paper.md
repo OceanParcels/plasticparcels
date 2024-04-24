@@ -58,7 +58,6 @@ The `PlasticParcels` github repository provides several useful tutorials. Here, 
 [Describe a release location, advection time, and show 2 plots - a) dispersal pathways b) heatmap/concentrations]
 
 # Acknowledgments
-**TODO fill this in with acknowledgements and Eriks funding source**
 We would like to thank ...
 MCD is supported by the NECCTON project, which has received funding from Horizon Europe RIA under grant agreement No 101081273. EvS was supported by the project Tracing Marine Macroplastics by Unraveling the Ocean’s Multiscale Transport Processes with project number VI.C.222.025 of the research programme Talent Programme Vici 2022 which is financed by the Dutch Research Council (NWO).
 
