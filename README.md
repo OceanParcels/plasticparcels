@@ -15,10 +15,10 @@ Below we detail the specific physics kernels implemented, as well as describe ho
     d. [Vertical Mixing](#verticalmixing)
     e. [Sea-ice Capture](#seaice)
 3. [Particle Initialisation Maps](#initialisationmaps)
-    a. [](#coastalrelease)
-    b. [](#riverrelease)
-    c. [](#fishingrelease)
-    d. [](#staterelease)
+    a. [Coastal mismanaged plastic waste emissions](#coastalrelease)
+    b. [Riverine mismanaged plastic waste emissions](#riverrelease)
+    c. [Open-sea fishing-related plastic emissions](#fishingrelease)
+    d. [Current global ocean plastic concentrations](#staterelease)
 
 
 ## Description of software
@@ -138,12 +138,7 @@ where $\text{d}W(t)$ is a Wiener noise increment with zero mean and a variance o
 Included in the `PlasticParcels` package are four algorithms to create particle initialisation maps, which represent best estimates for plastic pollution emmisions along with the current state of plastic concentrations in our oceans globally. Below we describe each of these algorithms. Each initialisation map, however, requires that particles be placed in ocean grid cells, hence we provide algorithms to generate these intialisation maps, rather than the maps themselves. These maps are land mask dependent, we include scripts to generate a land mask file, as well as a coast mask file, if the model does not provide one.
 
 
-### Current global ocean plastic concentrations 
-**TODO once implemented [@Kaandorp2023]**
-
-
-
-### Coastal mismanaged plastic waste emissions
+### Coastal mismanaged plastic waste emissions <a name="coastalrelease"></a>
 To generate a particle initialisation map of plastic pollution that enters the ocean from coastal communities, we use a global mismanaged plastic waste dataset provided per country [@Jambeck2015]. Specifically, for each country, we use the 'Mismanaged plastic waste [kg/person/day]' data to identify the amount of plastic entering the ocean along a coastline. The algorithm is as follows:
 
 
@@ -164,7 +159,7 @@ To generate a particle initialisation map of plastic pollution that enters the o
 
 $^*$We pre-process the country names in the [@Jambeck2015] data to account for small differences in the naming conventions of each country. Here, we use $r=50$ km, and $\phi$ is chosen as the model grid width in degrees. A sample plot of the initialisation map is shown in Figure X **add link**.
 
-### Riverine mismanaged plastic waste emissions
+### Riverine mismanaged plastic waste emissions <a name="riverrelease"></a>
 To generate a particle initialisation map of plastic pollution that enters the ocean from river sources, we use a global riverine input dataset [@Meijer2021]. This dataset is provided in the form of a shapefile, providing a location (latitude and longitude) and amount of plastic emissions (in units of tonnes per year). The algorithm is as follows:
 
 **Riverine emissions initialisation map algorithm**
@@ -178,7 +173,7 @@ To generate a particle initialisation map of plastic pollution that enters the o
 5. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
 
 
-### Open-sea fishing-related plastic emissions
+### Open-sea fishing-related plastic emissions <a name="fishingrelease"></a>
 To generate a particle initialisation map of plastic pollution emitted into the ocean from fishing-related activities, we use the global fishing watch dataset, first described in [@Kroodsma2018]. Assuming plastic emissions from fishing lines, trawlers, nets, (etc.?) are proportional to the amount of fishing hours in a given location, we generate a fishing-related plastic emissions initialisation map using the following algorithm:
 
 **Fishing-related emissions initialisation map algorithm**
@@ -195,5 +190,18 @@ To generate a particle initialisation map of plastic pollution emitted into the 
 
 
 
+### Current global ocean plastic concentrations <a name="staterelease"></a>
+**TODO once implemented [@Kaandorp2023]**
+
+
+
 ![Particle initialisations maps based on a) current global surface concentrations, b) coastal plastic emissions, c) river plastic emissions, d) fishing activity plastic emissions.](paper/initialisation_maps.png){width=80%}
 
+
+
+TODO:
+1. change references to DOI Links
+2. Update algorithms to be clearer
+3. Include additional kernels explanations
+4. Include release dataset explanations that are missing
+5. Include installation instructions
