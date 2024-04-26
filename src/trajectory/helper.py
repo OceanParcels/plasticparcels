@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 
 
-#import pandas as pd # Is this required?
+import pandas as pd
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
 from parcels.tools.converters import Geographic, GeographicPolar
 from datetime import datetime, timedelta
@@ -298,7 +298,7 @@ def create_particleset(fieldset, particle_settings):
             windage_coefficients = np.full(lons.shape, particle_settings['windage_coefficient'])
         else:
             windage_coefficients = particle_settings['windage_coefficient'] # Assumed to be an array of coefficients
-
+    
 
     ## Add variables to particle based on fieldset flags
     to_write_tracer = False
@@ -366,7 +366,64 @@ def create_particleset(fieldset, particle_settings):
                                     windage_coefficient=windage_coefficients
                                     )
     return pset
-        
+
+
+def create_particleset_from_file(fieldset, particle_settings):
+    """ Helper function to create a Parcels.ParicleSet
+
+    Parameters
+    ----------
+    model_settings :
+        A dictionary of model settings used to create the fieldset
+    particle_settings :
+        A dictionary of particle settings used to define some ....
+
+    Returns
+    -------
+    fieldset
+        A parcels.FieldSet object
+    """
+
+    # Load release type information
+    release_type = particle_settings['release_type']
+    if release_type == 'coastal':
+        release_file = './../../data/release/generated_files/coastal_population_MPW_NEMO0083.csv'
+        release_quantity_name = 'MPW_Cell'
+    elif release_type == 'rivers':
+        release_file = './../../data/release/generated_files/river_emissions_NEMO0083.csv'
+        release_quantity_name = 'Emissions'
+    elif release_type == 'fisheries':
+        release_file = './../../data/release/generated_files/agg_data_fisheries_info.csv'
+        release_quantity_name = 'fishing_hours'
+
+    particle_locations = pd.read_csv(release_file)
+
+
+    # Select specific continent/region/subregion/country/economic status if applicable:
+    if 'continent' in particle_settings.keys():
+        particle_locations = particle_locations[particle_locations['Continent'] == particle_settings['continent']]
+    if 'region' in particle_settings.keys():
+        particle_locations = particle_locations[particle_locations['Region'] == particle_settings['region']]
+    if 'subregion' in particle_settings.keys():
+        particle_locations = particle_locations[particle_locations['Subregion'] == particle_settings['subregion']]
+    if 'country' in particle_settings.keys():
+        particle_locations = particle_locations[particle_locations['Country'] == particle_settings['country']]
+    if 'economicstatus' in particle_settings.keys():
+        particle_locations = particle_locations[particle_locations['Economic status'] == particle_settings['economicstatus']]
+
+    particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
+    particle_locations = particle_locations[particle_locations[release_quantity_name]>0]
+
+    release_locations = {'lons': particle_locations['Longitude'],
+                        'lats':  particle_locations['Latitude']}
+
+    particle_settings['release_locations'] = release_locations
+
+
+    return create_particleset(fieldset, particle_settings)
+
+
+
 def create_kernel(fieldset, pset):
     """_summary_
 
