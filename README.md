@@ -1,5 +1,5 @@
 # PlasticParcels
-`PlasticParcels` is a python package for simulating the transport and dispersion of plastics in the ocean. The tool is based on `v3.0.2` of the `Parcels` computational Lagrangian ocean analysis framework [@Lange2017,@Delandmeter2019], providing a modular and customizable collection of methods, notebooks, and tutorials for advecting virtual plastic particles with a wide range of physical properties.
+`PlasticParcels` is a python package for simulating the transport and dispersion of plastics in the ocean. The tool is based on `v3.0.2` of the [`Parcels`](https://oceanparcels.org/) computational Lagrangian ocean analysis framework [@Lange2017](http://dx.doi.org/10.5194/gmd-10-4175-2017)[@Delandmeter2019](http://dx.doi.org/10.5194/gmd-12-3571-2019), providing a modular and customizable collection of methods, notebooks, and tutorials for advecting virtual plastic particles with a wide range of physical properties.
 
 # Table of contents
 0. [Description of Software](#description)
@@ -22,7 +22,7 @@ An open-source article describing `PlasticParcels` can be found here **link to a
 
 The current version supports nano- and microplastic behaviour, with support for macroplastics planned in the near-future. It has been designed for use with the Copernicus Marine Service platform [@CMEMS](https://marine.copernicus.eu/), providing new plastic modelling capabilities as part of the NECCTON project. `PlasticParcels` is easily adapted to run on local machines and high-performance computing (HPC) architecture with various hydrodynamic, biogeochemical, and other model fields as inputs. A future goal is to embed `PlasticParcels` within a cloud platform to allow for even more rapid prototyping, development, and simulations.
 
-Below we detail the specific physics kernels implemented, as well as describe how the particle initialisation maps are generated.
+Below we provide instructions to install `PlasticParcels`, we detail the specific physics kernels implemented in the tool, and we describe how the particle initialisation maps are generated.
 
 ## Installation
 **(Is this necessary? Or can be relegated to the github readme?)**
@@ -50,7 +50,7 @@ Ensure that you have updated `settings.txt` with the required directories and fi
 
 ## Physics kernels <a name="physicskernels"></a>
 
-The `Parcels` Lagrangian framework is a tool for advecting virtual particles that are assumed to be spherical in shape. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
+The [`Parcels`](https://oceanparcels.org/) Lagrangian framework is a tool for advecting virtual particles that are assumed to be spherical in shape. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
 
 ```math
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B}(\mathbf{x}(s),s) \text{d}s,
@@ -64,7 +64,7 @@ Numerically, we solve the above equation using a time-stepping approach, where w
 \frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \mathbf{B}(\mathbf{x}(t), t),
 ```
 
-and updating the particle position at each timestep. For simplicity, by default we use the fourth-order Runge-Kutta scheme of `Parcels` to solve the advection of the particle from the hydrodynamic model velocity field $`\mathbf{v}`$, and an Euler-forward scheme for all other additional behaviours realised in $`\mathbf{B}`$.
+and updating the particle position at each timestep. For simplicity, by default we use the fourth-order Runge-Kutta scheme of [`Parcels`](https://oceanparcels.org/) to solve the advection of the particle from the hydrodynamic model velocity field $`\mathbf{v}`$, and an Euler-forward scheme for all other additional behaviours realised in $`\mathbf{B}`$.
 
 
 ### Stokes Drift <a name="stokes"></a>
@@ -152,11 +152,11 @@ To generate a particle initialisation map of plastic pollution that enters the o
     d. For each identified coastal model grid-cell, identify the maximum population density from the GPW data within a specified distance $\phi$ (in degrees) north/south or east/west from the coastal model grid-cell center.
     e. Create an array with the coastal model grid-cell and it's associated area, the country name, continent name, region name, and subregion name from the shapefile, and the identified population density.
 5. Combine all entries generated in Step 4) a) into one array.
-6. Load the global mismanaged plastic waste data [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), and join it to the array generated in Step 5), by 'left joining' on country name$^*$. Create an additional column 'MPW_cell', mismanaged plastic waste across the grid cell by multiplying the mismanaged plastic waste per kilogram per day with the population density and the grid-cell area.
+6. Load the global mismanaged plastic waste data [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), and join it to the array generated in Step 5), by 'left joining' on country name$`^*`$. Create an additional column 'MPW_cell', mismanaged plastic waste across the grid cell by multiplying the mismanaged plastic waste per kilogram per day with the population density and the grid-cell area.
 7. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
 
 
-$^*$We pre-process the country names in the [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352) data to account for small differences in the naming conventions of each country. Here, we use $r=50$ km, and $\phi$ is chosen as the model grid width in degrees. A sample plot of the initialisation map is shown in Figure X **add link**.
+$`^*`$We pre-process the country names in the [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352) data to account for small differences in the naming conventions of each country. Here, we use $`r=50`$ km, and $`\phi`$ is chosen as the model grid width in degrees. A sample plot of the initialisation map is shown in Figure X **add link**.
 
 ### Riverine mismanaged plastic waste emissions <a name="riverrelease"></a>
 To generate a particle initialisation map of plastic pollution that enters the ocean from river sources, we use a global riverine input dataset [@Meijer2021](http://dx.doi.org/10.1126/sciadv.aaz5803). This dataset is provided in the form of a shapefile, providing a location (latitude and longitude) and amount of plastic emissions (in units of tonnes per year). The algorithm is as follows:
@@ -199,7 +199,7 @@ To generate a particle initialisation map of plastic pollution emitted into the 
 
 
 TODO:
-1. change references to DOI Links
+1. ~~change references to DOI Links~~ -- add links to non-published papers
 2. Update algorithms to be clearer
 3. Include additional kernels explanations
 4. Include release dataset explanations that are missing
