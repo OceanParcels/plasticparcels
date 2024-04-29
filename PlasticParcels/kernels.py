@@ -801,8 +801,9 @@ def checkErrorThroughSurface(particle, fieldset, time):
     """ Kernel to set the particle depth to the particle surface if it goes through the surface
     """
     if particle.state == StatusCode.ErrorThroughSurface:
-        particle_ddepth = - particle.depth # Set so that final depth = 0
-        particle.state = StatusCode.Success
+        #particle_ddepth = - particle.depth # Set so that final depth = 0
+        #particle.state = StatusCode.Success
+        particle.delete()
 
 
 def deleteParticle(particle, fieldset, time):

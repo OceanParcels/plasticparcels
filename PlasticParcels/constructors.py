@@ -499,7 +499,7 @@ def create_kernel(fieldset, pset):
 def load_default_settings():
     settings = {
                     # Model settings
-                    'mode': '2D', # Options [3D, 2D]
+                    'mode': '3D', # Options [3D, 2D]
                     'allow_time_extrapolation': False,            # Allow extrapolation of time for fieldset
                     'verbose_delete': False,                      # Print extra information when executing delete operations
                     
