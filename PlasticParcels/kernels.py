@@ -15,7 +15,7 @@ import numpy as np
 
 ## ERA 5 https://confluence.ecmwf.int/display/CKB/ERA5%3A+data+documentation
 
-def Stokes_drift(particle, fieldset, time):
+def StokesDrift(particle, fieldset, time):
     """Stokes drift kernel
     
     Description
@@ -73,7 +73,7 @@ def Stokes_drift(particle, fieldset, time):
 
 
 ### Wind related kernels ###
-def windage_drift(particle, fieldset, time):
+def WindageDrift(particle, fieldset, time):
     """Leeway windage kernel
     
     Description
@@ -93,7 +93,7 @@ def windage_drift(particle, fieldset, time):
     Parameter Requirements
     ----------
     particle :
-        - windage_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
+        - wind_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
     fieldset :
         - Wind field (U,V) at 10m height above sea surface [m s-1]
     
@@ -110,10 +110,10 @@ def windage_drift(particle, fieldset, time):
     wind_V = fieldset.Wind_V[time, particle.depth, particle.lat, particle.lon]
 
     # Apply windage to particles that have some exposed surface above the ocean surface
-    if particle.depth < 0.5*particle.particle_diameter:
+    if particle.depth < 0.5*particle.plastic_diameter:
         # Compute particle displacement
-        particle_dlon += particle.windage_coefficient * wind_U * particle.dt
-        particle_dlat += particle.windage_coefficient * wind_V * particle.dt
+        particle_dlon += particle.wind_coefficient * wind_U * particle.dt
+        particle_dlat += particle.wind_coefficient * wind_V * particle.dt
 
 
 ## Decay is hard to justify. Use on/off kernel as above, and maybe create a windage function that is depth/diameter dependent?
@@ -173,7 +173,7 @@ def windage_drift(particle, fieldset, time):
 ### Vertical diffusion related kernels ###
 
 ## TODO: Is this required? Why not just set v_s = 0 from the beginning??
-def neutral_buoyancy(particle, fieldset, time):
+def NeutralBuoyancy(particle, fieldset, time):
     """Neutral buoyancy kernel
 
     Description
@@ -199,7 +199,7 @@ def neutral_buoyancy(particle, fieldset, time):
 
 
 
-def settling_velocity(particle, fieldset, time):
+def SettlingVelocity(particle, fieldset, time):
     """Settling velocity kernel
     
     Description
@@ -219,8 +219,8 @@ def settling_velocity(particle, fieldset, time):
     Parameter Requirements
     ----------
     particle :
-        - particle_diameter
-        - particle_density
+        - diameter
+        - density
         - seawater_density Surrounding seawater density
     fieldset :
         - G - Gravity constant [m s-2]
@@ -248,8 +248,8 @@ def settling_velocity(particle, fieldset, time):
     seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
     seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000 # TODO: Check that we should convert here and not in the fieldset
-    particle_diameter = particle.particle_diameter
-    particle_density = particle.particle_density
+    particle_diameter = particle.plastic_diameter
+    particle_density = particle.plastic_density
 
     # Compute the kinematic viscosity of seawater 
     water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296)) # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
@@ -289,7 +289,7 @@ def settling_velocity(particle, fieldset, time):
 
 
 
-def biofouling(particle, fieldset, time):
+def Biofouling(particle, fieldset, time):
     """ Settling velocity due to biofouling kernel
 
     Description
@@ -332,8 +332,8 @@ def biofouling(particle, fieldset, time):
     Parameter Requirements
     ----------
     particle :
-        - Particle diameter 'particle_diameter'
-        - Particle density 'particle_density'
+        - Particle diameter 'diameter'
+        - Particle density 'density'
         - Surrounding seawater density 'seawater_density'
     fieldset : _type_
         - Gravity constant 'G' [m s-2]
@@ -378,8 +378,8 @@ def biofouling(particle, fieldset, time):
     #seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
     seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000. # TODO: Check that we should convert here and not in the fieldset
-    particle_radius = 0.5 * particle.particle_diameter
-    #particle_density = particle.particle_density
+    particle_radius = 0.5 * particle.plastic_diameter
+    #particle_density = particle.plastic_density
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
 
@@ -434,7 +434,7 @@ def biofouling(particle, fieldset, time):
     biofilm_thickness = total_radius - particle_radius  # biofilm thickness [m]
   
     # Compute diffusivities
-    total_density = (particle_volume * particle.particle_density + biofilm_volume * fieldset.biofilm_density) / total_volume  # total density [kg m-3]
+    total_density = (particle_volume * particle.plastic_density + biofilm_volume * fieldset.biofilm_density) / total_volume  # total density [kg m-3]
     plastic_diffusivity = fieldset.K * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * total_radius)  # diffusivity of plastic particle [m2 s-1]
     algae_diffusivity = fieldset.K * (temperature + 273.16) / (6. * math.pi * seawater_dynamic_viscosity * algal_cell_radius)  # diffusivity of algal cells [m2 s-1]
 
@@ -661,7 +661,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 
 
 
-def vertical_mixing(particle, fieldset, time):
+def VerticalMixing(particle, fieldset, time):
     """
     A markov-0 kernel for vertical mixing
     
