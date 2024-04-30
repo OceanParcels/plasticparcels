@@ -193,25 +193,22 @@ def create_fieldset(settings):
         fieldset.add_field(fieldset_wind.Wind_V)
 
 
-    # ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
-    # if fieldset.stokes_f or fieldset.wind_f > 0:
-    #     unbeachfiles = os.path.join(model_settings['input_data_dir_3'], '../../data/output_data/masks/land_current_NEMO0083.nc')
-    #     filenames_unbeach = {'unbeach_U': unbeachfiles, 
-    #                         'unbeach_V': unbeachfiles}
+    ## Apply unbeaching currents when Stokes/Wind can push particles into land cells
+    if fieldset.stokes_f or fieldset.wind_f > 0:
+        unbeachfiles = os.path.join(settings['unbeaching']['directory'], settings['unbeaching']['filename'])
+        filenames_unbeach = {'unbeach_U': unbeachfiles, 
+                            'unbeach_V': unbeachfiles}
 
-    #     variables_unbeach = {'unbeach_U': 'land_current_u',
-    #                         'unbeach_V': 'land_current_v'}   
+        variables_unbeach = settings['unbeaching']['variables']
 
-    #     dimensions_unbeach = {'lat': 'lat',
-    #                         'lon': 'lon'}
-        
+        dimensions_unbeach = settings['unbeaching']['dimensions']
 
-    #     fieldset_unbeach = FieldSet.from_netcdf(filenames_unbeach, variables_unbeach, dimensions_unbeach, mesh='spherical')
-    #     fieldset_unbeach.unbeach_U.units = GeographicPolar()
-    #     fieldset_unbeach.unbeach_V.units = Geographic()
+        fieldset_unbeach = FieldSet.from_netcdf(filenames_unbeach, variables_unbeach, dimensions_unbeach, mesh='spherical')
+        fieldset_unbeach.unbeach_U.units = GeographicPolar()
+        fieldset_unbeach.unbeach_V.units = Geographic()
 
-    #     fieldset.add_field(fieldset_unbeach.unbeach_U)
-    #     fieldset.add_field(fieldset_unbeach.unbeach_V)
+        fieldset.add_field(fieldset_unbeach.unbeach_U)
+        fieldset.add_field(fieldset_unbeach.unbeach_V)
     
 
     fieldset.add_constant('verbose_delete',settings['verbose_delete'])
@@ -279,8 +276,9 @@ def create_particleset_from_map(fieldset, settings):
     plastic_diameters = np.full(lons.shape, settings['release']['plastic_diameter'])
     wind_coefficients = np.full(lons.shape, settings['release']['wind_coefficient'])
 
-    # Create a PlasticParticle class
-    PlasticParticle = JITParticle.add_variables([
+     # Create a PlasticParticle class
+    PlasticParticle = JITParticle
+    variables = [
             Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
             Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
             Variable('wind_coefficient', dtype=np.float32, initial=0., to_write=False),
@@ -289,7 +287,21 @@ def create_particleset_from_map(fieldset, settings):
             Variable('absolute_salinity', dtype=np.float64, initial=np.nan, to_write=False),
             Variable('algae_amount', dtype=np.float64, initial=0., to_write=False),
             Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)
-            ])
+            ]
+    for variable in variables:
+        setattr(PlasticParticle, variable.name, variable)
+
+    # # Create a PlasticParticle class
+    # PlasticParticle = JITParticle.add_variables([
+    #         Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
+    #         Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
+    #         Variable('wind_coefficient', dtype=np.float32, initial=0., to_write=False),
+    #         Variable('settling_velocity', dtype=np.float64, initial=0., to_write=False),
+    #         Variable('seawater_density', dtype=np.float32, initial=np.nan, to_write=False),
+    #         Variable('absolute_salinity', dtype=np.float64, initial=np.nan, to_write=False),
+    #         Variable('algae_amount', dtype=np.float64, initial=0., to_write=False),
+    #         Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)
+    #           ])
 
     pset = ParticleSet.from_list(fieldset,
                                     PlasticParticle,
@@ -340,9 +352,9 @@ def create_kernel(fieldset):
     if fieldset.mixing_f:
         kernels.append(VerticalMixing)#pset.Kernel(vertical_mixing))
 
-    # ## Add the unbeaching kernel to the beginning
-    # if fieldset.stokes_f or fieldset.wind_f:
-    #     kernels.append(unbeaching)
+    ## Add the unbeaching kernel to the beginning
+    if fieldset.stokes_f or fieldset.wind_f:
+        kernels.append(unbeaching)
 
     if fieldset.mode:
         kernels.append(checkThroughBathymetry)
