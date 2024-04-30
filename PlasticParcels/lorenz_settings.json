@@ -8,10 +8,10 @@
     "wind_f": false,
     "ocean": {
         "modelname": "NEMO0083",
-        "directory": "data/input_data/MOi/",
+        "directory": "/storage/shared/oceanparcels/input_data/MOi/",
         "filename_style": "psy4v3r1/psy4v3r1-daily_",
-        "ocean_mesh": "domain_ORCA0083-N006/coordinates.nc",
-        "bathymetry_mesh": "domain_ORCA0083-N006/bathymetry_ORCA12_V3.3.nc",
+        "ocean_mesh": "domain_ORCA0083-N006/Old/coordinates.nc",
+        "bathymetry_mesh": "domain_ORCA0083-N006/Old/bathymetry_ORCA12_V3.3.nc",
         "variables": {
             "U": "vozocrtx",
             "V": "vomecrty",
@@ -51,27 +51,10 @@
                 "time": "time_counter"
             }
         },
-        "indices": {},
-        "bathymetry_variables": [
-            "bathymetry",
-            "Bathymetry"
-        ],
-        "bathymetry_dimensions": {
-            "lon": "nav_lon",
-            "lat": "nav_lat"
-        },
-        "mixing_variables": {
-            "mixing_kz": "votkeavt"
-        },
-        "mixing_dimensions": {
-            "lon": "glamf",
-            "lat": "gphif",
-            "depth": "depthw",
-            "time": "time_counter"
-        }
+        "indices": {}
     },
     "bgc": {
-        "directory": "data/input_data/MOi/",
+        "directory": "/storage/shared/oceanparcels/input_data/MOi/",
         "filename_style": "biomer4v2r1/biomer4v2r1-weekly_",
         "bgc_mesh": "domain_ORCA025-N006/mesh_hgr_PSY4V3_deg.nc",
         "variables": {
@@ -113,7 +96,7 @@
         }
     },
     "stokes": {
-        "directory": "data/input_data/ERA5/waves/",
+        "directory": "/storage/shared/oceanparcels/output_data/data_Michael/ERA5/waves/",
         "filename_style": "ERA5_global_waves_monthly_",
         "variables": {
             "Stokes_U": "ust",
@@ -127,7 +110,7 @@
         }
     },
     "wind": {
-        "directory": "data/input_data/ERA5/wind/",
+        "directory": "/storage/shared/oceanparcels/output_data/data_Michael/ERA5/wind/",
         "filename_style": "ERA5_global_wind_monthly_",
         "variables": {
             "Wind_U": "u10",
@@ -146,9 +129,9 @@
         "dt_timestep": null
     },
     "release_maps": {
-        "coastal": "data/release/generated_files/coastal_population_MPW_NEMO0083.csv",
-        "rivers": "data/release/generated_files/river_emissions_NEMO0083.csv",
-        "fisheries": "data/release/generated_files/agg_data_fisheries_info.csv",
+        "coastal": "data/output_data/coastal_population_MPW_NEMO0083.csv",
+        "rivers": "data/output_data/river_emissions_NEMO0083.csv",
+        "fisheries": "data/output_data/agg_data_fisheries_info.csv",
         "global_concentrations": null
     }
 }

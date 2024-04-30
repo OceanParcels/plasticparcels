@@ -52,8 +52,11 @@ def StokesDrift(particle, fieldset, time):
     # Sample the peak wave period
     T_p = fieldset.wave_Tp[time, particle.depth, particle.lat, particle.lon]
 
-    # Only compute displacements if the peak wave period is large enough
-    if T_p > 1E-14:
+    # Compute the local bathymetry / water depth with a margin of error
+    local_bathymetry = 0.99*fieldset.bathymetry[time, particle.depth, particle.lat, particle.lon]
+
+    # Only compute displacements if the peak wave period is large enough and the particle is in the water
+    if T_p > 1E-14 and particle.depth < local_bathymetry:
         # Peak wave frequency 
         omega_p = 2. * math.pi / T_p
         
@@ -79,8 +82,6 @@ def WindageDrift(particle, fieldset, time):
     Description
     ----------
     A simple windage kernel that applies a linear 'wind velocity' to the particle.
-    ?????TODO: the best I can find so far is eq 1 from Impact of windage on ocean surface Lagrangian coherent structures but follow the references more
-    ????? Mayber Breivik et al 2011 - Wind-induced drift of objects at sea: The leeway field method.
 
     We treat the windage drift as a linear addition to the velocity field
         u(x,t) = u_c(x,t) + C_w * u_w(x,t)
@@ -105,12 +106,17 @@ def WindageDrift(particle, fieldset, time):
         
     """
 
+    # Sample ocean velocities
+    (ocean_U, ocean_V) = fieldset.UV[particle]
+    ocean_speed = math.sqrt(ocean_U**2 + ocean_V**2)
+
     # Sample the U / V components of wind
     wind_U = fieldset.Wind_U[time, particle.depth, particle.lat, particle.lon]
     wind_V = fieldset.Wind_V[time, particle.depth, particle.lat, particle.lon]
 
     # Apply windage to particles that have some exposed surface above the ocean surface
-    if particle.depth < 0.5*particle.plastic_diameter:
+    # Use a basic approach to only apply windage to particle in the ocean
+    if particle.depth < 0.5*particle.plastic_diameter and ocean_speed > 1E-10:
         # Compute particle displacement
         particle_dlon += particle.wind_coefficient * wind_U * particle.dt
         particle_dlat += particle.wind_coefficient * wind_V * particle.dt
@@ -172,28 +178,28 @@ def WindageDrift(particle, fieldset, time):
 
 ### Vertical diffusion related kernels ###
 
-## TODO: Is this required? Why not just set v_s = 0 from the beginning??
-def NeutralBuoyancy(particle, fieldset, time):
-    """Neutral buoyancy kernel
+# ## TODO: Is this required? Why not just set v_s = 0 from the beginning??
+# def NeutralBuoyancy(particle, fieldset, time):
+#     """Neutral buoyancy kernel
 
-    Description
-    ----------
-    A kernel to treat the particle as neutrally buoyant by setting the sinking/rising velocity of a particle to 0 [m s-1]
+#     Description
+#     ----------
+#     A kernel to treat the particle as neutrally buoyant by setting the sinking/rising velocity of a particle to 0 [m s-1]
 
-    Parameter Requirements
-    ----------
-    particle :
-        sinking_velocity
+#     Parameter Requirements
+#     ----------
+#     particle :
+#         sinking_velocity
 
-    Kernel Requirements
-    ----------
-    Order of Operations:
-        Apply this kernel before any other vertical mixing kernels
-    """
+#     Kernel Requirements
+#     ----------
+#     Order of Operations:
+#         Apply this kernel before any other vertical mixing kernels
+#     """
 
 
-    # Set the particle's settling velocity to 0 [m s-1]
-    particle.settling_velocity = 0.
+#     # Set the particle's settling velocity to 0 [m s-1]
+#     particle.settling_velocity = 0.
 
 
 
@@ -495,15 +501,6 @@ def Biofouling(particle, fieldset, time):
     
     
     
-
-
-
-
-
-
-
-
-
 def PolyTEOS10_bsq(particle, fieldset, time):
     """ A seawater density kernel
 
@@ -662,8 +659,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 
 
 def VerticalMixing(particle, fieldset, time):
-    """
-    A markov-0 kernel for vertical mixing
+    """ A markov-0 kernel for vertical mixing
     
     Description:
         A simple verticle mixing kernel that uses a markov-0 process to determine the vertical displacement of a particle.

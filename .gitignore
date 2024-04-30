@@ -1,5 +1,7 @@
 data/
 fig/
+PlasticParcels/release/
+PlasticParcels/src/
 **.code-workspace*
 **.DS_store**
 **.pyc**

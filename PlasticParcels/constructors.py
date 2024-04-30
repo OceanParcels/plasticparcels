@@ -2,7 +2,6 @@ import os
 import numpy as np
 import xarray as xr
 
-
 import pandas as pd
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
 from parcels.tools.converters import Geographic, GeographicPolar
@@ -12,23 +11,9 @@ from PlasticParcels.kernels import PolyTEOS10_bsq, StokesDrift, WindageDrift, Se
 from PlasticParcels.utils import select_files, getclosest_ij
 
 
-# ## Is this a better way?
-# class PlasticParticle(JITParticle):
-#     def __init__(self):
-#         self.add_variables([
-#             Variable('plastic_diameter', dtype=np.float32, initial=np.nan),
-#             Variable('plastic_density', dtype=np.float32, initial=np.nan),
-#             Variable('windage_coefficient', dtype=np.float32, initial=0.),
-#             Variable('settling_velocity', dtype=np.float64, initial=0.),
-#             Variable('seawater_density', dtype=np.float32, initial=np.nan),
-#             Variable('absolute_salinity', dtype=np.float64, initial=np.nan),
-#             Variable('algae_amount', dtype=np.float64, initial=0.)
-#             ])
 
-
-## Ocean model fieldset
 def create_hydrodynamic_fieldset(settings):
-    """ Constructor function to create a Parcels.Fieldset for hydrodynamic data
+    """ A constructor method to create a Parcels.Fieldset from hydrodynamic model data
 
     Parameters
     ----------
@@ -90,8 +75,8 @@ def create_hydrodynamic_fieldset(settings):
     
     # Add in bathymetry
     fieldset.add_constant('z_start',0.5)        
-    bathymetry_variables = ('bathymetry', 'Bathymetry')
-    bathymetry_dimensions = {'lon': 'nav_lon', 'lat': 'nav_lat'}
+    bathymetry_variables = settings['ocean']['bathymetry_variables']
+    bathymetry_dimensions = settings['ocean']['bathymetry_dimensions']
     bathymetry_mesh = os.path.join(settings['ocean']['directory'], settings['ocean']['bathymetry_mesh'])
     bathymetry_field = Field.from_netcdf(bathymetry_mesh, bathymetry_variables, bathymetry_dimensions)
     fieldset.add_field(bathymetry_field) 
@@ -100,20 +85,18 @@ def create_hydrodynamic_fieldset(settings):
     if fieldset.mixing_f:
         dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
         kzfiles = select_files(dirread_model,'KZ_%4i*.nc',start_date,runtime,dt_margin=3)
-        filenames_mixing = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
-        variables_mixing = {'mixing_kz' : 'votkeavt'}
-        dimensions_mixing = {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}
+        mixing_filenames = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
+        mixing_variables = settings['ocean']['vertical_mixing_variables']
+        mixing_dimensions = settings['ocean']['vertical_mixing_dimensions']
 
-        mixing_fieldset = FieldSet.from_nemo(filenames_mixing,variables_mixing,dimensions_mixing)
+        mixing_fieldset = FieldSet.from_nemo(mixing_filenames,mixing_variables,mixing_dimensions)
         fieldset.add_field(mixing_fieldset.mixing_kz)    #phytoplankton primary productivity        
 
 
     return fieldset
 
-
-## Fieldset creation
 def create_fieldset(settings):
-    """ Constructor function to create a Parcels.Fieldset with all fields necessary for a PlasticParcels simulation
+    """ A constructor method to create a Parcels.Fieldset with all fields necessary for a PlasticParcels simulation
 
     Parameters
     ----------
@@ -235,130 +218,8 @@ def create_fieldset(settings):
 
     return fieldset
 
-
-
-
-
-def create_particleset(fieldset, particle_settings):
-    """ Helper function to create a Parcels.ParticleSet
-
-    Parameters
-    ----------
-    model_settings :
-        A dictionary of model settings used to create the fieldset
-    particle_settings :
-        A dictionary of particle settings used to define some ....
-
-    Returns
-    -------
-    fieldset
-        A parcels.FieldSet object
-    """    
-    release_locations = particle_settings['release_locations']
-    
-    ## Set the longitude, latitude, depth and time of the particles
-    lons = release_locations['lons']
-    lats = release_locations['lats']
-    depths = None
-    times = None
-    if 'depths' in release_locations.keys():
-        depths = release_locations['depths']
-    if 'times' in release_locations.keys():
-        times = release_locations['times']
-
-
-
-    ## Set particle densities 
-    if type(particle_settings['particle_density']) == float:
-        particle_densities = np.full(lons.shape, particle_settings['particle_density'])
-    else:
-        particle_densities = particle_settings['particle_density']
-
-    ## Set particle lengths
-    if type(particle_settings['particle_diameter']) == float:
-        particle_diameters = np.full(lons.shape, particle_settings['particle_diameter'])
-    else:
-        particle_diameters = particle_settings['particle_diameter']
-
-
-    ## Set wind coefficients of particles
-    if 'windage_coefficient' in particle_settings.keys():
-        if type(particle_settings['windage_coefficient']) == float:
-            windage_coefficients = np.full(lons.shape, particle_settings['windage_coefficient'])
-        else:
-            windage_coefficients = particle_settings['windage_coefficient'] # Assumed to be an array of coefficients
-    
-
-    ## Add variables to particle based on fieldset flags
-    to_write_tracer = False
-    to_write_dynamic = False
-    to_write_all = False
-    if 'write_output_option' not in particle_settings.keys():
-        pass
-    elif particle_settings['write_output_option'] == 'none':
-        pass
-    elif particle_settings['write_output_option'] == 'tracer':
-        to_write_tracer = True
-    elif particle_settings['write_output_option'] == 'dynamic':
-        to_write_tracer = True
-        to_write_dynamic = True
-    elif particle_settings['write_output_option'] == 'all':
-        to_write_tracer = True
-        to_write_dynamic = True
-        to_write_all = True
-    ## TODO: Write some catch for unimplemented options... raise error or something
-
-
-    ## Add variables to particle based on fieldset flags
-    variables = []
-    variables.append(Variable('particle_diameter', dtype=np.float32, to_write=to_write_all))                   # Particle Diameter (assuming spherical particle) [meters] (l_pl)
-    variables.append(Variable('particle_density', dtype=np.float32, to_write=to_write_all))                            # Particle Density [kg/m^3] (rho_pl)
-    variables.append(Variable('settling_velocity', dtype=np.float64, initial=0., to_write=to_write_dynamic))              # Particle Sinking Velocity [m/s] (v_s)
-    variables.append(Variable('seawater_density', dtype=np.float32, to_write=to_write_dynamic))
-    variables.append(Variable('absolute_salinity', dtype=np.float64, to_write=to_write_dynamic))
-    variables.append(Variable('windage_coefficient', dtype=np.float32, initial=0., to_write=to_write_all))
-    variables.append(Variable('algae_amount', dtype=np.float64, initial=0., to_write=to_write_dynamic))
-
-    # Create PlasticParticle class
-    PlasticParticle = JITParticle
-    for variable in variables:
-        setattr(PlasticParticle, variable.name, variable)
-
-
-    # Add kernel specific variables
-    # TODO
-    #if fieldset.biofouling_f:
-    #if fieldset.wind_f:
-        
-    
-
-    ## Create the particle set
-    if not fieldset.wind_f:
-        pset = ParticleSet.from_list(fieldset,
-                                    PlasticParticle,
-                                    lon=lons,
-                                    lat=lats,
-                                    time=times,
-                                    depth=depths,
-                                    particle_diameter=particle_diameters,
-                                    particle_density=particle_densities
-                                    )
-    else:
-        pset = ParticleSet.from_list(fieldset,
-                                    PlasticParticle,
-                                    lon=lons,
-                                    lat=lats,
-                                    time=times,
-                                    depth=depths,
-                                    particle_diameter=particle_diameters,
-                                    particle_density=particle_densities,
-                                    windage_coefficient=windage_coefficients
-                                    )
-    return pset
-
-
 def create_particleset_from_map(fieldset, settings):
-    """ Helper function to create a Parcels.ParicleSet from one of the available initialisation maps
+    """ A constructor method to create a Parcels.ParicleSet for a PlasticParcels simulation from one of the available initialisation maps
 
     Parameters
     ----------
@@ -381,11 +242,10 @@ def create_particleset_from_map(fieldset, settings):
         'rivers':'Emissions',
         'fisheries':'fishing_hours',
         'global_concentrations':None #Not implemented yet
-    }
+        }
     release_quantity_name = release_quantity_names[release_type]
 
     particle_locations = pd.read_csv(settings['release_maps'][release_type])
-
 
     # Select specific continent/region/subregion/country/economic status if applicable:
     if 'continent' in settings['release'].keys():
@@ -419,7 +279,7 @@ def create_particleset_from_map(fieldset, settings):
     plastic_diameters = np.full(lons.shape, settings['release']['plastic_diameter'])
     wind_coefficients = np.full(lons.shape, settings['release']['wind_coefficient'])
 
-    # Create a plasticparticle class
+    # Create a PlasticParticle class
     PlasticParticle = JITParticle.add_variables([
             Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
             Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
@@ -444,15 +304,13 @@ def create_particleset_from_map(fieldset, settings):
 
     return pset
 
-def create_kernel(fieldset, pset):
-    """_summary_
+def create_kernel(fieldset):
+    """ A constructor method to create a list of kernels for a PlasticParcels simulation
 
     Parameters
     ----------
     fieldset :
-        A parcels.FieldSet object
-    pset : _type_
-        A parcels.ParticleSet object
+        A parcels.FieldSet object containing a range of constants to turn on/off different kernel behaviours
 
     Returns
     -------
@@ -461,7 +319,7 @@ def create_kernel(fieldset, pset):
     """    
     kernels = []
 
-    kernels.append(PolyTEOS10_bsq)#pset.Kernel(PolyTEOS10_bsq)) # Set the seawater_density variable
+    kernels.append(PolyTEOS10_bsq) # To set the seawater_density variable
 
     if fieldset.mode: # 3D mode = on
         kernels.append(AdvectionRK4_3D)#pset.Kernel(AdvectionRK4_3D))
@@ -496,118 +354,16 @@ def create_kernel(fieldset, pset):
 
     return kernels
 
-def load_default_settings():
-    settings = {
-                    # Model settings
-                    'mode': '3D', # Options [3D, 2D]
-                    'allow_time_extrapolation': False,            # Allow extrapolation of time for fieldset
-                    'verbose_delete': False,                      # Print extra information when executing delete operations
-                    
-                    # Flags
-                    'mixing_f': False,                             # Turn on/off vertical turbulent mixing
-                    'biofouling_f': False,                         # Turn on/off biofouling of particles
-                    'stokes_f': False,                             # Turn on/off Stokes Drift
-                    'wind_f': False,                               # Turn on/off Windage
 
-                    # Ocean model
-                    'ocean' : {
-                        'directory': 'data/input_data/MOi/',                 # Directory of ocean model data
-                        'filename_style': 'psy4v3r1/psy4v3r1-daily_',          # Filename style of ocean model data
-                        'ocean_mesh': 'domain_ORCA0083-N006/coordinates.nc', # File location of ocean mesh
-                        'bathymetry_mesh': 'domain_ORCA0083-N006/bathymetry_ORCA12_V3.3.nc', # File location of bathymetry mesh
-                        'variables': { #Variable names in the ocean model for velocities, temperature and salinity
-                            'U': 'vozocrtx', # Variable name for the U-velocity
-                            'V': 'vomecrty', # Variable name for the V-velocity
-                            'W': 'vovecrtz', # Variable name for the W-velocity
-                            'conservative_temperature': 'votemper', # Variable name for the temperature field
-                            'absolute_salinity': 'vosaline' # Variable name for the salinity field
-                            }, 
-                        'dimensions':{ # The dimensions of the ocean model data, providing f-points for C-grid models
-                            'U': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                            'V': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                            'W': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                            'conservative_temperature': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'},
-                            'absolute_salinity': {'lon': 'glamf', 'lat': 'gphif','depth': 'depthw', 'time': 'time_counter'}
-                            },
-                        'indices': {}
-                    },
-                    
-                    # Biogeochemistry model
-                    'bgc' : {
-                        'directory': 'data/input_data/MOi/',                # Directory of biogeochemistry model
-                        'filename_style': 'biomer4v2r1/biomer4v2r1-weekly_',
-                        'bgc_mesh': 'domain_ORCA025-N006/mesh_hgr_PSY4V3_deg.nc', # File location of biogeochemistry model mesh
-
-                        'variables' : {
-                             'pp_phyto': 'nppv', # Total Primary Production of Phyto - 'Net primary prodution of biomass expressed as arbon per unit volume in sea water' [mg m-3 day-1] or [milligrams of Carbon per cubic meter per day]
-                            'bio_nanophy': 'phy', # Mole concentration of NanoPhytoplankton expressed as carbon in sea water
-                            'bio_diatom': 'phy2' # Mole concentration of Diatoms expressed as carbon in sea water
-                            },
-                        'dimensions' : {
-                            'pp_phyto': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                            'bio_nanophy': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'},
-                            'bio_diatom': {'lon': 'glamf', 'lat': 'gphif', 'depth': 'depthw', 'time': 'time_counter'}
-                            },
-
-                        'constants':{
-                            'biofilm_density': 1388.,                 # Biofilm density [g m-3]
-                            'algae_cell_volume': 2.0E-16,             # Volume of 1 algal cell [m3]
-                            'K': 1.0306E-13 / (86400. ** 2.),  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
-                            'R20': 0.1 / 86400.,         # Respiration rate, now [s-1]
-                            'Q10': 2.13,# temperature coefficient respiration [-]
-                            'Gamma': 1.728E5 / 86400.,      # Shear frequency [d-1], now [s-1]
-                            'carbon_molecular_weight': 12.,              # Atomic weight of Carbon
-                            'collision_probability': 1.,              # Collision probability [-]
-                            'algae_mortality_rate': 1.,               # TODO: Add description
-                            'algae_respiration_f': 1.,                # TODO: Add description
-                        }
-                    },
-
-                    # Waves model
-                    'stokes' : {
-                        'directory': 'data/input_data/ERA5/waves/',                  # Directory of Stokes drift model data
-                        'filename_style': 'ERA5_global_waves_monthly_',
-                        'variables' : {
-                            'Stokes_U': 'ust',
-                            'Stokes_V': 'vst',
-                            'wave_Tp': 'pp1d'
-                            },
-                        'dimensions': {
-                            'lat': 'latitude', # when not using the converted datasets, use 'longitude' otherwise use 'lon'
-                            'lon': 'longitude',
-                            'time': 'time'
-                            }
-                    },
-
-                    # Wind model
-                    'wind': {
-                        'directory': 'data/input_data/ERA5/wind/',                     # Directory of Wind model data
-                        'filename_style': 'ERA5_global_wind_monthly_',
-                        'variables' : {
-                            'Wind_U': 'u10',
-                            'Wind_V': 'v10'
-                            },
-                        'dimensions' : {
-                            'lat': 'latitude', # when not using the converted datasets, use 'longitude' otherwise use 'lon'
-                            'lon': 'longitude',
-                            'time': 'time'
-                            }
-                    },
-
-                    'simulation': {
-                        'start_date': None,
-                        'runtime': None,
-                        'dt_write': None,
-                        'dt_timestep': None
-                    },
-
-                    'release_maps': {
-                        'coastal':'data/release/generated_files/coastal_population_MPW_NEMO0083.csv',
-                        'rivers':'data/release/generated_files/river_emissions_NEMO0083.csv',
-                        'fisheries':'data/release/generated_files/agg_data_fisheries_info.csv',
-                        'global_concentrations':None #Not implemented yet
-                    }
-
-                    }
-
-    return settings
+# ## Is this a better way?
+# class PlasticParticle(JITParticle):
+#     def __init__(self):
+#         self.add_variables([
+#             Variable('plastic_diameter', dtype=np.float32, initial=np.nan),
+#             Variable('plastic_density', dtype=np.float32, initial=np.nan),
+#             Variable('windage_coefficient', dtype=np.float32, initial=0.),
+#             Variable('settling_velocity', dtype=np.float64, initial=0.),
+#             Variable('seawater_density', dtype=np.float32, initial=np.nan),
+#             Variable('absolute_salinity', dtype=np.float64, initial=np.nan),
+#             Variable('algae_amount', dtype=np.float64, initial=0.)
+#             ])

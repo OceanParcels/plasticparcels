@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 30 17:27:39 2021
-
-@author: kaandorp
-"""
 import numpy as np
 from glob import glob
 import pandas as pd
@@ -12,6 +5,7 @@ from datetime import timedelta
 import os
 import math
 import shapely as sh
+import json
 
 def getclosest_ij(lats, lons, latpt, lonpt):
     """Function to find the index of the closest point to a certain lon/lat value."""
@@ -23,7 +17,6 @@ def getclosest_ij(lats, lons, latpt, lonpt):
     
 def select_files(dirread,string_,date_current,dt_sim,i_date_s=-13,i_date_e=-3, dt_margin=8):
     # set dt_margin to e.g. 32 when dealing with monthly data, or 8 when dealing with weekly data
-    
     yr0 = date_current.year
     
     time_start = date_current - timedelta(days=dt_margin)
@@ -51,13 +44,10 @@ def select_files(dirread,string_,date_current,dt_sim,i_date_s=-13,i_date_e=-3, d
     return files_use
 
 
-# Added 2023-08-31
 def create_directory(directory):
     if not os.path.exists(directory):
         print('Creating directory %s' % directory)
         os.makedirs(directory)
-
-
 
 
 def distance(lon1, lat1, lon2, lat2):
@@ -86,14 +76,12 @@ def distance(lon1, lat1, lon2, lat2):
 
     return c*r
 
-
 def get_coords_from_polygon(shape):
     """
     Get a list of coordinate points on a Polygon
     (or MultiPolygon) shape
 
     Based on: https://stackoverflow.com/questions/58844463/how-to-get-a-list-of-every-point-inside-a-multipolygon-using-shapely
-
     """
     coords = []
 
@@ -108,3 +96,8 @@ def get_coords_from_polygon(shape):
     coords = np.concatenate(coords)
     return coords
 
+def load_settings(filename):
+    """ A function to load a settings file in json format"""
+    with open(filename, "r") as file:
+        settings = json.load(file)
+    return settings
