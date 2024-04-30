@@ -52,10 +52,9 @@
             }
         },
         "indices": {},
-        "bathymetry_variables": [
-            "bathymetry",
-            "Bathymetry"
-        ],
+        "bathymetry_variables": {
+            "bathymetry": "Bathymetry"
+        },
         "bathymetry_dimensions": {
             "lon": "nav_lon",
             "lat": "nav_lat"

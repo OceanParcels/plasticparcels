@@ -51,7 +51,23 @@
                 "time": "time_counter"
             }
         },
-        "indices": {}
+        "indices": {},
+        "bathymetry_variables": {
+            "bathymetry": "Bathymetry"
+        },
+        "bathymetry_dimensions": {
+            "lon": "nav_lon",
+            "lat": "nav_lat"
+        },
+        "mixing_variables": {
+            "mixing_kz": "votkeavt"
+        },
+        "mixing_dimensions": {
+            "lon": "glamf",
+            "lat": "gphif",
+            "depth": "depthw",
+            "time": "time_counter"
+        }
     },
     "bgc": {
         "directory": "/storage/shared/oceanparcels/input_data/MOi/",
