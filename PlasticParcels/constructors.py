@@ -50,10 +50,7 @@ def create_hydrodynamic_fieldset(settings):
     dimensions = settings['ocean']['dimensions']
     indices = settings['ocean']['indices']
 
-    if settings['mode'] == '3D':
-        mode_3D_f = True
-    else:
-        mode_3D_f = False
+    if settings['mode'] == '2D':
         indices['depth'] = range(0, 2)
 
     # Load the fieldset
@@ -61,12 +58,12 @@ def create_hydrodynamic_fieldset(settings):
                                   indices=indices, allow_time_extrapolation=settings['allow_time_extrapolation'])
 
     # Create flags for custom particle behaviour
-    fieldset.add_constant('mixing_f', settings['mixing_f'])
-    fieldset.add_constant('biofouling_f', settings['biofouling_f'])
-    fieldset.add_constant('stokes_f', settings['stokes_f'])
-    fieldset.add_constant('wind_f', settings['wind_f'])
+    fieldset.add_constant('use_mixing', settings['use_mixing'])
+    fieldset.add_constant('use_biofouling', settings['use_biofouling'])
+    fieldset.add_constant('use_stokes', settings['use_stokes'])
+    fieldset.add_constant('use_wind', settings['use_wind'])
     fieldset.add_constant('G', 9.81)  # Gravitational constant [m s-1]
-    fieldset.add_constant('mode', mode_3D_f)
+    fieldset.add_constant('mode', settings['mode'])
 
     # Add in bathymetry
     fieldset.add_constant('z_start', 0.5)
@@ -77,7 +74,7 @@ def create_hydrodynamic_fieldset(settings):
     fieldset.add_field(bathymetry_field)
 
     # If vertical mixing is turned on, add in the KPP-Profile
-    if fieldset.mixing_f:
+    if fieldset.use_mixing:
         dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
         kzfiles = select_files(dirread_model, 'KZ_%4i*.nc', start_date, runtime, dt_margin=3)
         mixing_filenames = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
@@ -111,7 +108,7 @@ def create_fieldset(settings):
     start_date = settings['simulation']['start_date']
     runtime = int(np.ceil(settings['simulation']['runtime'].total_seconds()/86400.))  # convert to days
 
-    if fieldset.biofouling_f:  # or do_permanent_fouling:
+    if fieldset.use_biofouling:
         # MOi glossary: https://www.mercator-ocean.eu/wp-content/uploads/2021/11/Glossary.pdf
         # and https://catalogue.marine.copernicus.eu/documents/PUM/CMEMS-GLO-PUM-001-028.pdf
 
@@ -145,7 +142,7 @@ def create_fieldset(settings):
         fieldset.add_field(bio_fieldset.bio_nanophy)  # nanopyhtoplankton concentration [mmol C m-3]
         fieldset.add_field(bio_fieldset.bio_diatom)  # diatom concentration [mmol C m-3]
 
-    if fieldset.stokes_f:
+    if fieldset.use_stokes:
         dirread_Stokes = os.path.join(settings['stokes']['directory'], settings['stokes']['filename_style'])
         wavesfiles = select_files(dirread_Stokes, '%4i*.nc', start_date, runtime, dt_margin=32)
 
@@ -165,7 +162,7 @@ def create_fieldset(settings):
         fieldset.add_field(fieldset_Stokes.Stokes_V)
         fieldset.add_field(fieldset_Stokes.wave_Tp)
 
-    if fieldset.wind_f:
+    if fieldset.use_wind:
         dirread_wind = os.path.join(settings['wind']['directory'], settings['wind']['filename_style'])
         windfiles = select_files(dirread_wind, '%4i*.nc', start_date, runtime, dt_margin=32)
 
@@ -184,7 +181,7 @@ def create_fieldset(settings):
         fieldset.add_field(fieldset_wind.Wind_V)
 
     # Apply unbeaching currents when Stokes/Wind can push particles into land cells
-    if fieldset.stokes_f or fieldset.wind_f > 0:
+    if fieldset.use_stokes or fieldset.use_wind > 0:
         unbeachfiles = os.path.join(settings['unbeaching']['directory'], settings['unbeaching']['filename'])
         filenames_unbeach = {'unbeach_U': unbeachfiles,
                              'unbeach_V': unbeachfiles}
@@ -311,21 +308,21 @@ def create_kernel(fieldset):
     else:
         kernels.append(AdvectionRK4)
 
-    if not fieldset.biofouling_f and fieldset.mode:
+    if not fieldset.use_biofouling and fieldset.mode:
         kernels.append(SettlingVelocity)
-    elif fieldset.biofouling_f and fieldset.mode:  # Must be in 3D to use biofouling mode
+    elif fieldset.use_biofouling and fieldset.mode:  # Must be in 3D to use biofouling mode
         kernels.append(Biofouling)
 
-    if fieldset.stokes_f:
+    if fieldset.use_stokes:
         kernels.append(StokesDrift)
-    if fieldset.wind_f:
+    if fieldset.use_wind:
         kernels.append(WindageDrift)
 
-    if fieldset.mixing_f:
+    if fieldset.use_mixing:
         kernels.append(VerticalMixing)
 
     # Add the unbeaching kernel to the beginning
-    if fieldset.stokes_f or fieldset.wind_f:
+    if fieldset.use_stokes or fieldset.use_wind:
         kernels.append(unbeaching)
 
     if fieldset.mode:
