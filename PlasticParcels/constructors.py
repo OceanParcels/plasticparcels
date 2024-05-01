@@ -210,7 +210,7 @@ def create_particleset_from_map(fieldset, settings):
     fieldset :
         A Parcels.FieldSet object
     settings :
-        A dictionary of model settings, simulation settings, and release settings and plastic type settings
+        A dictionary of model settings, simulation settings, and release settings and plastic-type settings
 
     Returns
     -------
@@ -258,9 +258,9 @@ def create_particleset_from_map(fieldset, settings):
     # 20240429 - for simplification I have removed the option to set custom times and depths, as well as different densities, diameters, and wind_coefficients, this can be done in an alternate way
     # TODO: Update this to use model grid id's instead of T-points lat/lon
     # Set particle properties
-    plastic_densities = np.full(lons.shape, settings['release']['plastic_density'])
-    plastic_diameters = np.full(lons.shape, settings['release']['plastic_diameter'])
-    wind_coefficients = np.full(lons.shape, settings['release']['wind_coefficient'])
+    plastic_densities = np.full(lons.shape, settings['plastictype']['plastic_density'])
+    plastic_diameters = np.full(lons.shape, settings['plastictype']['plastic_diameter'])
+    wind_coefficients = np.full(lons.shape, settings['plastictype']['wind_coefficient'])
 
     # Create a PlasticParticle class
     PlasticParticle = JITParticle.add_variables([
