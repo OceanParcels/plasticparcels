@@ -5,8 +5,8 @@ import pandas as pd
 from parcels import FieldSet, Field, ParticleSet, JITParticle, Variable, AdvectionRK4, AdvectionRK4_3D
 from parcels.tools.converters import Geographic, GeographicPolar
 
-from PlasticParcels.kernels import PolyTEOS10_bsq, StokesDrift, WindageDrift, SettlingVelocity, Biofouling, VerticalMixing, unbeaching, periodicBC, checkErrorThroughSurface, deleteParticle, checkThroughBathymetry
-from PlasticParcels.utils import select_files
+from plasticparcels.kernels import PolyTEOS10_bsq, StokesDrift, WindageDrift, SettlingVelocity, Biofouling, VerticalMixing, unbeaching, periodicBC, checkErrorThroughSurface, deleteParticle, checkThroughBathymetry
+from plasticparcels.utils import select_files
 
 
 def create_hydrodynamic_fieldset(settings):
@@ -87,7 +87,7 @@ def create_hydrodynamic_fieldset(settings):
 
 
 def create_fieldset(settings):
-    """ A constructor method to create a Parcels.Fieldset with all fields necessary for a PlasticParcels simulation
+    """ A constructor method to create a Parcels.Fieldset with all fields necessary for a plasticparcels simulation
 
     Parameters
     ----------
@@ -203,7 +203,7 @@ def create_fieldset(settings):
 
 
 def create_particleset_from_map(fieldset, settings):
-    """ A constructor method to create a Parcels.ParticleSet for a PlasticParcels simulation from one of the available initialisation maps
+    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
 
     Parameters
     ----------
@@ -287,7 +287,7 @@ def create_particleset_from_map(fieldset, settings):
 
 
 def create_kernel(fieldset):
-    """ A constructor method to create a list of kernels for a PlasticParcels simulation
+    """ A constructor method to create a list of kernels for a plasticparcels simulation
 
     Parameters
     ----------
