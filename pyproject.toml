@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools >= 61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PlasticParcels"
+description = "Package for simulating the transport and dispersion of plastics in the ocean."
+readme = "README.md"
+dynamic = ["version"]
+authors = [{ name = "oceanparcels.org team" }]
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Education",
+    "Intended Audience :: Education",
+]
+dependencies = [
+    "parcels >= 3.0.2, < 4",
+    "pytest",
+]
+
+[project.urls]
+homepage = "https://oceanparcels.org/"
+repository = "https://github.com/OceanParcels/PlasticParcels/"
+tracker = "https://github.com/OceanParcels/PlasticParcels/issues"
+
+[tool.setuptools]
+packages = ["plasticparcels"]
+
+[tool.setuptools_scm]
+write_to = "plasticparcels/_version_setup.py"
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+dev = [
+    "black == 24.4.0",
+    "darglint == 1.8.1",
+    "flake8 == 7.0.0",
+    "Flake8-pyproject == 1.2.3",
+    "isort == 5.13.2",
+    "pydocstyle == 6.3.0",
+    "sort-all == 1.2.0",
+]
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+
+[tool.flake8]
+extend-ignore = "E501"     # Don't check line length.
+docstring_style = "sphinx" # Use sphinx docstring style for darglint plugin.
