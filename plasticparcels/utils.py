@@ -5,6 +5,7 @@ from datetime import timedelta
 import os
 import shapely as sh
 import json
+from pathlib import Path
 from urllib.request import urlretrieve
 
 
@@ -151,13 +152,13 @@ def download_plasticparcels_dataset(dataset: str, settings, data_home=None):
 
     dataset_folder = os.path.join(data_home, dataset)
 
-    if not dataset_folder.exists():
-        dataset_folder.mkdir(parents=True)
+    if not Path(dataset_folder).exists():
+        Path(dataset_folder).mkdir(parents=True, exist_ok=True)
 
     for settings_path, filename in plasticparcels_data_files[dataset]:
-        filepath = dataset_folder / filename
+        filepath = os.path.join(dataset_folder, filename)
         settings[settings_path[0]][settings_path[1]] = filepath
-        if not filepath.exists():
+        if not os.path.exists(filepath):
             url = f"{plasticparcels_data_url}/{dataset}/{filename}"
             urlretrieve(url, str(filepath))
 
