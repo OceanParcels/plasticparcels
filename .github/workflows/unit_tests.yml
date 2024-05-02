@@ -30,4 +30,4 @@ jobs:
           environment-name: py3_parcels
       - name: Unit test
         run: |
-          run -m pytest -v -s tests
+          python -m pytest -v -s tests
