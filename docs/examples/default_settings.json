@@ -162,7 +162,7 @@
     "release_maps": {
         "coastal": "data/release/generated_files/coastal_population_MPW_NEMO0083.csv",
         "rivers": "data/release/generated_files/river_emissions_NEMO0083.csv",
-        "fisheries": "data/release/generated_files/agg_data_fisheries_info.csv",
+        "fisheries": "data/release/generated_files/agg_data_fisheries_info_NEMO0083.csv",
         "global_concentrations": null
     }
 }
