@@ -5,3 +5,5 @@ PlasticParcels/src/
 **.code-workspace*
 **.DS_store**
 **.pyc**
+**.nc
+**.zarr
