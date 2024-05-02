@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PlasticParcels"
-description = "Package for simulating the transport and dispersion of plastics in the ocean"
+description = "Package for simulating the transport and dispersion of plastics in the ocean."
 readme = "README.md"
 dynamic = ["version"]
 authors = [{ name = "oceanparcels.org team" }]
