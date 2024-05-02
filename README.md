@@ -154,7 +154,7 @@ To generate a particle initialisation map of plastic pollution that enters the o
     3. Create a list of coastal model grid-cells that are within $r$ km of a border vertex.
     4. For each identified coastal model grid-cell, identify the maximum population density from the GPW data within a specified distance $\phi$ (in degrees) north/south or east/west from the coastal model grid-cell center.
     5. Create an array with the coastal model grid-cell and its associated area, the country name, continent name, region name, and subregion name from the shapefile, and the identified population density.
-5. Combine all entries generated in Step 4.1 into one array.
+5. Combine all entries generated in Step 4.i. into one array.
 6. Load the global mismanaged plastic waste data [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), and join it to the array generated in Step 5, by 'left joining' on country name$`^*`$. Create an additional column 'MPW_cell', mismanaged plastic waste across the grid cell by multiplying the mismanaged plastic waste per kilogram per day with the population density and the grid-cell area.
 7. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
 
