@@ -13,8 +13,6 @@ plasticparcels_data_files = {
         (("release_maps", "rivers"), "river_emissions_NEMO0083.csv"),
         (("release_maps", "fisheries"), "agg_data_fisheries_info.csv"),
         (("unbeaching", "filename"), "land_current_NEMO0083.nc"),
-        # ("mask_coast_NEMO0083.nc"),  # TODO check if necessary?
-        # ("mask_land_NEMO0083.nc"),
     ],
 }
 
