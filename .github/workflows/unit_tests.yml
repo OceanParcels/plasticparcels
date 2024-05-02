@@ -1,0 +1,33 @@
+name: unit-tests
+on:
+  push:
+    branches:
+      - "master"
+      - "test-me/*"
+  pull_request:
+    branches:
+      - "*"
+  schedule:
+    - cron: "0 7 * * 1" # Run every Monday at 7:00 UTC
+
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  unit-test:
+    name: Unittesting on ubuntu with python latest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Conda and parcels
+        uses: ./.github/actions/install-plasticparcels
+        with:
+          environment-file: environment.yml
+          environment-name: py3_parcels
+      - name: Unit test
+        run: |
+          run -m pytest -v -s tests
