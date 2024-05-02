@@ -275,17 +275,17 @@ def create_particleset_from_map(fieldset, settings):
     #     Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)
     # ])
     PlasticParticle = JITParticle
-    variables= [Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
-                Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
-                Variable('wind_coefficient', dtype=np.float32, initial=0., to_write=False),
-                Variable('settling_velocity', dtype=np.float64, initial=0., to_write=False),
-                Variable('seawater_density', dtype=np.float32, initial=np.nan, to_write=False),
-                Variable('absolute_salinity', dtype=np.float64, initial=np.nan, to_write=False),
-                Variable('algae_amount', dtype=np.float64, initial=0., to_write=False),
-                Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)]
+    variables = [Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
+                 Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
+                 Variable('wind_coefficient', dtype=np.float32, initial=0., to_write=False),
+                 Variable('settling_velocity', dtype=np.float64, initial=0., to_write=False),
+                 Variable('seawater_density', dtype=np.float32, initial=np.nan, to_write=False),
+                 Variable('absolute_salinity', dtype=np.float64, initial=np.nan, to_write=False),
+                 Variable('algae_amount', dtype=np.float64, initial=0., to_write=False),
+                 Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)]
 
     for variable in variables:
-        setattr(PlasticParticle,variable.name, variable)
+        setattr(PlasticParticle, variable.name, variable)
 
     pset = ParticleSet.from_list(fieldset,
                                  PlasticParticle,
