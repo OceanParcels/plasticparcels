@@ -17,7 +17,7 @@ import os
 import glob
 import xarray as xr
 
-from utils import create_directory, load_settings
+from .utils import create_directory, load_settings
 
 
 def NEMO_select_section(extent, lon, lat, val):
