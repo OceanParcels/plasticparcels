@@ -2,10 +2,10 @@
     "mode": "3D",
     "allow_time_extrapolation": false,
     "verbose_delete": false,
-    "mixing_f": false,
-    "biofouling_f": false,
-    "stokes_f": false,
-    "wind_f": false,
+    "use_mixing": false,
+    "use_biofouling": false,
+    "use_stokes": false,
+    "use_wind": false,
     "ocean": {
         "modelname": "NEMO0083",
         "directory": "/storage/shared/oceanparcels/input_data/MOi/",
@@ -142,7 +142,6 @@
         "indices": {}
     },
     "unbeaching": {
-        "directory": "data/output_data/",
         "filename": "land_current_NEMO0083.nc",
         "variables": {
             "unbeach_U": "land_current_u",

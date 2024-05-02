@@ -182,7 +182,7 @@ def create_fieldset(settings):
 
     # Apply unbeaching currents when Stokes/Wind can push particles into land cells
     if fieldset.use_stokes or fieldset.use_wind > 0:
-        unbeachfiles = os.path.join(settings['unbeaching']['directory'], settings['unbeaching']['filename'])
+        unbeachfiles = settings['unbeaching']['filename']
         filenames_unbeach = {'unbeach_U': unbeachfiles,
                              'unbeach_V': unbeachfiles}
 
