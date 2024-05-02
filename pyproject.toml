@@ -26,6 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "parcels >= 3.0.2, < 4",
+    "pytest",
 ]
 
 [project.urls]
