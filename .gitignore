@@ -1,8 +1,4 @@
-data/
 input_data/
-fig/
-PlasticParcels/release/
-PlasticParcels/src/
 **.code-workspace*
 **.DS_store**
 **.pyc**
