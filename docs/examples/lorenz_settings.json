@@ -1,5 +1,5 @@
 {
-    "mode": "3D",
+    "use_3D": true,
     "allow_time_extrapolation": false,
     "verbose_delete": false,
     "use_mixing": false,

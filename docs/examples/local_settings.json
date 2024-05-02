@@ -1,11 +1,11 @@
 {
-    "mode": "3D",
+    "use_3D": true,
     "allow_time_extrapolation": false,
     "verbose_delete": false,
-    "mixing_f": false,
-    "biofouling_f": false,
-    "stokes_f": false,
-    "wind_f": false,
+    "use_mixing": false,
+    "use_biofouling": false,
+    "use_stokes": false,
+    "use_wind": false,
     "ocean": {
         "modelname": "NEMO0083",
         "directory": "data/input_data/MOi/",

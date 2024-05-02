@@ -50,7 +50,7 @@ def create_hydrodynamic_fieldset(settings):
     dimensions = settings['ocean']['dimensions']
     indices = settings['ocean']['indices']
 
-    if settings['mode'] == '2D':
+    if not settings['use_3D']:
         indices['depth'] = range(0, 2)
 
     # Load the fieldset
@@ -63,7 +63,7 @@ def create_hydrodynamic_fieldset(settings):
     fieldset.add_constant('use_stokes', settings['use_stokes'])
     fieldset.add_constant('use_wind', settings['use_wind'])
     fieldset.add_constant('G', 9.81)  # Gravitational constant [m s-1]
-    fieldset.add_constant('mode', settings['mode'])
+    fieldset.add_constant('use_3D', settings['use_3D'])
 
     # Add in bathymetry
     fieldset.add_constant('z_start', 0.5)
@@ -303,14 +303,14 @@ def create_kernel(fieldset):
 
     kernels.append(PolyTEOS10_bsq)  # To set the seawater_density variable  # TODO do we need this always? Or only for some kernels?
 
-    if fieldset.mode:  # 3D mode == on
+    if fieldset.use_3D:
         kernels.append(AdvectionRK4_3D)
     else:
         kernels.append(AdvectionRK4)
 
-    if not fieldset.use_biofouling and fieldset.mode:
+    if not fieldset.use_biofouling and fieldset.use_3D:
         kernels.append(SettlingVelocity)
-    elif fieldset.use_biofouling and fieldset.mode:  # Must be in 3D to use biofouling mode
+    elif fieldset.use_biofouling and fieldset.use_3D:  # Must be in 3D to use biofouling mode
         kernels.append(Biofouling)
 
     if fieldset.use_stokes:
@@ -325,7 +325,7 @@ def create_kernel(fieldset):
     if fieldset.use_stokes or fieldset.use_wind:
         kernels.append(unbeaching)
 
-    if fieldset.mode:
+    if fieldset.use_3D:
         kernels.append(checkThroughBathymetry)
         kernels.append(checkErrorThroughSurface)
 
