@@ -16,14 +16,14 @@ from scipy import spatial
 from utils import distance, get_coords_from_polygon
 
 
-## Function definitions
+# Function definitions
 def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath, gpw_filepath,
-                                           distance_threshhold = 50., grid_range = 0.083,
-                                           gpw_column_name = 'Population Density, v4.11 (2000, 2005, 2010, 2015, 2020): 2.5 arc-minutes',
-                                           gpw_raster_number = 4,
-                                           jambeck_filepath = None,
-                                           jambeck_url = 'https://www.science.org/doi/suppl/10.1126/science.1260352/suppl_file/1260352_supportingfile_suppl._excel_seq1_v1.xlsx',
-                                           jambeck_url_backup = 'http://jambeck.engr.uga.edu/wp-content/uploads/2015/01/JambeckSData.xlsx'
+                                           distance_threshhold=50., grid_range=0.083,
+                                           gpw_column_name='Population Density, v4.11 (2000, 2005, 2010, 2015, 2020): 2.5 arc-minutes',
+                                           gpw_raster_number=4,
+                                           jambeck_filepath=None,
+                                           jambeck_url='https://www.science.org/doi/suppl/10.1126/science.1260352/suppl_file/1260352_supportingfile_suppl._excel_seq1_v1.xlsx',
+                                           jambeck_url_backup='http://jambeck.engr.uga.edu/wp-content/uploads/2015/01/JambeckSData.xlsx'
                                            ):
     """
     Description
@@ -68,9 +68,9 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
 
     # Open the Natural Earth coastline vector dataset
     shpfilename = shpreader.natural_earth(resolution='50m',
-                                        category='cultural',
-                                        name='admin_0_countries')
-    
+                                          category='cultural',
+                                          name='admin_0_countries')
+
     reader = shpreader.Reader(shpfilename)
     countries = reader.records()
 
@@ -82,12 +82,11 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
     coords = xr.open_dataset(coords_filepath, decode_cf=False)
 
-    #mask_coast = data_mask_coast['mask_coast'].values
     lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
     lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
 
     # Compute the area of each grid cell
-    cell_areas = coords['e1t'][0] * coords['e2t'][0]/10e6 # in km**2
+    cell_areas = coords['e1t'][0] * coords['e2t'][0]/10e6  # in km**2
     coastal_cell_areas = cell_areas.data[np.where(data_mask_coast['mask_coast'])]
 
     # Loop through all countries from Natural Earth dataset
@@ -101,15 +100,15 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
 
         # Extract longitude and latitude of the coastal point
         country_coords = get_coords_from_polygon(country.geometry)
-        country_lons, country_lats = country_coords[:,0], country_coords[:,1]
+        country_lons, country_lats = country_coords[:, 0], country_coords[:, 1]
 
         # Loop through country points to find coastal points within distance_threshhold km
         all_coastal_indices = []
         for i in range(len(country_lons)):
             distances = distance(np.repeat(country_lons[i], len(lons_coast)), np.repeat(country_lats[i], len(lats_coast)), lons_coast, lats_coast)
-            coastal_indices = np.where(distances<=distance_threshhold)[0] # Coastal indices are those that are within the thresshold distance
+            coastal_indices = np.where(distances <= distance_threshhold)[0]  # Coastal indices are those that are within the thresshold distance
             all_coastal_indices.append(coastal_indices)
-            
+
         # Concatenate into one list and identify the unique coastal cells
         all_coastal_indices = np.unique(np.hstack(all_coastal_indices))
 
@@ -119,55 +118,52 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
             coastal_id = all_coastal_indices[i]
             coastal_point = [lons_coast[coastal_id], lats_coast[coastal_id]]
             coastal_cell_area = coastal_cell_areas[coastal_id]
-            
+
             # Compute the population density as the maximum population density around the coastal cell
-            # Because the grid is ordered longitude ascencding, latitude descending, the slice ordering is swapped for lat
-            population_density = gpw[gpw_column_name].sel(longitude = slice(coastal_point[0] - grid_range, coastal_point[0] + grid_range),
-                                                          latitude = slice(coastal_point[1] + grid_range, coastal_point[1] - grid_range),
-                                                          raster = gpw_raster_number).max()
-            
+            # Because the grid is ordered longitude ascending, latitude descending, the slice ordering is swapped for lat
+            population_density = gpw[gpw_column_name].sel(longitude=slice(coastal_point[0] - grid_range, coastal_point[0] + grid_range),
+                                                          latitude=slice(coastal_point[1] + grid_range, coastal_point[1] - grid_range),
+                                                          raster=gpw_raster_number).max()
+
             population_density = np.float32(population_density)
 
             country_coastal_density_list.append({'Continent': continent,
-                                                    'Region': region_un,
-                                                    'Subregion': subregion,
-                                                    'Country': country_name,
-                                                    'Longitude': coastal_point[0],
-                                                    'Latitude': coastal_point[1],
-                                                    'Area[km2]': coastal_cell_area,
-                                                    'PopulationDensity':population_density})
-        
+                                                 'Region': region_un,
+                                                 'Subregion': subregion,
+                                                 'Country': country_name,
+                                                 'Longitude': coastal_point[0],
+                                                 'Latitude': coastal_point[1],
+                                                 'Area[km2]': coastal_cell_area,
+                                                 'PopulationDensity': population_density})
+
         country_coastal_density_df = pd.DataFrame.from_records(country_coastal_density_list)
         coastal_density_list.append(country_coastal_density_df)
-
-        #print(country_name, "added")
 
     # Concatenate all the information into one dataframe
     coastal_density_df = pd.concat(coastal_density_list)
 
     # Open the Jambeck dataset
     if jambeck_filepath is not None:
-        MPW = pd.read_excel(jambeck_filepath,'Jambeck et al. (2014)')
+        MPW = pd.read_excel(jambeck_filepath, 'Jambeck et al. (2014)')
     else:
         try:
             socket = urlr.urlopen(jambeck_url)
         except:
-            #print('Using backup')
             socket = urlr.urlopen(jambeck_url_backup)
         spreadsheet_from_url = pd.ExcelFile(socket.read())
-        MPW = pd.read_excel(spreadsheet_from_url,'Jambeck et al. (2014)')
-    
+        MPW = pd.read_excel(spreadsheet_from_url, 'Jambeck et al. (2014)')
+
     # Perform some data cleaning steps
     # 1. Rename the columns to make it easier to work with
-    MPW = MPW.rename(columns={'Economic status1' : 'Economic status',
-                                'Mismanaged plastic waste [kg/person/day]7' : 'Mismanaged plastic waste [kg/person/day]'})
-    
+    MPW = MPW.rename(columns={'Economic status1': 'Economic status',
+                              'Mismanaged plastic waste [kg/person/day]7': 'Mismanaged plastic waste [kg/person/day]'})
+
     # 2. Set the bottom rows with black info to blank strings and only keep data with valid country names
     MPW = MPW.fillna('')
     MPW = MPW[MPW['Country'] != '']
 
     # 3. Remove all sub/superscripts and standardise the 'and' and ampersands.
-    MPW['Country'] = MPW['Country'].replace(regex='[0-9]',value='').str.replace('&', 'and')
+    MPW['Country'] = MPW['Country'].replace(regex='[0-9]', value='').str.replace('&', 'and')
 
     # 4. Manually rename some countries to match the Natural Earth Dataset
     MPW['Country'] = MPW['Country'].replace('Brunei', 'Brunei Darussalam')
@@ -189,25 +185,25 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
     MPW['Country'] = MPW['Country'].replace('USVI', 'United States Virgin Islands')
     MPW['Country'] = MPW['Country'].replace('Sao Tome and Principe', 'São Tomé and Principe')
 
-    # TODO: Sort out these countries... 
-    # Below commented out because it obviously doubles up rows when left-joining. 
-    #MPW['Country'] = MPW['Country'].replace('Northern Cyprus', 'Cyprus') # Combines the two sets
-    #MPW['Country'] = MPW['Country'].replace('Gibraltar', 'United Kingdom') # Add to UK
-    #MPW['Country'] = MPW['Country'].replace('French Guiana', 'France')
-    #MPW['Country'] = MPW['Country'].replace('Guadeloupe', 'France')
-    #MPW['Country'] = MPW['Country'].replace('Martinique', 'France')
-    #MPW['Country'] = MPW['Country'].replace('Christmas Island', 'Australia')
-    #MPW['Country'] = MPW['Country'].replace('Reunion', 'France')
-    #MPW['Country'] = MPW['Country'].replace('Netherlands Antilles', 'Netherlands')
+    # TODO: Sort out these countries...
+    # Below commented out because it obviously doubles up rows when left-joining.
+    # MPW['Country'] = MPW['Country'].replace('Northern Cyprus', 'Cyprus') # Combines the two sets
+    # MPW['Country'] = MPW['Country'].replace('Gibraltar', 'United Kingdom') # Add to UK
+    # MPW['Country'] = MPW['Country'].replace('French Guiana', 'France')
+    # MPW['Country'] = MPW['Country'].replace('Guadeloupe', 'France')
+    # MPW['Country'] = MPW['Country'].replace('Martinique', 'France')
+    # MPW['Country'] = MPW['Country'].replace('Christmas Island', 'Australia')
+    # MPW['Country'] = MPW['Country'].replace('Reunion', 'France')
+    # MPW['Country'] = MPW['Country'].replace('Netherlands Antilles', 'Netherlands')
 
     # Combine the coastal cell density data with the mismanaged plastic waste data, performing a left-join on the country column
-    coastal_density_mpw_df = pd.merge(coastal_density_df, MPW[['Country', 'Economic status', 'Mismanaged plastic waste [kg/person/day]']], on="Country", how="left") #
-    
+    coastal_density_mpw_df = pd.merge(coastal_density_df, MPW[['Country', 'Economic status', 'Mismanaged plastic waste [kg/person/day]']], on="Country", how="left")
+
     # Compute the mismanaged plastic waste in units of kg/day
     coastal_density_mpw_df['MPW_Cell'] = coastal_density_mpw_df['Area[km2]']*coastal_density_mpw_df['PopulationDensity']*coastal_density_mpw_df['Mismanaged plastic waste [kg/person/day]']
 
     return coastal_density_mpw_df
-    
+
 
 def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
     """
@@ -229,14 +225,13 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
     -------
     river_emissions_df
         A dataset containing the coastal cells associated with plastic emissions from rivers.
-    """    
+    """
     # Load Meijer Data
     data = gpd.read_file(river_filepath)
 
     lon_river = data.geometry.x
     lat_river = data.geometry.y
-    output_river = data['dots_exten'].values #in tonnes per year
-
+    output_river = data['dots_exten'].values  # in tonnes per year
 
     # Load in coast mask
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
@@ -245,8 +240,8 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
 
     # Load Natural Earth dataset for attaching country information to river source
     shpfilename = shpreader.natural_earth(resolution='50m',
-                                        category='cultural',
-                                        name='admin_0_countries')
+                                          category='cultural',
+                                          name='admin_0_countries')
     reader = shpreader.Reader(shpfilename)
     countries = reader.records()
 
@@ -258,21 +253,21 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
         country_name = country.attributes['NAME_LONG']
 
         country_coords = get_coords_from_polygon(country.geometry)
-        country_lons, country_lats = country_coords[:,0], country_coords[:,1]
+        country_lons, country_lats = country_coords[:, 0], country_coords[:, 1]
 
         country_df = pd.DataFrame({'Continent': np.repeat(continent, len(country_lons)),
-                                    'Region': np.repeat(region_un, len(country_lons)),
-                                    'Subregion': np.repeat(subregion, len(country_lons)),
-                                    'Country': np.repeat(country_name, len(country_lons)),
-                                    'Longitude': country_lons,
-                                    'Latitude': country_lats})
+                                   'Region': np.repeat(region_un, len(country_lons)),
+                                   'Subregion': np.repeat(subregion, len(country_lons)),
+                                   'Country': np.repeat(country_name, len(country_lons)),
+                                   'Longitude': country_lons,
+                                   'Latitude': country_lats})
         countries_list.append(country_df)
     coastal_df = pd.concat(countries_list)
 
     # Create river emissions dataset
     river_emissions_list = []
 
-    for i, (lon,lat,output) in enumerate(zip(lon_river,lat_river,output_river)):
+    for i, (lon, lat, output) in enumerate(zip(lon_river, lat_river, output_river)):
         # Find closest coastal cell
         distances = distance(np.repeat(lon, len(lons_coast)), np.repeat(lat, len(lats_coast)), lons_coast, lats_coast)
         closest_coast_id = np.argmin(distances)
@@ -284,15 +279,13 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
                                      coastal_df['Latitude'])
         closest_country_id = np.argmin(distances_country)
 
-
-        river_emissions_list.append({'Continent' : coastal_df['Continent'].iloc[closest_country_id],
-                                        'Region' : coastal_df['Region'].iloc[closest_country_id],
-                                        'Subregion' : coastal_df['Subregion'].iloc[closest_country_id],
-                                        'Country' : coastal_df['Country'].iloc[closest_country_id],
-                                        'Longitude' : lons_coast[closest_coast_id],
-                                        'Latitude' : lats_coast[closest_coast_id],
-                                        'Emissions' : output
-                                    })
+        river_emissions_list.append({'Continent': coastal_df['Continent'].iloc[closest_country_id],
+                                     'Region': coastal_df['Region'].iloc[closest_country_id],
+                                     'Subregion': coastal_df['Subregion'].iloc[closest_country_id],
+                                     'Country': coastal_df['Country'].iloc[closest_country_id],
+                                     'Longitude': lons_coast[closest_coast_id],
+                                     'Latitude': lats_coast[closest_coast_id],
+                                     'Emissions': output})
     river_emissions_df = pd.DataFrame.from_records(river_emissions_list)
 
     return river_emissions_df
@@ -321,9 +314,9 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
 
     """
     # Sort all the fisheries files
-    fisheries_files = sorted(glob.glob(fisheries_filepath + 'fleet*/*') )
+    fisheries_files = sorted(glob.glob(fisheries_filepath + 'fleet*/*'))
 
-    # Load Global Fishing Watch data and concatenate into one 
+    # Load Global Fishing Watch data and concatenate into one
     data_fisheries = []
     for file_ in fisheries_files:
         data_fisheries_day = pd.read_csv(file_)
@@ -342,8 +335,8 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
 
     # Load in the Natural Earth vector dataset
     shpfilename = shpreader.natural_earth(resolution='50m',
-                                        category='cultural',
-                                        name='admin_0_countries')
+                                          category='cultural',
+                                          name='admin_0_countries')
     reader = shpreader.Reader(shpfilename)
     countries = reader.records()
 
@@ -360,20 +353,19 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
             country_flag = country.attributes['SU_A3']
 
         countries_list.append({'Continent': continent,
-                                'Region': region_un,
-                                'Subregion': subregion,
-                                'Country': country_name,
-                                'flag': country_flag})
+                               'Region': region_un,
+                               'Subregion': subregion,
+                               'Country': country_name,
+                               'flag': country_flag})
     countries_df = pd.DataFrame.from_records(countries_list)
 
     # Match flag to country attributes from the Natural Earth dataset, and cleanup column names
-    agg_data_fisheries_info = pd.merge(agg_data_fisheries, countries_df, on = 'flag', how = 'left')
-    agg_data_fisheries_info = agg_data_fisheries_info.rename(columns={'cell_ll_lat' : 'Latitude',
-                                                                      'cell_ll_lon' : 'Longitude',
+    agg_data_fisheries_info = pd.merge(agg_data_fisheries, countries_df, on='flag', how='left')
+    agg_data_fisheries_info = agg_data_fisheries_info.rename(columns={'cell_ll_lat': 'Latitude',
+                                                                      'cell_ll_lon': 'Longitude',
                                                                       'flag': 'Flag',
-                                                                      'geartype' : 'Geartype',
-                                                                      'month' : "Month"})
-
+                                                                      'geartype': 'Geartype',
+                                                                      'month': "Month"})
 
     # Create a smaller dataset where the fishing hours are matched to the model grid
     model_agg_data_fisheries_info = agg_data_fisheries_info.copy(deep=True)
@@ -392,8 +384,8 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     mapped_ocean_points = ocean_points[indices]
 
     # Add these mapped points to the fisheries data as extra columns
-    model_agg_data_fisheries_info.insert(0, "ModelLongitude", mapped_ocean_points[:,0])
-    model_agg_data_fisheries_info.insert(1, "ModelLatitude", mapped_ocean_points[:,1])
+    model_agg_data_fisheries_info.insert(0, "ModelLongitude", mapped_ocean_points[:, 0])
+    model_agg_data_fisheries_info.insert(1, "ModelLatitude", mapped_ocean_points[:, 1])
 
     # Create a data set where longitude and latitude are from the model
     model_agg_data_fisheries_info = model_agg_data_fisheries_info.groupby(['ModelLongitude', 'ModelLatitude', 'Flag', 'Geartype', 'Month', 'Continent', 'Region', 'Subregion', 'Country'])['fishing_hours'].agg('sum').reset_index()
@@ -402,7 +394,6 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     return agg_data_fisheries_info, model_agg_data_fisheries_info
 
 
-#input_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/input_data/'
 output_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/generated_files/'
 mask_land_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_land_NEMO0083.nc'
 mask_coast_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_coast_NEMO0083.nc'
@@ -412,15 +403,14 @@ coords_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParce
 gpw_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/GPWv4/gpw-v4-population-density-rev11_totpop_2pt5_min_nc/gpw_v4_population_density_rev11_2pt5_min.nc'
 output_name = output_data + 'coastal_population_MPW_NEMO0083.csv'
 
-if not os.path.isfile(output_name):    
-    coastal_dataset = create_coastal_mpw_jambeck_release_map(mask_coast_filepath = mask_coast_filepath,
-                                                            coords_filepath = coords_filepath,
-                                                            gpw_filepath = gpw_filepath)
+if not os.path.isfile(output_name):
+    coastal_dataset = create_coastal_mpw_jambeck_release_map(mask_coast_filepath=mask_coast_filepath,
+                                                             coords_filepath=coords_filepath,
+                                                             gpw_filepath=gpw_filepath)
     coastal_dataset.to_csv(output_name)
     print("Coastline mismanaged plastic waste file created:", output_name)
 else:
     print("Coastline mismanaged plastic waste file already exists:", output_name)
-
 
 
 # Create rivers release data
@@ -428,8 +418,8 @@ river_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcel
 output_name = output_data + 'river_emissions_NEMO0083.csv'
 
 if not os.path.isfile(output_name):
-    river_dataset = create_rivers_meijer_release_map(mask_coast_filepath = mask_coast_filepath,
-                                                       river_filepath = river_filepath)
+    river_dataset = create_rivers_meijer_release_map(mask_coast_filepath=mask_coast_filepath,
+                                                     river_filepath=river_filepath)
     river_dataset.to_csv(output_data+'river_emissions_NEMO0083.csv')
     print("River mismanaged plastic waste file created:", output_name)
 else:
