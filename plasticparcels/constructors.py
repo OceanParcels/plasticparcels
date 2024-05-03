@@ -39,7 +39,7 @@ def create_hydrodynamic_fieldset(settings):
     wfiles = select_files(dirread_model, 'W_%4i*.nc', start_date, runtime, dt_margin=3)
     tfiles = select_files(dirread_model, 'T_%4i*.nc', start_date, runtime, dt_margin=3)
     sfiles = select_files(dirread_model, 'S_%4i*.nc', start_date, runtime, dt_margin=3)
-
+    
     filenames = {'U': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': ufiles},
                  'V': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': vfiles},
                  'W': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': wfiles},
@@ -225,7 +225,7 @@ def create_particleset_from_map(fieldset, settings):
         'coastal': 'MPW_Cell',
         'rivers': 'Emissions',
         'fisheries': 'fishing_hours',
-        'global_concentrations': None  # TODO: Not implemented yet
+        'global_concentrations': 'Concentration'
     }
     release_quantity_name = release_quantity_names[release_type]
 
@@ -242,6 +242,8 @@ def create_particleset_from_map(fieldset, settings):
         particle_locations = particle_locations[particle_locations['Country'] == settings['release']['country']]
     if 'economicstatus' in settings['release'].keys():
         particle_locations = particle_locations[particle_locations['Economic status'] == settings['release']['economicstatus']]
+    if 'concentration_type' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentrationtype']]
 
     particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
     particle_locations = particle_locations[particle_locations[release_quantity_name] > 0]
