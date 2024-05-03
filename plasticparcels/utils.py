@@ -132,6 +132,7 @@ def download_plasticparcels_dataset(dataset: str, settings, data_home=None):
             (("release_maps", "coastal"), "coastal_population_MPW_NEMO0083.csv"),
             (("release_maps", "rivers"), "river_emissions_NEMO0083.csv"),
             (("release_maps", "fisheries"), "agg_data_fisheries_info_NEMO0083.csv"),
+            (("release_maps", "global_concentrations"), "global_concentrations_NEMO0083.csv"),
             (("unbeaching", "filename"), "land_current_NEMO0083.nc"),
         ],
     }

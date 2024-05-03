@@ -4,3 +4,5 @@ input_data/
 **.pyc**
 **.nc
 **.zarr
+docs/_build/*
+docs/_downloads

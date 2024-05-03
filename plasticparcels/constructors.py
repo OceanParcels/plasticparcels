@@ -182,7 +182,7 @@ def create_fieldset(settings):
 
     # Apply unbeaching currents when Stokes/Wind can push particles into land cells
     if fieldset.use_stokes or fieldset.use_wind > 0:
-        unbeachfiles = os.path.join(settings['unbeaching']['directory'], settings['unbeaching']['filename'])
+        unbeachfiles = settings['unbeaching']['filename']
         filenames_unbeach = {'unbeach_U': unbeachfiles,
                              'unbeach_V': unbeachfiles}
 
@@ -225,7 +225,7 @@ def create_particleset_from_map(fieldset, settings):
         'coastal': 'MPW_Cell',
         'rivers': 'Emissions',
         'fisheries': 'fishing_hours',
-        'global_concentrations': None  # TODO: Not implemented yet
+        'global_concentrations': 'Concentration'
     }
     release_quantity_name = release_quantity_names[release_type]
 
@@ -242,6 +242,8 @@ def create_particleset_from_map(fieldset, settings):
         particle_locations = particle_locations[particle_locations['Country'] == settings['release']['country']]
     if 'economicstatus' in settings['release'].keys():
         particle_locations = particle_locations[particle_locations['Economic status'] == settings['release']['economicstatus']]
+    if 'concentration_type' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentration_type']]
 
     particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
     particle_locations = particle_locations[particle_locations[release_quantity_name] > 0]
