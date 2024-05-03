@@ -39,6 +39,7 @@ linkcheck_ignore = [
     r"https://www\.nodc\.noaa\.gov/",  # 2023-06-23 Site non-responsive
     r"https://mybinder\.org/",  # 2023-09-02 Site non-responsive
     r"https://ariane-code.cnrs.fr/",  # 2024-04-30 Site non-responsive
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
