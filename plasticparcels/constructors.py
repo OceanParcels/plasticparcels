@@ -243,7 +243,7 @@ def create_particleset_from_map(fieldset, settings):
     if 'economicstatus' in settings['release'].keys():
         particle_locations = particle_locations[particle_locations['Economic status'] == settings['release']['economicstatus']]
     if 'concentration_type' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentrationtype']]
+        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentration_type']]
 
     particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
     particle_locations = particle_locations[particle_locations[release_quantity_name] > 0]
