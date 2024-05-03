@@ -39,7 +39,7 @@ def create_hydrodynamic_fieldset(settings):
     wfiles = select_files(dirread_model, 'W_%4i*.nc', start_date, runtime, dt_margin=3)
     tfiles = select_files(dirread_model, 'T_%4i*.nc', start_date, runtime, dt_margin=3)
     sfiles = select_files(dirread_model, 'S_%4i*.nc', start_date, runtime, dt_margin=3)
-    
+
     filenames = {'U': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': ufiles},
                  'V': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': vfiles},
                  'W': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': wfiles},
@@ -182,7 +182,7 @@ def create_fieldset(settings):
 
     # Apply unbeaching currents when Stokes/Wind can push particles into land cells
     if fieldset.use_stokes or fieldset.use_wind > 0:
-        unbeachfiles = os.path.join(settings['unbeaching']['directory'], settings['unbeaching']['filename'])
+        unbeachfiles = settings['unbeaching']['filename']
         filenames_unbeach = {'unbeach_U': unbeachfiles,
                              'unbeach_V': unbeachfiles}
 
