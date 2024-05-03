@@ -12,6 +12,7 @@ import cartopy.io.shapereader as shpreader
 import geopandas as gpd
 import glob
 from scipy import spatial
+from scipy.interpolate import RegularGridInterpolator
 
 from utils import distance, get_coords_from_polygon
 
@@ -394,6 +395,122 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     return agg_data_fisheries_info, model_agg_data_fisheries_info
 
 
+def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_coast_filepath, coords_filepath,
+                                                      kaandorp_filepath, distance_thresshold=50.):
+    """
+    Description
+    ----------
+
+    A function to create a particle release map based on the global concentrations data produced by [@Kaandorp2023].
+    We match this data to the model coastal and ocean cells for a better coverage release.
+    We use only the 2020 data for all plastic class sizes, and for the ocean cells we only use the surface 0-5m depth.
+    """
+    
+    # Load in the data and select year 2020, all plastic sizes, and for ocean concentrations take the surface layer
+    ds = xr.open_dataset(kaandorp_filepath)
+    beach = ds['concentration_beach_mass_log10'].sel({'size_nominal':'all', 'time':2020})
+    ocean = ds['concentration_mass_log10'].sel({'size_nominal':'all', 'time':2020, 'depth':'0 - <5'})
+
+    # Load in coast mask and model coordinates
+    data_mask_coast = xr.open_dataset(mask_coast_filepath)
+    coords = xr.open_dataset(coords_filepath, decode_cf=False)
+
+    lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
+    lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
+
+    # Tackle the beach concentrations first:
+    # Create a list of lons, lats, concentration values
+    lon_beach = beach.lon_beach.values
+    lat_beach = beach.lat_beach.values
+    conc_beach = np.power(10,beach.values) # beach.values are in log10 form
+
+    # Load Natural Earth dataset for attaching country information to beach source
+    shpfilename = shpreader.natural_earth(resolution='50m',
+                                            category='cultural',
+                                            name='admin_0_countries')
+    reader = shpreader.Reader(shpfilename)
+    countries = reader.records()
+
+    countries_list = []
+    for country in countries:
+        continent = country.attributes['CONTINENT']
+        region_un = country.attributes['REGION_UN']
+        subregion = country.attributes['SUBREGION']
+        country_name = country.attributes['NAME_LONG']
+
+        country_coords = get_coords_from_polygon(country.geometry)
+        country_lons, country_lats = country_coords[:, 0], country_coords[:, 1]
+
+        country_df = pd.DataFrame({'Continent': np.repeat(continent, len(country_lons)),
+                                    'Region': np.repeat(region_un, len(country_lons)),
+                                    'Subregion': np.repeat(subregion, len(country_lons)),
+                                    'Country': np.repeat(country_name, len(country_lons)),
+                                    'Longitude': country_lons,
+                                    'Latitude': country_lats})
+        countries_list.append(country_df)
+    coastal_df = pd.concat(countries_list)
+
+    # Create coastal concentrations dataset
+    coast_concentration_list = []
+    distance_threshhold=50.
+
+    for i, (lon, lat) in enumerate(zip(lons_coast,lats_coast)):
+        # Find the closest beach concentration
+        distances = distance(np.repeat(lon, len(lon_beach)), np.repeat(lat, len(lat_beach)), lon_beach, lat_beach)
+        closest_beach_id = np.argmin(distances)
+        if distances[closest_beach_id] > distance_threshhold: # skip coastal grid cells not within a threshhold from a littered beach
+            continue
+        else:
+            # Find the closest country point to the coastal cell to assign country information
+            distances_country = distance(np.repeat(lon, len(coastal_df['Longitude'])),
+                                            np.repeat(lat, len(coastal_df['Latitude'])),
+                                            coastal_df['Longitude'],
+                                            coastal_df['Latitude'])
+            closest_country_id = np.argmin(distances_country)
+
+            coast_concentration_list.append({'Continent': coastal_df['Continent'].iloc[closest_country_id],
+                                            'Region': coastal_df['Region'].iloc[closest_country_id],
+                                            'Subregion': coastal_df['Subregion'].iloc[closest_country_id],
+                                            'Country': coastal_df['Country'].iloc[closest_country_id],
+                                            'Longitude': lon,
+                                            'Latitude': lat,
+                                            'Concentration': conc_beach[closest_beach_id],
+                                            'ConcentrationType': 'Beach'})
+
+    coast_concentration_df = pd.DataFrame.from_records(coast_concentration_list)
+
+    # Now tackle the surface ocean concentrations:
+    conc_ocean = np.power(10,ocean.values) # Values are in log10 space
+
+    data_mask_land = xr.open_dataset(mask_land_filepath)
+    lats_ocean = data_mask_land['lat'].data[np.where(~data_mask_land['mask_land'])]
+    lons_ocean = data_mask_land['lon'].data[np.where(~data_mask_land['mask_land'])]
+
+    # Function to interpolate the ocean concentrations
+    f_interp_conc_ocean = RegularGridInterpolator((ocean.lon, ocean.lat), conc_ocean.T, method='nearest', bounds_error=False, fill_value=None)  
+
+    # Interpolate the ocean concentrations to the model grid cells
+    interp_conc_ocean = f_interp_conc_ocean((lons_ocean, lats_ocean))
+
+    # Create ocean concentration dataset where values are non-NaN
+    non_nan_id = ~np.isnan(interp_conc_ocean)
+    ocean_concentration_list = []
+    for i in np.where(non_nan_id)[0]:
+        ocean_concentration_list.append({'Continent': 'N/A',
+                                            'Region': 'N/A',
+                                            'Subregion': 'N/A',
+                                            'Country': 'N/A',
+                                            'Longitude': lons_ocean[i],
+                                            'Latitude': lats_ocean[i],
+                                            'Concentration': interp_conc_ocean[i],
+                                            'ConcentrationType': 'Ocean'})
+    ocean_concentration_df = pd.DataFrame.from_records(ocean_concentration_list)
+
+    # Combine the two beach and ocean datasets
+    concentration_df = pd.concat([ocean_concentration_df, coast_concentration_df])
+
+    return concentration_df
+
 output_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/generated_files/'
 mask_land_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_land_NEMO0083.nc'
 mask_coast_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_coast_NEMO0083.nc'
@@ -420,7 +537,7 @@ output_name = output_data + 'river_emissions_NEMO0083.csv'
 if not os.path.isfile(output_name):
     river_dataset = create_rivers_meijer_release_map(mask_coast_filepath=mask_coast_filepath,
                                                      river_filepath=river_filepath)
-    river_dataset.to_csv(output_data+'river_emissions_NEMO0083.csv')
+    river_dataset.to_csv(output_name)
     print("River mismanaged plastic waste file created:", output_name)
 else:
     print("River mismanaged plastic waste file already exists:", output_name)
@@ -438,3 +555,14 @@ if not os.path.isfile(output_name) and not os.path.isfile(output_on_model_name):
     print("Fishing related plastic waste file created:", output_name, 'and', output_on_model_name)
 else:
     print("Fishing related plastic waste file already exists:", output_name)
+
+# Create current concentrations release data
+kaandorp_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/Kaandorp2023/AtlantECO-MAPS_Global_plastic_mass_budget_Kaandorp_etal_2023.nc'
+output_name = output_data+'global_concentrations_NEMO0083.csv'
+
+if not os.path.isfile(output_name):
+    concentration_dataset = create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_coast_filepath, coords_filepath, kaandorp_filepath, distance_thresshold=50.)
+    concentration_dataset.to_csv(output_name)
+    print("Concentration map file created:", output_name)
+else:
+    print("Concentration map file already exists:", output_name)
