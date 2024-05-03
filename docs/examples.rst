@@ -10,3 +10,4 @@ PlasticParcels has a few example notebooks, see below.
    :name: running-simulations
 
    examples/example_Italy_coast.ipynb
+   examples/example_Greece_coast.ipynb
