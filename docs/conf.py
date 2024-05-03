@@ -24,7 +24,21 @@ extensions = []
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+linkcheck_ignore = [
+    r'http://localhost:\d+/',
+    r"http://www2\.cesm\.ucar\.edu/models/cesm1\.0/pop2/doc/sci/POPRefManual.pdf",  # Site doesn't allow crawling
+    r"https://pubs\.acs\.org/doi/10\.1021/acs\.est\.0c01984",  # Site doesn't allow crawling
+    r"https://aip\.scitation\.org/doi/10\.1063/1\.4982720",  # Site doesn't allow crawling
+    r"https://www\.sciencedirect\.com/.*",  # Site doesn't allow crawling
+    r"https://lxml\.de/",  # Crawler occasionally fails to establish connection
+    r"https://linux\.die\.net/",  # Site doesn't allow crawling
+    r"https://agupubs\.onlinelibrary\.wiley\.com/",  # Site doesn't allow crawling
 
+    # To monitor
+    r"http://marine.copernicus.eu/",  # 2023-06-07 Site non-responsive
+    r"https://www\.nodc\.noaa\.gov/",  # 2023-06-23 Site non-responsive
+    r"https://mybinder\.org/",  # 2023-09-02 Site non-responsive
+    r"https://ariane-code.cnrs.fr/",  # 2024-04-30 Site non-responsive
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
