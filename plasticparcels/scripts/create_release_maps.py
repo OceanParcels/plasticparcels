@@ -405,15 +405,14 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     We match this data to the model coastal and ocean cells for a better coverage release.
     We use only the 2020 data for all plastic class sizes, and for the ocean cells we only use the surface 0-5m depth.
     """
-    
+
     # Load in the data and select year 2020, all plastic sizes, and for ocean concentrations take the surface layer
     ds = xr.open_dataset(kaandorp_filepath)
-    beach = ds['concentration_beach_mass_log10'].sel({'size_nominal':'all', 'time':2020})
-    ocean = ds['concentration_mass_log10'].sel({'size_nominal':'all', 'time':2020, 'depth':'0 - <5'})
+    beach = ds['concentration_beach_mass_log10'].sel({'size_nominal': 'all', 'time': 2020})
+    ocean = ds['concentration_mass_log10'].sel({'size_nominal': 'all', 'time': 2020, 'depth': '0 - <5'})
 
     # Load in coast mask and model coordinates
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
-    coords = xr.open_dataset(coords_filepath, decode_cf=False)
 
     lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
     lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
@@ -422,12 +421,12 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     # Create a list of lons, lats, concentration values
     lon_beach = beach.lon_beach.values
     lat_beach = beach.lat_beach.values
-    conc_beach = np.power(10,beach.values) # beach.values are in log10 form
+    conc_beach = np.power(10, beach.values)  # beach.values are in log10 form
 
     # Load Natural Earth dataset for attaching country information to beach source
     shpfilename = shpreader.natural_earth(resolution='50m',
-                                            category='cultural',
-                                            name='admin_0_countries')
+                                          category='cultural',
+                                          name='admin_0_countries')
     reader = shpreader.Reader(shpfilename)
     countries = reader.records()
 
@@ -442,52 +441,52 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
         country_lons, country_lats = country_coords[:, 0], country_coords[:, 1]
 
         country_df = pd.DataFrame({'Continent': np.repeat(continent, len(country_lons)),
-                                    'Region': np.repeat(region_un, len(country_lons)),
-                                    'Subregion': np.repeat(subregion, len(country_lons)),
-                                    'Country': np.repeat(country_name, len(country_lons)),
-                                    'Longitude': country_lons,
-                                    'Latitude': country_lats})
+                                   'Region': np.repeat(region_un, len(country_lons)),
+                                   'Subregion': np.repeat(subregion, len(country_lons)),
+                                   'Country': np.repeat(country_name, len(country_lons)),
+                                   'Longitude': country_lons,
+                                   'Latitude': country_lats})
         countries_list.append(country_df)
     coastal_df = pd.concat(countries_list)
 
     # Create coastal concentrations dataset
     coast_concentration_list = []
-    distance_threshhold=50.
+    distance_threshhold = 50.
 
-    for i, (lon, lat) in enumerate(zip(lons_coast,lats_coast)):
+    for i, (lon, lat) in enumerate(zip(lons_coast, lats_coast)):
         # Find the closest beach concentration
         distances = distance(np.repeat(lon, len(lon_beach)), np.repeat(lat, len(lat_beach)), lon_beach, lat_beach)
         closest_beach_id = np.argmin(distances)
-        if distances[closest_beach_id] > distance_threshhold: # skip coastal grid cells not within a threshhold from a littered beach
+        if distances[closest_beach_id] > distance_threshhold:  # skip coastal grid cells not within a threshhold from a littered beach
             continue
         else:
             # Find the closest country point to the coastal cell to assign country information
             distances_country = distance(np.repeat(lon, len(coastal_df['Longitude'])),
-                                            np.repeat(lat, len(coastal_df['Latitude'])),
-                                            coastal_df['Longitude'],
-                                            coastal_df['Latitude'])
+                                         np.repeat(lat, len(coastal_df['Latitude'])),
+                                         coastal_df['Longitude'],
+                                         coastal_df['Latitude'])
             closest_country_id = np.argmin(distances_country)
 
             coast_concentration_list.append({'Continent': coastal_df['Continent'].iloc[closest_country_id],
-                                            'Region': coastal_df['Region'].iloc[closest_country_id],
-                                            'Subregion': coastal_df['Subregion'].iloc[closest_country_id],
-                                            'Country': coastal_df['Country'].iloc[closest_country_id],
-                                            'Longitude': lon,
-                                            'Latitude': lat,
-                                            'Concentration': conc_beach[closest_beach_id],
-                                            'ConcentrationType': 'Beach'})
+                                             'Region': coastal_df['Region'].iloc[closest_country_id],
+                                             'Subregion': coastal_df['Subregion'].iloc[closest_country_id],
+                                             'Country': coastal_df['Country'].iloc[closest_country_id],
+                                             'Longitude': lon,
+                                             'Latitude': lat,
+                                             'Concentration': conc_beach[closest_beach_id],
+                                             'ConcentrationType': 'Beach'})
 
     coast_concentration_df = pd.DataFrame.from_records(coast_concentration_list)
 
     # Now tackle the surface ocean concentrations:
-    conc_ocean = np.power(10,ocean.values) # Values are in log10 space
+    conc_ocean = np.power(10, ocean.values)  # Values are in log10 space
 
     data_mask_land = xr.open_dataset(mask_land_filepath)
     lats_ocean = data_mask_land['lat'].data[np.where(~data_mask_land['mask_land'])]
     lons_ocean = data_mask_land['lon'].data[np.where(~data_mask_land['mask_land'])]
 
     # Function to interpolate the ocean concentrations
-    f_interp_conc_ocean = RegularGridInterpolator((ocean.lon, ocean.lat), conc_ocean.T, method='nearest', bounds_error=False, fill_value=None)  
+    f_interp_conc_ocean = RegularGridInterpolator((ocean.lon, ocean.lat), conc_ocean.T, method='nearest', bounds_error=False, fill_value=None)
 
     # Interpolate the ocean concentrations to the model grid cells
     interp_conc_ocean = f_interp_conc_ocean((lons_ocean, lats_ocean))
@@ -497,19 +496,20 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     ocean_concentration_list = []
     for i in np.where(non_nan_id)[0]:
         ocean_concentration_list.append({'Continent': 'N/A',
-                                            'Region': 'N/A',
-                                            'Subregion': 'N/A',
-                                            'Country': 'N/A',
-                                            'Longitude': lons_ocean[i],
-                                            'Latitude': lats_ocean[i],
-                                            'Concentration': interp_conc_ocean[i],
-                                            'ConcentrationType': 'Ocean'})
+                                         'Region': 'N/A',
+                                         'Subregion': 'N/A',
+                                         'Country': 'N/A',
+                                         'Longitude': lons_ocean[i],
+                                         'Latitude': lats_ocean[i],
+                                         'Concentration': interp_conc_ocean[i],
+                                         'ConcentrationType': 'Ocean'})
     ocean_concentration_df = pd.DataFrame.from_records(ocean_concentration_list)
 
     # Combine the two beach and ocean datasets
     concentration_df = pd.concat([ocean_concentration_df, coast_concentration_df])
 
     return concentration_df
+
 
 output_data = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/release/generated_files/'
 mask_land_filepath = '/Users/denes001/Research/Projects/PlasticParcels/PlasticParcels/data/output_data/masks/mask_land_NEMO0083.nc'
