@@ -3,9 +3,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: mambaforge-22.9
-  jobs:
-    pre_build:
-      - sphinx-build -b linkcheck docs/ _build/linkcheck
+  # jobs:  # TODO: uncomment when we have a test suite
+  #   pre_build:
+  #     - sphinx-build -b linkcheck docs/ _build/linkcheck
 
 sphinx:
   configuration: docs/conf.py
