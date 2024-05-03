@@ -14,7 +14,7 @@ Numerically, we solve the above equation using a time-stepping approach, where w
 \frac{\text{d}\mathbf{x}(t)}{\text{d}t} = \mathbf{v}(\mathbf{x}(t), t) + \mathbf{B}(\mathbf{x}(t), t),
 ```
 
-and updating the particle position at each timestep. For simplicity, by default we use the fourth-order Runge-Kutta scheme of [`Parcels`](https://oceanparcels.org/) to solve the advection of the particle from the hydrodynamic model velocity field {math}`\mathbf{v}`, and an Euler-forward scheme for all other additional behaviours realised in {math}`\mathbf{B}`.
+and updating the particle position at each timestep. For simplicity, by default we use the fourth-order Runge-Kutta scheme of [`parcels`](https://oceanparcels.org/) to solve the advection of the particle from the hydrodynamic model velocity field {math}`\mathbf{v}`, and an Euler-forward scheme for all other additional behaviours realised in {math}`\mathbf{B}`.
 
 
 ### Stokes Drift
@@ -31,7 +31,7 @@ Our particular implementation of the Stokes drift kernel requires a surface Stok
 
 
 ### Wind-induced drift / Leeway <a name="winddrift"></a>
-Plastic particles at the ocean surface that are not completely submersed will experience a force from the relative wind due to a wind drag, leading to a wind-induced drift. This wind-induced drift of the particle is called leeway [@Allen1999] <mark>[link to citation needed]</mark>, which can be decomposed into a downwind component (in the direction of the wind), and a crosswind component (which is typically non-zero for asymmetric objects). As we assume that each plastic particle is spherical, we can ignore the crosswind component of leeway, and only consider the downwind component of leeway. The downwind component follows an almost linear relationship with the relative 10m wind speed [@Allen2005] <mark>[link to citation needed]</mark>, so we model the leeway as
+Plastic particles at the ocean surface that are not completely submersed will experience a force from the relative wind due to a wind drag, leading to a wind-induced drift. This wind-induced drift of the particle is called leeway [@Allen1999](https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/ADA366414.xhtml), which can be decomposed into a downwind component (in the direction of the wind), and a crosswind component (which is typically non-zero for asymmetric objects). As we assume that each plastic particle is spherical, we can ignore the crosswind component of leeway, and only consider the downwind component of leeway. The downwind component follows an almost linear relationship with the relative 10m wind speed [@Allen2005](https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/ADA435435.xhtml), so we model the leeway as
 
 
 ```{math}
@@ -40,8 +40,6 @@ Plastic particles at the ocean surface that are not completely submersed will ex
 
 
 where {math}`\mathbf{v}_{\text{Wind}}` is the wind velocity 10m above sea level, and {math}`c` is the leeway rate (a percentage of wind speed, which we refer to in the code as the windage coefficient). Ignoring all additional behaviour of the particle, then {math}`\mathbf{v}_{\text{Wind}} - \mathbf{v}` is the relative wind acting on the particle.
-
-**! Include where this kernel has been used before + references to literature on what percentages to use**
 
 A version of this kernel has been used in @[Manral2024](https://open-research-europe.ec.europa.eu/articles/4-41).
 
@@ -64,7 +62,7 @@ As described above, the modelled attached algal growth drives a change in the se
 \mathbf{B}_{\text{Biofouling}} := \mathbf{v}_{\text{Biofouling}}.
 ```
 
-**(Include where this has been used)** This kernel has been used in various forms in [@Lobelle2021](http://dx.doi.org/10.1029/2020JC017098), [@Fischer2022](http://dx.doi.org/10.5194/bg-19-2211-2022), and [@Kaandorp2023](http://dx.doi.org/10.1038/s41561-023-01216-0).
+This kernel has been used in various forms in [@Lobelle2021](http://dx.doi.org/10.1029/2020JC017098), [@Fischer2022](http://dx.doi.org/10.5194/bg-19-2211-2022), and [@Kaandorp2023](http://dx.doi.org/10.1038/s41561-023-01216-0).
 
 ### Vertical mixing kernel <a name="verticalmixing"></a>
 An important process that is unresolved in even high-resolution ocean models is wind-driven turbulent mixing, which occurs at scales far smaller than a typical model ocean grid cell. In the vertical direction, this turbulent mixing can distribute even positively buoyant plastic particles throughout the mixed layer. To model this process, we take the approach of [@Onink2022](http://dx.doi.org/10.5194/gmd-15-1995-2022), by employing a Markov-0 styled stochastic parameterisation.
@@ -77,9 +75,8 @@ Denote by {math}`K_z = K_z(\mathbf{x}(t))` the vertical diffusion coefficient pr
 
 where {math}`\text{d}W(t)` is a Wiener noise increment with zero mean and a variance of {math}`\text{d}t`. In our case, the displacement due to the settling velocity of a particle is already accounted for in the biofouling kernel, hence we only model the stochastic term (by setting {math}`w=0`). To numerically solve this equation, we use the stochastic generalisation of the Euler-forward scheme, called the Euler-Maruyama scheme [@Maruyama1955](http://dx.doi.org/10.1007/BF02846028).
 
+A version of this kernel has been used in [@Onink2022](http://dx.doi.org/10.5194/gmd-15-1995-2022)
+
 
 ### Sea-ice capture <a name="seaice"></a>
-**TODO once implemented**
-
-### In development:
-**TODO -beaching, fragmentation, degradation, etc.???**
+A sea-ice capture kernel is currently under development and will be released soon.
