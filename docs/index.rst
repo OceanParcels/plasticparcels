@@ -17,4 +17,6 @@ Welcome to the documentation of PlasticParcels.
 
    Home <self>
    Examples <examples>
+   Physics kernels <physicskernels>
+   Plastic initialisation maps <initialisationmaps>
    OceanParcels website <https://oceanparcels.org/>

@@ -60,6 +60,8 @@ extensions = [
     "numpydoc",
 ]
 
+myst_enable_extensions = ["dollarmath", "amsmath"]
+
 # based on pandas doc/source/conf.py
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to Python object."""
