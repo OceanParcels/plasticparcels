@@ -50,7 +50,7 @@ html_static_path = ['_static']
 html_theme_options = {
     "logo": {
         "image_light": "plasticparcelslogo.png",
-        "image_dark": "plasticparcelslogo-inverted.png",  # TODO create this
+        "image_dark": "plasticparcelslogo_inverted.png",
     },
     # "use_edit_page_button": True,
     "github_url": "https://github.com/OceanParcels/plasticparcels",
