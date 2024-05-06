@@ -12,7 +12,7 @@ import os
 import sys
 import warnings
 
-project = 'PlasticParcels'
+project = 'plasticparcels'
 copyright = f'{datetime.datetime.now().year}, The OceanParcels Team'
 author = 'The OceanParcels Team'
 

@@ -6,7 +6,7 @@ The [`parcels`](https://oceanparcels.org/) Lagrangian framework is a tool for ad
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B}(\mathbf{x}(s),s) \text{d}s,
 ```
 
-where {math}`\mathbf{x}(t)` describes the particle position at time {math}`t`, {math}`\mathbf{v} = (u,v,w)` is the hydrodynamic model velocity field, and {math}`\mathbf{B}(\mathbf{x}(t),t)` describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. When performing a plastic dispersal simulation with `PlasticParcels`, users have the explicit option of choosing which additional behaviour to include. Examples of these additional behaviours are described below.
+where {math}`\mathbf{x}(t)` describes the particle position at time {math}`t`, {math}`\mathbf{v} = (u,v,w)` is the hydrodynamic model velocity field, and {math}`\mathbf{B}(\mathbf{x}(t),t)` describes any displacements to the particle position caused by additional behaviour the particle exhibits or experiences. When performing a plastic dispersal simulation with `plasticparcels`, users have the explicit option of choosing which additional behaviour to include. Examples of these additional behaviours are described below.
 
 Numerically, we solve the above equation using a time-stepping approach, where we compute the displacements in the particle position as
 
