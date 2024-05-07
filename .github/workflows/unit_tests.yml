@@ -25,8 +25,10 @@ jobs:
           environment-name: py3_parcels
       - name: Unit test
         run: |
-          python -m pytest -v -s tests
+          coverage run -m pytest -v -s tests
+          coverage xml
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
+          flags: unit-tests
           token: ${{ secrets.CODECOV_TOKEN }}
