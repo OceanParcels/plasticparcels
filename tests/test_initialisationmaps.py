@@ -2,6 +2,7 @@ import plasticparcels as pp
 import parcels
 import pytest
 
+
 def make_simple_fieldset():
     fieldset = parcels.FieldSet.from_data({'U': 0, 'V': 0}, {'lon': 0, 'lat': 0}, mesh='spherical')
     return fieldset
@@ -19,10 +20,12 @@ def test_maptypes(maptype):
         'country': 'Italy',
     }
 
-    settings['plastictype'] = {  # TODO these should be defaults?
-        'wind_coefficient' : 0.01, # Percentage of wind to apply to particles
-        'plastic_diameter' : 0.001, # Plastic particle diameter (m)
-        'plastic_density' : 1030., # Plastic particle density (kg/m^3)
+    settings['plastictype'] = {   # TODO these should be defaults?
+        'wind_coefficient': 0.01,  # Percentage of wind to apply to particles
+        'plastic_diameter': 0.001,  # Plastic particle diameter (m)
+        'plastic_density': 1030.,  # Plastic particle density (kg/m^3)
     }
 
     pset = pp.constructors.create_particleset_from_map(fieldset, settings)
+
+    assert len(pset) > 0
