@@ -390,7 +390,8 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
 
     # Create a data set where longitude and latitude are from the model
     model_agg_data_fisheries_info = model_agg_data_fisheries_info.groupby(['ModelLongitude', 'ModelLatitude', 'Flag', 'Geartype', 'Month', 'Continent', 'Region', 'Subregion', 'Country'])['fishing_hours'].agg('sum').reset_index()
-
+    model_agg_data_fisheries_info = model_agg_data_fisheries_info.rename(columns={'ModelLatitude': 'Latitude', 'ModelLongitude': 'Longitude'})
+    
     # Return both raw and model datasets
     return agg_data_fisheries_info, model_agg_data_fisheries_info
 
