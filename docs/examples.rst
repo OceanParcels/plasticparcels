@@ -11,3 +11,4 @@ PlasticParcels has a few example notebooks, see below.
 
    examples/example_Italy_coast.ipynb
    examples/example_Greece_coast.ipynb
+   examples/example_initialisation_maps.ipynb
