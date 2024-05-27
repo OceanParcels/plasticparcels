@@ -36,7 +36,9 @@ Required Data
 
 For the wind and wave data, we recommend using the `CDS API <https://cds.climate.copernicus.eu/api-how-to>`_.
 
-However, just like the ``parcels`` framework, ``plasticparcels`` can be adapted to use other hydrodynamic, biogeochemical, wave, and atmospheric models. If you require assistance, please contact us through the Discussions page on github https://github.com/OceanParcels/plasticparcels/discussions
+To run the examples, you will need to update the data directories in settings ``.json`` files.
+
+Just like the ``parcels`` framework, ``plasticparcels`` can be adapted to use other hydrodynamic, biogeochemical, wave, and atmospheric models. If you require assistance, please contact us through the Discussions page on github https://github.com/OceanParcels/plasticparcels/discussions
 
 .. toctree::
    :maxdepth: 2
