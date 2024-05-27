@@ -8,8 +8,8 @@
     "use_wind": false,
     "ocean": {
         "modelname": "NEMO0083",
-        "directory": "test/test_data/",
-        "filename_style": "psy4v3r1/psy4v3r1-daily_",
+        "directory": "tests/test_data/",
+        "filename_style": "test_",
         "ocean_mesh": "PSY4V3R1_mesh_hgr.nc",
         "bathymetry_mesh": "PSY4V3R1_mesh_zgr.nc",
         "variables": {
@@ -70,7 +70,7 @@
         }
     },
     "bgc": {
-        "directory": "test/test_data/",
+        "directory": "tests/test_data/",
         "filename_style": "biomer4v2r1-weekly_",
         "bgc_mesh": "mesh_hgr_PSY4V3_deg.nc",
         "variables": {
@@ -113,7 +113,7 @@
         }
     },
     "stokes": {
-        "directory": "test/test_data/",
+        "directory": "tests/test_data/",
         "filename_style": "ERA5_global_waves_monthly_",
         "variables": {
             "Stokes_U": "ust",
@@ -128,7 +128,7 @@
         "indices": {}
     },
     "wind": {
-        "directory": "test/test_data/",
+        "directory": "tests/test_data/",
         "filename_style": "ERA5_global_wind_monthly_",
         "variables": {
             "Wind_U": "u10",
