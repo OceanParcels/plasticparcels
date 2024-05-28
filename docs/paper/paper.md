@@ -50,9 +50,56 @@ In addition, due to the flexibility of the package, users may use the functions 
 
 
 # Usage Example
-The `plasticparcels` github repository provides several useful tutorials. Here, we briefly demonstrate how `plasticparcels` can be used for a microplastic dispersal simulation in the Mediterranean Sea. The tutorial can be found on the `plasticparcels` github repository, ...
+Here, we briefly demonstrate how `plasticparcels` can be used for a microplastic dispersal simulation in the Mediterranean Sea. The tutorial can be found on the [`plasticparcels` documentation](\url{https://plastic.oceanparcels.org/en/latest/examples/example_Italy_coast.html}). Here, we use the coastal mismanaged plastic waste dataset [@Jambeck2015] to visualise the trajectories of buoyant (surface-bound) microplastic particles subject to the effects of Stokes drift and wind-induced drift, neglecting any vertical motion (along with any biofouling, or vertical mixing).
 
-[Describe a release location, advection time, and show 2 plots - a) dispersal pathways b) heatmap/concentrations]
+We start by importing `plasticparcels`, loading pre-defined settings that include information about the models and parameter settings for our simulation, and defining the start date, runtime, simulation timestep and output timestep.
+
+```python
+import plasticparcels as pp
+settings_file = 'docs/examples/example_Italy_coast_settings.json'
+settings = pp.utils.load_settings(settings_file)
+
+settings['simulation'] = {
+    'start_date': datetime.strptime('2019-01-01-00:00:00', '%Y-%m-%d-%H:%M:%S'), # Start date of simulation
+    'runtime': timedelta(days=30),              # Runtime of simulation
+    'dt_write': timedelta(hours=12),            # Timestep of output
+    'dt_timestep': timedelta(minutes=20),       # Timestep of advection
+    }
+```
+
+After turning on/off certain behaviour kernels, we define our plastic particle type, and particle release settings.
+
+```python
+settings['plastictype'] = {
+    'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
+    'plastic_diameter' : 0.001, # Plastic particle diameter (m)
+    'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
+}
+
+settings['release'] = {
+    'initialisation_type': 'coastal',
+    'country': 'Italy',
+}
+```
+
+We then create the `FieldSet`, `ParticleSet` and `Kernel` list objects, and run our simulation.
+
+```python
+fieldset = pp.constructors.create_fieldset(settings)
+pset = pp.constructors.create_particleset_from_map(fieldset, settings)
+kernels = pp.constructors.create_kernel(fieldset)
+
+runtime = settings['simulation']['runtime']
+dt_timestep = settings['simulation']['dt_timestep']
+dt_write = settings['simulation']['dt_write']
+
+pfile = pp.ParticleFile('example_Italy_coast.zarr', pset, settings=settings, outputdt=dt_write)
+pset.execute(kernels, runtime=runtime, dt=dt_timestep, output_file=pfile)
+```
+
+A trajectory plot of the simulated plastic particles is shown in Fig. \ref{fig:example} a), and a concentration plot is shown in Fig. \ref{fig:example} b).
+
+![The results of a simple simulation to identify the pathways of coastal mismanaged plastic waste [@Jambeck2015] along Italian coastlines. a) Trajectories of simulated plastic particles, b) The number of particles that enter a $0.1^\circ \times 0.1^\circ$ grid cell over the duration of the simulation.\label{fig:example}](example.png){width=80%}
 
 # Acknowledgments
 We would like to thank the OceanParcels team at Utrecht University for their helpful suggestions developing the tool. MCD was supported by the NECCTON project, which has received funding from Horizon Europe RIA under grant agreement No 101081273. EvS was supported by the project Tracing Marine Macroplastics by Unraveling the Ocean’s Multiscale Transport Processes with project number VI.C.222.025 of the research programme Talent Programme Vici 2022 which is financed by the Dutch Research Council (NWO).
