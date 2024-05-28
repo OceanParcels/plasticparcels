@@ -220,6 +220,14 @@ def create_particleset_from_map(fieldset, settings):
 
     # Load release type information
     release_type = settings['release']['initialisation_type']  # TODO: MAKE THIS PART BETTER!
+    
+    ### DEALING WITH GRID vs POINT
+    if 'release_style' in settings['release'].keys():
+        release_style = settings['release']['release_style']
+    else:
+        release_style = 'point'
+
+    ### - can we use the fieldset.U.grid? And do the rotations ourself? we have the xi and yi for the grid
 
     release_quantity_names = {
         'coastal': 'MPW_Cell',
