@@ -98,12 +98,12 @@ pfile = pp.ParticleFile(
   'example_Italy_coast.zarr',
   pset,
   settings=settings,
-  outputdt=settings['simulation']['dt_write']
+  outputdt=settings['simulation']['outputdt']
 )
 pset.execute(
   kernels,
   runtime=settings['simulation']['runtime'],
-  dt=settings['simulation']['dt_timestep'],
+  dt=settings['simulation']['dt'],
   output_file=pfile
 )
 ```
