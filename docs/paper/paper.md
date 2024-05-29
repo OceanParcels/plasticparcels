@@ -1,5 +1,5 @@
 ---
-title:  'plasticparcels: A python package for marine plastic dispersal simulations using Parcels'
+title:  'plasticparcels: A python package for marine plastic dispersal simulations and parameterisation development using parcels'
 tags:
   - Plastic dispersal simulations
   - Lagrangian oceanography
@@ -15,7 +15,7 @@ authors:
 affiliations:
   - name: Institute for Marine and Atmospheric Research, Utrecht University, the Netherlands
     index: 1
-date: 24 April 2024
+date: 29 May 2024
 bibliography: paper.bib
 link-bibliography: false
 ---
