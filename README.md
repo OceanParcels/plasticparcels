@@ -19,4 +19,4 @@ For more information and documentation, see the [PlasticParcels documentation](h
 [![unit-tests](https://github.com/OceanParcels/plasticparcels/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/OceanParcels/plasticparcels/actions/workflows/unit_tests.yml)
 [![Anaconda-release](https://anaconda.org/conda-forge/plasticparcels/badges/version.svg)](https://anaconda.org/conda-forge/plasticparcels/)
 [![Anaconda-date](https://anaconda.org/conda-forge/plasticparcels/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/plasticparcels/)
-[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.823561.svg)](https://doi.org/10.5281/zenodo.823561)
+[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.11388383.svg)](https://doi.org/10.5281/zenodo.11388383)
