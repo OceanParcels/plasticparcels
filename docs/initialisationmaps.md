@@ -1,5 +1,5 @@
 # Description of algorithms for particle initialisation maps
-Included in the `PlasticParcels` package are four particle initialisation maps, along with the algorithms to create them. These maps represent best estimates for plastic pollution emissions along coastlines [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), from river sources [@Meijer2021](http://dx.doi.org/10.1126/sciadv.aaz5803), in the open-ocean from fishing-related activities [@Kroodsma2018](http://dx.doi.org/10.1126/science.aao5646), as well as a current best estimate of buoyant plastic concentrations globally [@Kaandorp2023](http://dx.doi.org/10.1038/s41561-023-01216-0).
+Included in the `plasticparcels` package are four particle initialisation maps, along with the algorithms to create them. These maps represent best estimates for plastic pollution emissions along coastlines [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), from river sources [@Meijer2021](http://dx.doi.org/10.1126/sciadv.aaz5803), in the open-ocean from fishing-related activities [@Kroodsma2018](http://dx.doi.org/10.1126/science.aao5646), as well as a current best estimate of buoyant plastic concentrations globally [@Kaandorp2023](http://dx.doi.org/10.1038/s41561-023-01216-0).
 Each initialisation map, however, requires that particles be placed in ocean grid cells, so we also provide algorithms to generate these ocean masks too.
 
 The code for these algorithims can be found in `plasticparcels/scripts/create_release_maps.py`. Below we describe each of the algorithms.
@@ -20,7 +20,7 @@ To generate a particle initialisation map of plastic pollution that enters the o
     4. Create an array with the coastal model grid-cell and its associated area, the country name, continent name, region name, and subregion name from the shapefile, and the identified population density.
 5. Combine all entries generated in Step 4.4. into one array.
 6. Load the global mismanaged plastic waste data [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352), and join it to the array generated in Step 5, by 'left joining' on country name$^*$. Create an additional column 'MPW_cell', which represents the mismanaged plastic waste across the grid cell, by multiplying the mismanaged plastic waste per kilogram per day with the population density and the grid-cell area.
-7. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
+7. Save the data into a `.csv` file, to be read and processed by `plasticparcels`.
 
 
 $^*$We pre-process the country names in the [@Jambeck2015](http://dx.doi.org/10.1126/science.1260352) data to account for small differences in the naming conventions of each country. We use $`r=50`$ km, and $`\phi`$ is chosen as the model grid width in degrees. A sample plot of the initialisation map is shown in Figure X **add link**.
@@ -36,7 +36,7 @@ To generate a particle initialisation map of plastic pollution that enters the o
     1. Compute the distance from the emission source to the center of every coastal grid cell, and identify the closest coastal grid cell.
     2. Compute the distance from the emission source to every country border point, and identify the closest country border point.
     3. Create an array with the coastal model grid-cell, the country name, continent name, region name, and subregion name of the closest border point from the Natural Earth shapefile, and the associated emissions amount.
-5. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
+5. Save the data into a `.csv` file, to be read and processed by `plasticparcels`.
 
 
 ## Open-sea fishing-related plastic emissions <a name="fishingrelease"></a>
@@ -51,7 +51,7 @@ To generate a particle initialisation map of plastic pollution emitted into the 
 6. Load (or generate) the coast mask file from the selected ocean model.
 7. Find the closest ocean grid cell for each entry in the aggregated dataset from Step 5. using a KD-Tree approach.
 8. Aggregate the data by summing the fishing hours over the following columns: country name, continent name, flag, gear type, date (month and year), ocean grid cell.
-9. Save the data into a `.csv` file, to be read and processed by `PlasticParcels`.
+9. Save the data into a `.csv` file, to be read and processed by `plasticparcels`.
 
 $^*$We use the `fleet-daily-csvs-100-v2-2020` files, which are for the year 2020 only.
 
@@ -70,4 +70,4 @@ To generate a particle initialisation map of the current best-estimate of global
 8. Interpolate the `concentration_mass_log10` to the ocean-grid cells, using  an `RegularGridInterpolator` function from `scipy.interpolate`, with the grid and data being `(lon, lat)` and `concentration_mass_log10` from the `concentration_mass_log10` dataset.
 9. For all valid concentrations identified in Step 8., identify the closest country boundary vertex from the Natural Earth shapefile.
 10. Create an array with the ocean model cell, the interpolated plastic concentration amount (converting it into a mass insteaf of a `log10` mass), and the continent name, region name, subregion name, country name, and country flag from the Natural Earth shapefile.
-11. Combine the arrays generated in Steps 6. and 10., and save the data as a `.csv` file, to be read and processed `PlasticParcels`.
+11. Combine the arrays generated in Steps 6. and 10., and save the data as a `.csv` file, to be read and processed `plasticparcels`.
