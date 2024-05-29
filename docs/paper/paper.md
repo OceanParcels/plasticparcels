@@ -60,16 +60,21 @@ settings_file = 'docs/examples/example_Italy_coast_settings.json'
 settings = pp.utils.load_settings(settings_file)
 
 settings['simulation'] = {
-    'start_date': datetime.strptime('2019-01-01-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-    'runtime': timedelta(days=30),              # Runtime of simulation
-    'dt_write': timedelta(hours=12),            # Timestep of output
-    'dt_timestep': timedelta(minutes=20),       # Timestep of advection
+    'startdate': datetime.strptime('2019-01-01-00:00:00', '%Y-%m-%d-%H:%M:%S'),
+    'runtime': timedelta(days=30),        # Runtime of simulation
+    'outputdt': timedelta(hours=12),      # Timestep of output
+    'dt': timedelta(minutes=20),          # Timestep of advection
     }
 ```
 
 After turning on/off certain behaviour kernels, we define our plastic particle type, and particle release settings.
 
 ```python
+settings['use_3D'] = False          # Turn off 3D advection
+settings['use_biofouling'] = False  # Turn off biofouling
+settings['use_stokes'] = True       # Turn on Stokes drift
+settings['use_wind'] = True         # Turn on wind-induced drift
+
 settings['plastictype'] = {
     'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
     'plastic_diameter' : 0.001, # Plastic particle diameter (m)
