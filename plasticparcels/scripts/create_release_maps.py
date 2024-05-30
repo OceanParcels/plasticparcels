@@ -18,6 +18,7 @@ from utils import distance, get_coords_from_polygon
 
 
 # Function definitions
+# Function definitions
 def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath, gpw_filepath,
                                            distance_threshhold=50., grid_range=0.083,
                                            gpw_column_name='Population Density, v4.11 (2000, 2005, 2010, 2015, 2020): 2.5 arc-minutes',
@@ -83,12 +84,16 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
     coords = xr.open_dataset(coords_filepath, decode_cf=False)
 
-    lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
-    lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
+    # Indices of all coastal grid cells
+    coast_grid_id = np.asarray(np.where(data_mask_coast['mask_coast']))
+
+    # Longitudes and latitudes of coastal grid cells
+    lats_coast = data_mask_coast['lat'].data[coast_grid_id[0],coast_grid_id[1]]
+    lons_coast = data_mask_coast['lon'].data[coast_grid_id[0],coast_grid_id[1]]
 
     # Compute the area of each grid cell
     cell_areas = coords['e1t'][0] * coords['e2t'][0]/10e6  # in km**2
-    coastal_cell_areas = cell_areas.data[np.where(data_mask_coast['mask_coast'])]
+    coastal_cell_areas = cell_areas.data[coast_grid_id[0],coast_grid_id[1]]
 
     # Loop through all countries from Natural Earth dataset
     coastal_density_list = []
@@ -119,6 +124,7 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
             coastal_id = all_coastal_indices[i]
             coastal_point = [lons_coast[coastal_id], lats_coast[coastal_id]]
             coastal_cell_area = coastal_cell_areas[coastal_id]
+            coastal_grid_cell_id = coast_grid_id[:, coastal_id]
 
             # Compute the population density as the maximum population density around the coastal cell
             # Because the grid is ordered longitude ascending, latitude descending, the slice ordering is swapped for lat
@@ -134,6 +140,7 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
                                                  'Country': country_name,
                                                  'Longitude': coastal_point[0],
                                                  'Latitude': coastal_point[1],
+                                                 'GridCellID': coastal_grid_cell_id,
                                                  'Area[km2]': coastal_cell_area,
                                                  'PopulationDensity': population_density})
 
@@ -236,8 +243,13 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
 
     # Load in coast mask
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
-    lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
-    lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
+    
+    # Indices of all coastal grid cells
+    coast_grid_id = np.asarray(np.where(data_mask_coast['mask_coast']))
+
+    # Longitudes and latitudes of coastal grid cells
+    lats_coast = data_mask_coast['lat'].data[coast_grid_id[0],coast_grid_id[1]]
+    lons_coast = data_mask_coast['lon'].data[coast_grid_id[0],coast_grid_id[1]]
 
     # Load Natural Earth dataset for attaching country information to river source
     shpfilename = shpreader.natural_earth(resolution='50m',
@@ -286,6 +298,7 @@ def create_rivers_meijer_release_map(mask_coast_filepath, river_filepath):
                                      'Country': coastal_df['Country'].iloc[closest_country_id],
                                      'Longitude': lons_coast[closest_coast_id],
                                      'Latitude': lats_coast[closest_coast_id],
+                                     'GridCellID': coast_grid_id[:, closest_coast_id],
                                      'Emissions': output})
     river_emissions_df = pd.DataFrame.from_records(river_emissions_list)
 
@@ -372,8 +385,12 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     model_agg_data_fisheries_info = agg_data_fisheries_info.copy(deep=True)
     data_mask_land = xr.open_dataset(mask_land_filepath)
 
-    lats_ocean = data_mask_land['lat'].data[np.where(~data_mask_land['mask_land'])]
-    lons_ocean = data_mask_land['lon'].data[np.where(~data_mask_land['mask_land'])]
+    # Indices of all coastal grid cells
+    ocean_grid_id = np.asarray(np.where(~data_mask_land['mask_land']))
+    
+    # Longitudes and latitudes of ocean grid cells
+    lats_ocean = data_mask_land['lat'].data[ocean_grid_id[0], ocean_grid_id[1]]
+    lons_ocean = data_mask_land['lon'].data[ocean_grid_id[0], ocean_grid_id[1]]
 
     # A list of ocean points
     ocean_points = np.array([lons_ocean, lats_ocean]).T
@@ -383,13 +400,15 @@ def create_fisheries_gfwv2_release_map(fisheries_filepath, mask_land_filepath):
     distances_deg, indices = spatial.KDTree(ocean_points).query(fishing_points)
 
     mapped_ocean_points = ocean_points[indices]
+    mapped_ocean_grid_ids = ocean_grid_id[:, indices]
 
     # Add these mapped points to the fisheries data as extra columns
     model_agg_data_fisheries_info.insert(0, "ModelLongitude", mapped_ocean_points[:, 0])
     model_agg_data_fisheries_info.insert(1, "ModelLatitude", mapped_ocean_points[:, 1])
+    model_agg_data_fisheries_info.insert(2, "GridCellID", mapped_ocean_grid_ids)
 
     # Create a data set where longitude and latitude are from the model
-    model_agg_data_fisheries_info = model_agg_data_fisheries_info.groupby(['ModelLongitude', 'ModelLatitude', 'Flag', 'Geartype', 'Month', 'Continent', 'Region', 'Subregion', 'Country'])['fishing_hours'].agg('sum').reset_index()
+    model_agg_data_fisheries_info = model_agg_data_fisheries_info.groupby(['ModelLongitude', 'ModelLatitude', 'GridCellID', 'Flag', 'Geartype', 'Month', 'Continent', 'Region', 'Subregion', 'Country'])['fishing_hours'].agg('sum').reset_index()
     model_agg_data_fisheries_info = model_agg_data_fisheries_info.rename(columns={'ModelLatitude': 'Latitude', 'ModelLongitude': 'Longitude'})
 
     # Return both raw and model datasets
@@ -415,8 +434,12 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     # Load in coast mask and model coordinates
     data_mask_coast = xr.open_dataset(mask_coast_filepath)
 
-    lats_coast = data_mask_coast['lat'].data[np.where(data_mask_coast['mask_coast'])]
-    lons_coast = data_mask_coast['lon'].data[np.where(data_mask_coast['mask_coast'])]
+    # Indices of all coastal grid cells
+    coast_grid_id = np.asarray(np.where(data_mask_coast['mask_coast']))
+
+    # Longitudes and latitudes of coastal grid cells
+    lats_coast = data_mask_coast['lat'].data[coast_grid_id[0],coast_grid_id[1]]
+    lons_coast = data_mask_coast['lon'].data[coast_grid_id[0],coast_grid_id[1]]
 
     # Tackle the beach concentrations first:
     # Create a list of lons, lats, concentration values
@@ -474,6 +497,7 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
                                              'Country': coastal_df['Country'].iloc[closest_country_id],
                                              'Longitude': lon,
                                              'Latitude': lat,
+                                             'GridCellID': coast_grid_id[:,i],
                                              'Concentration': conc_beach[closest_beach_id],
                                              'ConcentrationType': 'Beach'})
 
@@ -482,9 +506,14 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     # Now tackle the surface ocean concentrations:
     conc_ocean = np.power(10, ocean.values)  # Values are in log10 space
 
+    # Indices of all coastal grid cells
     data_mask_land = xr.open_dataset(mask_land_filepath)
-    lats_ocean = data_mask_land['lat'].data[np.where(~data_mask_land['mask_land'])]
-    lons_ocean = data_mask_land['lon'].data[np.where(~data_mask_land['mask_land'])]
+
+    ocean_grid_id = np.asarray(np.where(~data_mask_land['mask_land']))
+
+    # Longitudes and latitudes of ocean grid cells
+    lats_ocean = data_mask_land['lat'].data[ocean_grid_id[0], ocean_grid_id[1]]
+    lons_ocean = data_mask_land['lon'].data[ocean_grid_id[0], ocean_grid_id[1]]
 
     # Function to interpolate the ocean concentrations
     f_interp_conc_ocean = RegularGridInterpolator((ocean.lon, ocean.lat), conc_ocean.T, method='nearest', bounds_error=False, fill_value=None)
@@ -502,6 +531,7 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
                                          'Country': 'N/A',
                                          'Longitude': lons_ocean[i],
                                          'Latitude': lats_ocean[i],
+                                         'GridCellID': ocean_grid_id[:,i],
                                          'Concentration': interp_conc_ocean[i],
                                          'ConcentrationType': 'Ocean'})
     ocean_concentration_df = pd.DataFrame.from_records(ocean_concentration_list)
