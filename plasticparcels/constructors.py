@@ -27,18 +27,18 @@ def create_hydrodynamic_fieldset(settings):
     dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
 
     # Start date and runtime of the simulation
-    start_date = settings['simulation']['start_date']
+    startdate = settings['simulation']['startdate']
     runtime = int(np.ceil(settings['simulation']['runtime'].total_seconds()/86400.))  # convert to days
 
     # Mesh masks
     ocean_mesh = os.path.join(settings['ocean']['directory'], settings['ocean']['ocean_mesh'])  # mesh_mask
 
     # Setup input for fieldset creation
-    ufiles = select_files(dirread_model, 'U_%4i*.nc', start_date, runtime, dt_margin=3)
-    vfiles = select_files(dirread_model, 'V_%4i*.nc', start_date, runtime, dt_margin=3)
-    wfiles = select_files(dirread_model, 'W_%4i*.nc', start_date, runtime, dt_margin=3)
-    tfiles = select_files(dirread_model, 'T_%4i*.nc', start_date, runtime, dt_margin=3)
-    sfiles = select_files(dirread_model, 'S_%4i*.nc', start_date, runtime, dt_margin=3)
+    ufiles = select_files(dirread_model, 'U_%4i*.nc', startdate, runtime, dt_margin=3)
+    vfiles = select_files(dirread_model, 'V_%4i*.nc', startdate, runtime, dt_margin=3)
+    wfiles = select_files(dirread_model, 'W_%4i*.nc', startdate, runtime, dt_margin=3)
+    tfiles = select_files(dirread_model, 'T_%4i*.nc', startdate, runtime, dt_margin=3)
+    sfiles = select_files(dirread_model, 'S_%4i*.nc', startdate, runtime, dt_margin=3)
 
     filenames = {'U': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': ufiles},
                  'V': {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': vfiles},
@@ -76,7 +76,7 @@ def create_hydrodynamic_fieldset(settings):
     # If vertical mixing is turned on, add in the KPP-Profile
     if fieldset.use_mixing:
         dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
-        kzfiles = select_files(dirread_model, 'KZ_%4i*.nc', start_date, runtime, dt_margin=3)
+        kzfiles = select_files(dirread_model, 'KZ_%4i*.nc', startdate, runtime, dt_margin=3)
         mixing_filenames = {'lon': ocean_mesh, 'lat': ocean_mesh, 'depth': wfiles[0], 'data': kzfiles}
         mixing_variables = settings['ocean']['vertical_mixing_variables']
         mixing_dimensions = settings['ocean']['vertical_mixing_dimensions']
@@ -105,7 +105,7 @@ def create_fieldset(settings):
 
     # Now add the other fields
     # Start date and runtime of the simulation
-    start_date = settings['simulation']['start_date']
+    startdate = settings['simulation']['startdate']
     runtime = int(np.ceil(settings['simulation']['runtime'].total_seconds()/86400.))  # convert to days
 
     if fieldset.use_biofouling:
@@ -121,11 +121,11 @@ def create_fieldset(settings):
         bgc_mesh = os.path.join(settings['bgc']['directory'], settings['bgc']['bgc_mesh'])  # mesh_mask_4th
 
         dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
-        wfiles = select_files(dirread_model, 'W_%4i*.nc', start_date, runtime, dt_margin=3)
+        wfiles = select_files(dirread_model, 'W_%4i*.nc', startdate, runtime, dt_margin=3)
 
-        ppfiles = select_files(dirread_bgc, 'nppv_%4i*.nc', start_date, runtime, dt_margin=8)
-        phy1files = select_files(dirread_bgc, 'phy_%4i*.nc', start_date, runtime, dt_margin=8)
-        phy2files = select_files(dirread_bgc, 'phy2_%4i*.nc', start_date, runtime, dt_margin=8)
+        ppfiles = select_files(dirread_bgc, 'nppv_%4i*.nc', startdate, runtime, dt_margin=8)
+        phy1files = select_files(dirread_bgc, 'phy_%4i*.nc', startdate, runtime, dt_margin=8)
+        phy2files = select_files(dirread_bgc, 'phy2_%4i*.nc', startdate, runtime, dt_margin=8)
 
         filenames_bio = {'pp_phyto': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': ppfiles},
                          'bio_nanophy': {'lon': bgc_mesh, 'lat': bgc_mesh, 'depth': wfiles[0], 'data': phy1files},
@@ -144,7 +144,7 @@ def create_fieldset(settings):
 
     if fieldset.use_stokes:
         dirread_Stokes = os.path.join(settings['stokes']['directory'], settings['stokes']['filename_style'])
-        wavesfiles = select_files(dirread_Stokes, '%4i*.nc', start_date, runtime, dt_margin=32)
+        wavesfiles = select_files(dirread_Stokes, '%4i*.nc', startdate, runtime, dt_margin=32)
 
         filenames_Stokes = {'Stokes_U': wavesfiles,
                             'Stokes_V': wavesfiles,
@@ -164,7 +164,7 @@ def create_fieldset(settings):
 
     if fieldset.use_wind:
         dirread_wind = os.path.join(settings['wind']['directory'], settings['wind']['filename_style'])
-        windfiles = select_files(dirread_wind, '%4i*.nc', start_date, runtime, dt_margin=32)
+        windfiles = select_files(dirread_wind, '%4i*.nc', startdate, runtime, dt_margin=32)
 
         filenames_wind = {'Wind_U': windfiles,
                           'Wind_V': windfiles}

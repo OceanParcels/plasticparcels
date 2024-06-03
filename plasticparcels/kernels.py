@@ -1,13 +1,5 @@
 # A list of kernels used to displace particles
-
-# TODO: Add documentation here
-
-# @author: denes001
-# @date: 2023-08-09
-
-
 # Add a sea-ice kernel https://github.com/AnnekeV/thesis_plastic_seaice/blob/master/kernels.py
-
 
 from parcels import ParcelsRandom, StatusCode
 import math
