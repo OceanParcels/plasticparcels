@@ -1,7 +1,7 @@
 Examples
 ========
 
-PlasticParcels has a few example notebooks, see below.
+``plasticparcels`` has a few example notebooks, see below.
 
 
 

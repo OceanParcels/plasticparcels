@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PlasticParcels documentation
+Plasticparcels documentation
 ============================
 
-Welcome to the documentation of PlasticParcels.
+Welcome to the documentation of ``plasticparcels``.
 
 ``plasticparcels`` is a python package for simulating the transport and dispersion of plastics in the ocean. The tool is based on the ``parcels`` computational Lagrangian ocean analysis framework, providing a modular and customisable collection of methods, notebooks, and tutorials for advecting virtual plastic particles with a wide range of physical properties.
 
