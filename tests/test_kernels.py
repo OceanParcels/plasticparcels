@@ -30,7 +30,7 @@ def make_standard_particleset(fieldset, settings):
     pset = pp.constructors.create_particleset_from_map(fieldset, settings)
 
     # Only keep particles in the test domain
-    keep_particles = (pset.lon > 17) & (pset.lon < 20) & (pset.lat < 36) & (pset.lat > 34) 
+    keep_particles = (pset.lon > 17) & (pset.lon < 20) & (pset.lat < 36) & (pset.lat > 34)
     pset.remove_booleanvector(~keep_particles)
 
     return pset
