@@ -27,7 +27,12 @@ def test_create_hydrodynamic_fieldset():
     assert isinstance(fieldset, parcels.FieldSet)
 
 # Test the create_fieldset() function
-def test_create_fieldset():
+@pytest.mark.parametrize('use_3D', [True, False])
+@pytest.mark.parametrize('use_biofouling', [True, False])
+@pytest.mark.parametrize('use_stokes', [True, False])
+@pytest.mark.parametrize('use_wind', [True, False])
+@pytest.mark.parametrize('use_mixing', [True, False])
+def test_create_fieldset(use_3D, use_biofouling, use_stokes, use_wind, use_mixing):
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
@@ -37,6 +42,12 @@ def test_create_fieldset():
                                 'outputdt': timedelta(hours=1),
                                 'dt': timedelta(minutes=20),
                                 }
+    
+    settings['use_3D'] = use_3D
+    settings['use_biofouling'] = use_biofouling
+    settings['use_stokes'] = use_stokes
+    settings['use_wind'] = use_wind
+    settings['use_mixing'] = use_mixing
     
     fieldset = pp.constructors.create_fieldset(settings)
 
