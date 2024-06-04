@@ -11,16 +11,27 @@ def make_simple_fieldset():
                                           mesh='spherical')
     return fieldset
 
+def make_standard_simulation_settings():
+    simulation_settings = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
+                                'runtime': timedelta(days=2),
+                                'outputdt': timedelta(hours=1),
+                                'dt': timedelta(minutes=20),
+                                }
+    return simulation_settings
+
+def make_standard_plastictype_settings():
+    plastictype_settings = {'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
+                                'plastic_diameter' : 0.01, # Plastic particle diameter (m)
+                                'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
+                                }
+    return plastictype_settings
+
 
 # Test the create_hydrodynamic_fieldset() function
 def test_create_hydrodynamic_fieldset():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
-    settings['simulation'] = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=1),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+    settings['simulation'] = make_standard_simulation_settings()
 
     fieldset = pp.constructors.create_hydrodynamic_fieldset(settings)
 
@@ -37,11 +48,7 @@ def test_create_fieldset(use_3D, use_biofouling, use_stokes, use_wind, use_mixin
     settings = pp.utils.load_settings(settings_file)
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
-    settings['simulation'] = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=1),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+    settings['simulation'] = make_standard_simulation_settings()
     
     settings['use_3D'] = use_3D
     settings['use_biofouling'] = use_biofouling
@@ -60,16 +67,9 @@ def test_create_particleset_from_map(initialisation_map):
     settings = pp.utils.load_settings(settings_file)
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
-    settings['simulation'] = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=1),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+    settings['simulation'] = make_standard_simulation_settings()
  
-    settings['plastictype'] = {'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
-                                'plastic_diameter' : 0.001, # Plastic particle diameter (m)
-                                'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
-                                }
+    settings['plastictype'] = make_standard_plastictype_settings()
     
     settings['release'] = {'initialisation_type': initialisation_map,
                             'country': 'Italy',
@@ -87,16 +87,9 @@ def test_create_particleset_from_map_concentrations(concentration_type):
     settings = pp.utils.load_settings(settings_file)
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
-    settings['simulation'] = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=1),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+    settings['simulation'] = make_standard_simulation_settings()
  
-    settings['plastictype'] = {'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
-                                'plastic_diameter' : 0.001, # Plastic particle diameter (m)
-                                'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
-                                }
+    settings['plastictype'] = make_standard_plastictype_settings()
     
     settings['release'] = {'initialisation_type': 'global_concentrations',
                             'concentration_type': concentration_type,
@@ -117,8 +110,8 @@ def test_create_kernel(use_3D, use_biofouling, use_stokes, use_wind, use_mixing)
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
-    settings['simulation'] = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                              'runtime': timedelta(days=1)}
+
+    settings['simulation'] = make_standard_simulation_settings()
 
     settings['use_3D'] = use_3D
     settings['use_biofouling'] = use_biofouling
