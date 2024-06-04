@@ -59,10 +59,10 @@
             "lon": "nav_lon",
             "lat": "nav_lat"
         },
-        "mixing_variables": {
+        "vertical_mixing_variables": {
             "mixing_kz": "votkeavt"
         },
-        "mixing_dimensions": {
+        "vertical_mixing_dimensions": {
             "lon": "glamf",
             "lat": "gphif",
             "depth": "depthw",
