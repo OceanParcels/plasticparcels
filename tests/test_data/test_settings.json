@@ -1,6 +1,6 @@
 {
     "use_3D": true,
-    "allow_time_extrapolation": false,
+    "allow_time_extrapolation": true,
     "verbose_delete": false,
     "use_mixing": false,
     "use_biofouling": false,
@@ -10,8 +10,8 @@
         "modelname": "NEMO0083",
         "directory": "tests/test_data/",
         "filename_style": "test_",
-        "ocean_mesh": "PSY4V3R1_mesh_hgr.nc",
-        "bathymetry_mesh": "PSY4V3R1_mesh_zgr.nc",
+        "ocean_mesh": "test_ocean_mesh_hgr.nc",
+        "bathymetry_mesh": "test_bathymetry_mesh_zgr.nc",
         "variables": {
             "U": "vozocrtx",
             "V": "vomecrty",
@@ -71,8 +71,8 @@
     },
     "bgc": {
         "directory": "tests/test_data/",
-        "filename_style": "biomer4v2r1-weekly_",
-        "bgc_mesh": "mesh_hgr_PSY4V3_deg.nc",
+        "filename_style": "test_",
+        "bgc_mesh": "test_bgc_mesh_hgr.nc",
         "variables": {
             "pp_phyto": "nppv",
             "bio_nanophy": "phy",
@@ -114,7 +114,7 @@
     },
     "stokes": {
         "directory": "tests/test_data/",
-        "filename_style": "ERA5_global_waves_monthly_",
+        "filename_style": "test_waves_",
         "variables": {
             "Stokes_U": "ust",
             "Stokes_V": "vst",
@@ -129,7 +129,7 @@
     },
     "wind": {
         "directory": "tests/test_data/",
-        "filename_style": "ERA5_global_wind_monthly_",
+        "filename_style": "test_wind_",
         "variables": {
             "Wind_U": "u10",
             "Wind_V": "v10"
