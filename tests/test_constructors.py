@@ -14,18 +14,18 @@ def make_simple_fieldset():
 
 def make_standard_simulation_settings():
     simulation_settings = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=2),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+                           'runtime': timedelta(days=2),
+                           'outputdt': timedelta(hours=1),
+                           'dt': timedelta(minutes=20),
+                           }
     return simulation_settings
 
 
 def make_standard_plastictype_settings():
-    plastictype_settings = {'wind_coefficient' : 0.01,  # Percentage of wind to apply to particles
-                                'plastic_diameter' : 0.01, # Plastic particle diameter (m)
-                                'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
-                                }
+    plastictype_settings = {'wind_coefficient': 0.01,    # Percentage of wind to apply to particles
+                            'plastic_diameter': 0.01,    # Plastic particle diameter (m)
+                            'plastic_density': 1030.,    # Plastic particle density (kg/m^3)
+                            }
     return plastictype_settings
 
 
@@ -76,8 +76,8 @@ def test_create_particleset_from_map(initialisation_map):
     settings['plastictype'] = make_standard_plastictype_settings()
 
     settings['release'] = {'initialisation_type': initialisation_map,
-                            'country': 'Italy',
-                            }
+                           'country': 'Italy',
+                           }
 
     fieldset = make_simple_fieldset()
     pset = pp.constructors.create_particleset_from_map(fieldset, settings)
@@ -97,8 +97,8 @@ def test_create_particleset_from_map_concentrations(concentration_type):
     settings['plastictype'] = make_standard_plastictype_settings()
 
     settings['release'] = {'initialisation_type': 'global_concentrations',
-                            'concentration_type': concentration_type,
-                            }
+                           'concentration_type': concentration_type,
+                           }
 
     fieldset = make_simple_fieldset()
     pset = pp.constructors.create_particleset_from_map(fieldset, settings)

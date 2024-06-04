@@ -8,19 +8,19 @@ import pytest
 
 def make_standard_simulation_settings():
     simulation_settings = {'startdate': datetime.strptime('2020-01-04-00:00:00', '%Y-%m-%d-%H:%M:%S'),
-                                'runtime': timedelta(days=2),
-                                'outputdt': timedelta(hours=1),
-                                'dt': timedelta(minutes=20),
-                                }
+                           'runtime': timedelta(days=2),
+                           'outputdt': timedelta(hours=1),
+                           'dt': timedelta(minutes=20),
+                           }
     return simulation_settings
 
 
 def make_standard_plastictype_settings():
-    #Use tiny wind percentage because test data set is not large and wind speeds are quick!
-    plastictype_settings = {'wind_coefficient' : 0.0001,  # Percentage of wind to apply to particles
-                                'plastic_diameter' : 0.001, # Plastic particle diameter (m)
-                                'plastic_density' : 1030.,  # Plastic particle density (kg/m^3)
-                                }
+    # Use tiny wind percentage because test data set is not large and wind speeds are quick!
+    plastictype_settings = {'wind_coefficient': 0.0001,     # Percentage of wind to apply to particles
+                            'plastic_diameter': 0.001,  # Plastic particle diameter (m)
+                            'plastic_density': 1030.,   # Plastic particle density (kg/m^3)
+                            }
     return plastictype_settings
 
 
@@ -30,7 +30,7 @@ def make_standard_particleset(fieldset, settings):
     pset = pp.constructors.create_particleset_from_map(fieldset, settings)
 
     # Only keep particles in the test domain
-    keep_particles = (pset.lon >17) & (pset.lon <20) & (pset.lat < 36) & (pset.lat > 34) 
+    keep_particles = (pset.lon > 17) & (pset.lon < 20) & (pset.lat < 36) & (pset.lat > 34) 
     pset.remove_booleanvector(~keep_particles)
 
     return pset
@@ -59,7 +59,7 @@ def test_advection_only(use_3D):
         kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
     else:
         kernels = [parcels.application_kernels.AdvectionRK4, pp.kernels.deleteParticle]
-    
+
     pset = make_standard_particleset(fieldset, settings)
 
     start_lons = pset.lon.copy()
@@ -222,8 +222,8 @@ def test_mixing():
                pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
     kernels_mixing = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.VerticalMixing,
-               pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface,
-               pp.kernels.deleteParticle]
+                      pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface,
+                      pp.kernels.deleteParticle]
 
     pset = make_standard_particleset(fieldset, settings)
     pset_mixing = make_standard_particleset(fieldset, settings)
