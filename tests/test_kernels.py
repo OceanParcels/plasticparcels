@@ -56,7 +56,8 @@ def test_advection_only(use_3D):
 
     fieldset = pp.constructors.create_fieldset(settings)
     if use_3D:
-        kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
+        kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry,
+                   pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
     else:
         kernels = [parcels.application_kernels.AdvectionRK4, pp.kernels.deleteParticle]
 
