@@ -75,7 +75,7 @@ def test_create_particleset(plastic_amount):
 
     settings['plastictype'] = make_standard_plastictype_settings()
 
-    if 'plastic_amount' == None:
+    if plastic_amount is None:
         release_locations = {'lons': [18], 'lats': [35]}
     else:
         release_locations = {'lons': [18], 'lats': [35], 'plastic_amount': [plastic_amount]}
