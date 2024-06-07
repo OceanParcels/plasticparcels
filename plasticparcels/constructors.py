@@ -226,7 +226,7 @@ def create_particleset(fieldset, settings, release_locations):
     if 'plastic_amount' in release_locations.keys():
         plastic_amounts = release_locations['plastic_amount']
     else:
-        plastic_amounts = np.zeros_like(lons)
+        plastic_amounts = np.nan_like(lons)
 
     # Set particle properties
     plastic_densities = np.full(lons.shape, settings['plastictype']['plastic_density'])
