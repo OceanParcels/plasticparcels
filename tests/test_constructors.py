@@ -63,6 +63,7 @@ def test_create_fieldset(use_3D, use_biofouling, use_stokes, use_wind, use_mixin
 
     assert isinstance(fieldset, parcels.FieldSet)
 
+
 # Test the base create_particleset() function
 @pytest.mark.parametrize('plastic_amount', [None, 1])
 def test_create_particleset(plastic_amount):
@@ -74,7 +75,7 @@ def test_create_particleset(plastic_amount):
 
     settings['plastictype'] = make_standard_plastictype_settings()
 
-    if 'plastic_amount' is None:
+    if 'plastic_amount' == None:
         release_locations = {'lons': [18], 'lats': [35]}
     else:
         release_locations = {'lons': [18], 'lats': [35], 'plastic_amount': [plastic_amount]}
@@ -83,6 +84,7 @@ def test_create_particleset(plastic_amount):
     pset = pp.constructors.create_particleset(fieldset, settings, release_locations)
 
     assert isinstance(pset, parcels.ParticleSet)
+
 
 # Test three different initialisation maps
 @pytest.mark.parametrize('initialisation_map', ['coastal', 'fisheries', 'rivers'])
