@@ -202,8 +202,8 @@ def create_fieldset(settings):
     return fieldset
 
 
-def create_particleset_from_map(fieldset, settings):
-    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
+def create_particleset(fieldset, settings, release_locations):
+    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation
 
     Parameters
     ----------
@@ -211,6 +211,8 @@ def create_particleset_from_map(fieldset, settings):
         A Parcels.FieldSet object
     settings :
         A dictionary of model settings, simulation settings, and release settings and plastic-type settings
+    release_locations :
+        A dictionary of release locations for particles
 
     Returns
     -------
@@ -218,47 +220,14 @@ def create_particleset_from_map(fieldset, settings):
         A parcels.ParticleSet object
     """
 
-    # Load release type information
-    release_type = settings['release']['initialisation_type']  # TODO: MAKE THIS PART BETTER!
-
-    release_quantity_names = {
-        'coastal': 'MPW_Cell',
-        'rivers': 'Emissions',
-        'fisheries': 'fishing_hours',
-        'global_concentrations': 'Concentration'
-    }
-    release_quantity_name = release_quantity_names[release_type]
-
-    particle_locations = pd.read_csv(settings['release_maps'][release_type])
-
-    # Select specific continent/region/subregion/country/economic status if applicable:
-    if 'continent' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['Continent'] == settings['release']['continent']]
-    if 'region' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['Region'] == settings['release']['region']]
-    if 'subregion' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['Subregion'] == settings['release']['subregion']]
-    if 'country' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['Country'] == settings['release']['country']]
-    if 'economicstatus' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['Economic status'] == settings['release']['economicstatus']]
-    if 'concentration_type' in settings['release'].keys():
-        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentration_type']]
-
-    particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
-    particle_locations = particle_locations[particle_locations[release_quantity_name] > 0]
-
-    release_locations = {'lons': particle_locations['Longitude'],
-                         'lats': particle_locations['Latitude'],
-                         'plastic_amount': particle_locations[release_quantity_name]}
-
     # Set the longitude, latitude, and plastic amount per particle
     lons = release_locations['lons']
     lats = release_locations['lats']
-    plastic_amounts = release_locations['plastic_amount']
+    if 'plastic_amount' in release_locations.keys():
+        plastic_amounts = release_locations['plastic_amount']
+    else:
+        plastic_amounts = np.nan_like(lons)
 
-    # 20240429 - for simplification I have removed the option to set custom times and depths, as well as different densities, diameters, and wind_coefficients, this can be done in an alternate way
-    # TODO: Update this to use model grid id's instead of T-points lat/lon
     # Set particle properties
     plastic_densities = np.full(lons.shape, settings['plastictype']['plastic_density'])
     plastic_diameters = np.full(lons.shape, settings['plastictype']['plastic_diameter'])
@@ -297,6 +266,61 @@ def create_particleset_from_map(fieldset, settings):
                                  plastic_density=plastic_densities,
                                  wind_coefficient=wind_coefficients,
                                  plastic_amount=plastic_amounts)
+
+    return pset
+
+
+def create_particleset_from_map(fieldset, settings):
+    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
+
+    Parameters
+    ----------
+    fieldset :
+        A Parcels.FieldSet object
+    settings :
+        A dictionary of model settings, simulation settings, and release settings and plastic-type settings
+
+    Returns
+    -------
+    particleset
+        A parcels.ParticleSet object
+    """
+
+    # Load release type information
+    release_type = settings['release']['initialisation_type']
+
+    release_quantity_names = {
+        'coastal': 'MPW_Cell',
+        'rivers': 'Emissions',
+        'fisheries': 'fishing_hours',
+        'global_concentrations': 'Concentration'
+    }
+    release_quantity_name = release_quantity_names[release_type]
+
+    particle_locations = pd.read_csv(settings['release_maps'][release_type])
+
+    # Select specific continent/region/subregion/country/economic status if applicable:
+    if 'continent' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['Continent'] == settings['release']['continent']]
+    if 'region' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['Region'] == settings['release']['region']]
+    if 'subregion' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['Subregion'] == settings['release']['subregion']]
+    if 'country' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['Country'] == settings['release']['country']]
+    if 'economicstatus' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['Economic status'] == settings['release']['economicstatus']]
+    if 'concentration_type' in settings['release'].keys():
+        particle_locations = particle_locations[particle_locations['ConcentrationType'] == settings['release']['concentration_type']]
+
+    particle_locations = particle_locations.groupby(['Longitude', 'Latitude'])[release_quantity_name].agg('sum').reset_index()
+    particle_locations = particle_locations[particle_locations[release_quantity_name] > 0]
+
+    release_locations = {'lons': particle_locations['Longitude'],
+                         'lats': particle_locations['Latitude'],
+                         'plastic_amount': particle_locations[release_quantity_name]}
+
+    pset = create_particleset(fieldset, settings, release_locations)
 
     return pset
 
