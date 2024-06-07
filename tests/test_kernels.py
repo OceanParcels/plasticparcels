@@ -26,12 +26,9 @@ def make_standard_plastictype_settings():
 
 def make_standard_particleset(fieldset, settings):
     # Generate a particleset that has particles in the test domain
-    settings['release'] = {'initialisation_type': 'fisheries', 'country': 'Malta'}
-    pset = pp.constructors.create_particleset_from_map(fieldset, settings)
-
-    # Only keep particles in the test domain
-    keep_particles = (pset.lon > 17) & (pset.lon < 20) & (pset.lat < 36) & (pset.lat > 34)
-    pset.remove_booleanvector(~keep_particles)
+    release_locations = {'lons': [18,18.25,18.5], 'lats': [35,35,35],
+                         'plastic_amount': [1,1,1]}
+    pset = pp.constructors.create_particleset(fieldset, settings, release_locations)
 
     return pset
 
@@ -40,7 +37,6 @@ def make_standard_particleset(fieldset, settings):
 def test_advection_only(use_3D):
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
-    settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
     settings['plastictype'] = make_standard_plastictype_settings()
@@ -75,7 +71,6 @@ def test_advection_only(use_3D):
 def test_settling_velocity():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
-    settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
     settings['plastictype'] = make_standard_plastictype_settings()
@@ -108,7 +103,6 @@ def test_settling_velocity():
 def test_biofouling():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
-    settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
     settings['plastictype'] = make_standard_plastictype_settings()
@@ -141,6 +135,8 @@ def test_biofouling():
 def test_Stokes():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
+
+    # Required for the unbeaching kernel
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
@@ -157,7 +153,7 @@ def test_Stokes():
 
     fieldset = pp.constructors.create_fieldset(settings)
 
-    kernels = [pp.kernels.StokesDrift, pp.kernels.deleteParticle]
+    kernels = [pp.kernels.StokesDrift, pp.kernels.unbeaching, pp.kernels.periodicBC, pp.kernels.deleteParticle]
 
     pset = make_standard_particleset(fieldset, settings)
 
@@ -173,6 +169,8 @@ def test_Stokes():
 def test_wind():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
+
+    # Required for the unbeaching kernel
     settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
@@ -205,7 +203,6 @@ def test_wind():
 def test_mixing():
     settings_file = 'tests/test_data/test_settings.json'
     settings = pp.utils.load_settings(settings_file)
-    settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
 
     settings['simulation'] = make_standard_simulation_settings()
     settings['plastictype'] = make_standard_plastictype_settings()
