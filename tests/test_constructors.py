@@ -64,6 +64,28 @@ def test_create_fieldset(use_3D, use_biofouling, use_stokes, use_wind, use_mixin
     assert isinstance(fieldset, parcels.FieldSet)
 
 
+# Test the base create_particleset() function
+@pytest.mark.parametrize('plastic_amount', [None, 1])
+def test_create_particleset(plastic_amount):
+    settings_file = 'tests/test_data/test_settings.json'
+    settings = pp.utils.load_settings(settings_file)
+    settings = pp.utils.download_plasticparcels_dataset('NEMO0083', settings, 'input_data')
+
+    settings['simulation'] = make_standard_simulation_settings()
+
+    settings['plastictype'] = make_standard_plastictype_settings()
+
+    if plastic_amount is None:
+        release_locations = {'lons': [18], 'lats': [35]}
+    else:
+        release_locations = {'lons': [18], 'lats': [35], 'plastic_amount': [plastic_amount]}
+
+    fieldset = make_simple_fieldset()
+    pset = pp.constructors.create_particleset(fieldset, settings, release_locations)
+
+    assert isinstance(pset, parcels.ParticleSet)
+
+
 # Test three different initialisation maps
 @pytest.mark.parametrize('initialisation_map', ['coastal', 'fisheries', 'rivers'])
 def test_create_particleset_from_map(initialisation_map):

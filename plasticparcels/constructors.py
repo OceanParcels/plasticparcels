@@ -221,12 +221,12 @@ def create_particleset(fieldset, settings, release_locations):
     """
 
     # Set the longitude, latitude, and plastic amount per particle
-    lons = release_locations['lons']
-    lats = release_locations['lats']
+    lons = np.array(release_locations['lons'])
+    lats = np.array(release_locations['lats'])
     if 'plastic_amount' in release_locations.keys():
         plastic_amounts = release_locations['plastic_amount']
     else:
-        plastic_amounts = np.nan_like(lons)
+        plastic_amounts = np.full_like(lons, np.nan)
 
     # Set particle properties
     plastic_densities = np.full(lons.shape, settings['plastictype']['plastic_density'])
