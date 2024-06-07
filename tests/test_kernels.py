@@ -26,8 +26,8 @@ def make_standard_plastictype_settings():
 
 def make_standard_particleset(fieldset, settings):
     # Generate a particleset that has particles in the test domain
-    release_locations = {'lons': [18,18.25,18.5], 'lats': [35,35,35],
-                         'plastic_amount': [1,1,1]}
+    release_locations = {'lons': [18, 18.25, 18.5], 'lats': [35, 35, 35],
+                         'plastic_amount': [1, 1, 1]}
     pset = pp.constructors.create_particleset(fieldset, settings, release_locations)
 
     return pset
