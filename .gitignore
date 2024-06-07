@@ -2,7 +2,6 @@ input_data/
 **.code-workspace*
 **.DS_store**
 **.pyc**
-**.nc
 **.zarr
 docs/_build/*
 docs/_downloads
