@@ -22,7 +22,8 @@ and updating the particle position at each timestep. For simplicity, by default 
 An important process that affects plastic particle dispersal in the upper ocean is the Stokes drift, whereby a particle subjected to a surface wave will experience a net displacement in the direction of wave propagation. We include a kernel to parameterise the effect of Stokes drift on a particle, based on the Phillips spectrum approximation developed in [@Breivik2016](http://dx.doi.org/10.1016/j.ocemod.2016.01.005). Specifically, we model this additional behaviour as {math}`\mathbf{B}_{\text{Stokes}}`, where the change in the particle position is described by
 
 ```{math}
-\mathbf{B}_{\text{Stokes}} := \mathbf{v}_{\text{Stokes}}(\mathbf{x}(t), t) =\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)\bigg(e^{2k_p z} - \beta \sqrt{-2\pi k_p z}\text{ erfc}(-2k_p z) \bigg).
+\mathbf{B}_{\text{Stokes}} &:= \mathbf{v}_{\text{Stokes}}(\mathbf{x}(t), t) \\
+&=\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)\bigg(e^{2k_p z} - \beta \sqrt{-2\pi k_p z}\text{ erfc}(-2k_p z) \bigg).
 ```
 
 Here, {math}`z` is the depth of the particle, {math}`\mathbf{v}_{\text{Stokes}}(\mathbf{x}_{z=0}(t),t)` is the surface Stokes drift velocity, {math}`\beta=1` (as we assume a Phillips spectrum), and erfc is the complementary error function. The peak wave number {math}`k_p` is computed as {math}`k_p = \omega_{p}^2/9.81`, where {math}`\omega_p` is the peak wave frequency {math}`\omega_p = 2 \pi / T_p`, using the peak wave period {math}`T_p = T_p(\mathbf{x}_{z=0}(t),t)`.
