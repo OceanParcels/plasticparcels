@@ -1,6 +1,6 @@
 # Physics kernels
 
-The [`parcels`](https://oceanparcels.org/) Lagrangian framework is a tool for advecting virtual particles that are assumed to be spherical in shape. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional \textit{behaviour} of the particle. Mathematically, particle trajectories are computed by solving the following equation:
+The [`parcels`](https://oceanparcels.org/) Lagrangian framework is a tool for advecting virtual particles that are assumed to be spherical in shape. It works by numerically integrating the velocity fields from a hydrodynamic model while including any additional *behaviour* of the particle. Mathematically, particle trajectories are computed by solving the following equation:
 
 ```{math}
 \mathbf{x}(t) = \mathbf{x}(0) + \int_{0}^{t} \mathbf{v}(\mathbf{x}(s), s) + \mathbf{B}(\mathbf{x}(s),s) \text{d}s,
