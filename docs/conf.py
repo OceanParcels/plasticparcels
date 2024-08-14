@@ -12,6 +12,10 @@ import os
 import sys
 import warnings
 
+sys.path.insert(0, os.path.abspath('..')) # Allow to find `plasticparcels` package
+
+import plasticparcels
+
 project = 'plasticparcels'
 copyright = f'{datetime.datetime.now().year}, The OceanParcels Team'
 author = 'The OceanParcels Team'
@@ -19,7 +23,6 @@ author = 'The OceanParcels Team'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -78,6 +81,7 @@ extensions = [
     "myst_parser",
     "nbsphinx",
     "numpydoc",
+    'sphinx.ext.autosummary',
 ]
 
 myst_enable_extensions = ["dollarmath", "amsmath"]
@@ -130,12 +134,12 @@ def linkcode_resolve(domain, info):
     else:
         linespec = ""
 
-    fn = os.path.relpath(fn, start=os.path.dirname(parcels.__file__))
+    fn = os.path.relpath(fn, start=os.path.dirname(plasticparcels.__file__))
 
-    if "-" in parcels.__version__:
-        return f"https://github.com/OceanParcels/plasticparcels/blob/master/parcels/{fn}{linespec}"
+    if "-" in plasticparcels.__version__:
+        return f"https://github.com/OceanParcels/plasticparcels/blob/master/plasticparcels/{fn}{linespec}"
     else:
         return (
             f"https://github.com/OceanParcels/plasticparcels/blob/"
-            f"{parcels.__version__}/parcels/{fn}{linespec}"
+            f"{plasticparcels.__version__}/plasticparcels/{fn}{linespec}"
         )

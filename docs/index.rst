@@ -31,8 +31,8 @@ Required Data
 
 * Hydrodynamic model data: `MOI GLO12 (psy4v3r1) <https://www.mercator-ocean.eu/en/solutions-expertise/accessing-digital-data/product-details/?offer=4217979b-2662-329a-907c-602fdc69c3a3&system=d35404e4-40d3-59d6-3608-581c9495d86a>`_
 * Biogeochemical model data: `MOI BIO4 (biomer4v2r1) <https://www.mercator-ocean.eu/en/solutions-expertise/accessing-digital-data/product-details/?offer=8d0c01f3-81c7-0a59-0d06-602fdf63c5b6&system=dc40b324-7de7-0732-880b-5d9dcf7d344a>`_
-* Wave data: `ECMWF ERA5 Wave <https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels>`_ (specifically, the variables ``mean_wave_period``, ``peak_wave_period``, ``u_component_stokes_drift``, and ``v_component_stokes_drift``.) 
-* Wind data: `ECMWF ERA5 Wind <https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels>`_ (specifically, the variables ``10m_u_component_of_wind`` and ``10m_v_component_of_wind``) 
+* Wave data: `ECMWF ERA5 Wave <https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels>`_ (specifically, the variables ``mean_wave_period``, ``peak_wave_period``, ``u_component_stokes_drift``, and ``v_component_stokes_drift``.)
+* Wind data: `ECMWF ERA5 Wind <https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels>`_ (specifically, the variables ``10m_u_component_of_wind`` and ``10m_v_component_of_wind``)
 
 For the wind and wave data, we recommend using the `CDS API <https://cds.climate.copernicus.eu/api-how-to>`_.
 
@@ -48,4 +48,5 @@ Just like the ``parcels`` framework, ``plasticparcels`` can be adapted to use ot
    Examples <examples>
    Physics kernels <physicskernels>
    Plastic initialisation maps <initialisationmaps>
+   API reference <reference>
    OceanParcels website <https://oceanparcels.org/>
