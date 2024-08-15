@@ -36,7 +36,6 @@ def StokesDrift(particle, fieldset, time):
 
 
     """
-
     # Sample the U / V components of Stokes drift
     stokes_U = fieldset.Stokes_U[time, particle.depth, particle.lat, particle.lon]
     stokes_V = fieldset.Stokes_V[time, particle.depth, particle.lat, particle.lon]
@@ -96,7 +95,6 @@ def WindageDrift(particle, fieldset, time):
         None
 
     """
-
     # Sample ocean velocities
     (ocean_U, ocean_V) = fieldset.UV[particle]
     ocean_speed = math.sqrt(ocean_U**2 + ocean_V**2)
@@ -226,14 +224,13 @@ def SettlingVelocity(particle, fieldset, time):
         - Must run before any kernel that uses the particle.settling_velocty variable
 
 
-    References:
+    References
     ----------
     [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
     [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
 
     TODO: Add units to each variable, and the TODO's below.
     """
-
     # Define constants and sample fieldset variables
     g = fieldset.G  # gravitational acceleration [m s-2]
     seawater_density = particle.seawater_density  # [kg m-3]
@@ -276,7 +273,7 @@ def SettlingVelocity(particle, fieldset, time):
 
 
 def Biofouling(particle, fieldset, time):
-    """ Settling velocity due to biofouling kernel
+    """Settling velocity due to biofouling kernel
 
     Description
     ----------
@@ -339,14 +336,13 @@ def Biofouling(particle, fieldset, time):
 
 
 
-    References:
+    References
     ----------
     [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
     [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
     [3] Menden-Deuer and Lessard (2000) - https://doi.org/10.4319/lo.2000.45.3.0569
     [4] Bernard and Remond (2012) - https://doi.org/10.1016/j.biortech.2012.07.022
     """
-
     # Define constants and algal properties, and sample fieldset variables
     # g = fieldset.G  # gravitational acceleration [m s-2]
     # k = fieldset.K  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
@@ -467,7 +463,7 @@ def Biofouling(particle, fieldset, time):
 
 
 def PolyTEOS10_bsq(particle, fieldset, time):
-    """ A seawater density kernel
+    """A seawater density kernel
 
     Description:
     ----------
@@ -487,7 +483,8 @@ def PolyTEOS10_bsq(particle, fieldset, time):
     Order of Operations:
         This kernel must be run before any kernel that requires particle.seawater_density
 
-    References:
+    References
+    ----------
      Roquet, F., Madec, G., McDougall, T. J., Barker, P. M., 2014: Accurate
       polynomial expressions for the density and specific volume of
       seawater using the TEOS-10 standard. Ocean Modelling.
@@ -496,7 +493,6 @@ def PolyTEOS10_bsq(particle, fieldset, time):
       temperature and density of seawater.  Journal of Atmospheric and
       Oceanic Technology, 20, 730-741.
     """
-
     Z = - particle.depth  # note: use negative depths!
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
     CT = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
@@ -569,7 +565,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 
 
 def VerticalMixing(particle, fieldset, time):
-    """ A markov-0 kernel for vertical mixing
+    """A markov-0 kernel for vertical mixing
 
     Description:
         A simple verticle mixing kernel that uses a markov-0 process to determine the vertical displacement of a particle.
@@ -587,7 +583,6 @@ def VerticalMixing(particle, fieldset, time):
 
     NOTES: previously called markov_0_mixing
     """
-
     # Sample the ocean vertical eddy diffusivity field KZ
     delta_z = 0.5  # [m], used to compute the gradient of kz using a forward-difference
     kz = fieldset.mixing_kz[time, particle.depth, particle.lat, particle.lon]
@@ -633,7 +628,7 @@ def VerticalMixing(particle, fieldset, time):
 
 
 def unbeaching(particle, fieldset, time):
-    """ A kernel to unbeach particles"""
+    """A kernel to unbeach particles"""
     # Measure the velocity field at the final particle location
     (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
 
@@ -670,8 +665,8 @@ def checkThroughBathymetry(particle, fieldset, time):
 # @date: 2023-08-09
 
 def periodicBC(particle, fieldset, time):
-    """ Kernel to keep the particle between [-180,180] longitude
-        To be run after all movement kernels
+    """Kernel to keep the particle between [-180,180] longitude
+    To be run after all movement kernels
     """
     if particle.lon + particle_dlon <= -180.:  # noqa
         particle_dlon += 360.  # noqa
@@ -680,7 +675,7 @@ def periodicBC(particle, fieldset, time):
 
 
 def checkErrorThroughSurface(particle, fieldset, time):
-    """ Kernel to set the particle depth to the particle surface if it goes through the surface
+    """Kernel to set the particle depth to the particle surface if it goes through the surface
     """
     if particle.state == StatusCode.ErrorThroughSurface:
         # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
@@ -689,7 +684,7 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
 
 def deleteParticle(particle, fieldset, time):
-    """ Kernel for deleting particles if they throw an error other than through the surface
+    """Kernel for deleting particles if they throw an error other than through the surface
     """
     if particle.state >= 50 and particle.state != StatusCode.ErrorThroughSurface:
         particle.delete()

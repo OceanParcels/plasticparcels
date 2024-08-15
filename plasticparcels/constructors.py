@@ -10,7 +10,7 @@ from plasticparcels.utils import select_files
 
 
 def create_hydrodynamic_fieldset(settings):
-    """ A constructor method to create a Parcels.Fieldset from hydrodynamic model data
+    """A constructor method to create a Parcels.Fieldset from hydrodynamic model data
 
     Parameters
     ----------
@@ -22,7 +22,6 @@ def create_hydrodynamic_fieldset(settings):
     fieldset
         A parcels.FieldSet object
     """
-
     # Location of hydrodynamic data
     dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
 
@@ -87,7 +86,7 @@ def create_hydrodynamic_fieldset(settings):
 
 
 def create_fieldset(settings):
-    """ A constructor method to create a Parcels.Fieldset with all fields necessary for a plasticparcels simulation
+    """A constructor method to create a Parcels.Fieldset with all fields necessary for a plasticparcels simulation
 
     Parameters
     ----------
@@ -99,7 +98,6 @@ def create_fieldset(settings):
     fieldset
         A parcels.FieldSet object
     """
-
     # First create the hydrodynamic fieldset
     fieldset = create_hydrodynamic_fieldset(settings)
 
@@ -203,7 +201,7 @@ def create_fieldset(settings):
 
 
 def create_particleset(fieldset, settings, release_locations):
-    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation
+    """A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation
 
     Parameters
     ----------
@@ -219,7 +217,6 @@ def create_particleset(fieldset, settings, release_locations):
     particleset
         A parcels.ParticleSet object
     """
-
     # Set the longitude, latitude, and plastic amount per particle
     lons = np.array(release_locations['lons'])
     lats = np.array(release_locations['lats'])
@@ -271,7 +268,7 @@ def create_particleset(fieldset, settings, release_locations):
 
 
 def create_particleset_from_map(fieldset, settings):
-    """ A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
+    """A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
 
     Parameters
     ----------
@@ -285,7 +282,6 @@ def create_particleset_from_map(fieldset, settings):
     particleset
         A parcels.ParticleSet object
     """
-
     # Load release type information
     release_type = settings['release']['initialisation_type']
 
@@ -326,7 +322,7 @@ def create_particleset_from_map(fieldset, settings):
 
 
 def create_kernel(fieldset):
-    """ A constructor method to create a list of kernels for a plasticparcels simulation
+    """A constructor method to create a list of kernels for a plasticparcels simulation
 
     Parameters
     ----------

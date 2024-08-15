@@ -9,3 +9,4 @@ dependencies:
   # Testing
   - pytest
   - coverage
+  - pre_commit

@@ -43,21 +43,44 @@ packages = ["plasticparcels"]
 write_to = "plasticparcels/_version_setup.py"
 local_scheme = "no-local-version"
 
-[project.optional-dependencies]
-dev = [
-    "black == 24.4.0",
-    "darglint == 1.8.1",
-    "flake8 == 7.0.0",
-    "Flake8-pyproject == 1.2.3",
-    "isort == 5.13.2",
-    "pydocstyle == 6.3.0",
-    "sort-all == 1.2.0",
+[tool.ruff.lint]
+select = [
+    "E",  # Error
+    "F",  # pyflakes
+    # "I",  # isort
+    "B",  # Bugbear
+    # "UP", # pyupgrade
+    "LOG", # logging
+    "ICN", # import conventions
+    "G", # logging-format
+    "RUF", # ruff
+    "D",  # pydocstyle
+    "DOC", # pydoclint
 ]
 
-[tool.isort]
-profile = "black"
-skip_gitignore = true
+# If updating to use a formatter, look at https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules for rules to add to ignore
+ignore = [
+    # line too long (82 > 79 characters)
+    "E501",
+    # ‘from module import *’ used; unable to detect undefined names
+    "F403",
+    # Mutable class attributes should be annotated with `typing.ClassVar`
+    "RUF012",
+    # Consider `(slice(2), *block)` instead of concatenation
+    "RUF005",
+    # Prefer `next(iter(variable.items()))` over single element slice
+    "RUF015",
+    # do not use bare except, specify exception instead
+    "E722",
+    # First line should be in imperative mood (requires writing of summaries)
+    "D401",
+    # 1 blank line required between summary line and description (requires writing of summaries)
+    "D205",
+    # Loop control variable `i` not used within loop body
+    "B007",
+    # Remove unused `noqa` directive
+    "RUF100",
+]
 
-[tool.flake8]
-extend-ignore = "E501"     # Don't check line length.
-docstring_style = "sphinx" # Use sphinx docstring style for darglint plugin.
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

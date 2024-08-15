@@ -57,7 +57,6 @@ def distance(lon1, lat1, lon2, lat2):
     Calculate the great circle distance between two points
     on the earth (specified in decimal degrees)
     """
-
     # Convert decimal degrees to Radians:
     lon1r = np.radians(lon1)
     lat1r = np.radians(lat1)
@@ -100,7 +99,7 @@ def get_coords_from_polygon(shape):
 
 
 def load_settings(filename):
-    """ A function to load a settings file in json format"""
+    """A function to load a settings file in json format"""
     with open(filename, "r") as file:
         settings = json.load(file)
     return settings
@@ -126,7 +125,6 @@ def download_plasticparcels_dataset(dataset: str, settings, data_home=None):
     dataset_folder : Path
         Path to the folder containing the downloaded dataset files.
     """
-
     plasticparcels_data_files = {
         "NEMO0083": [
             (("release_maps", "coastal"), "coastal_population_MPW_NEMO0083.csv"),
