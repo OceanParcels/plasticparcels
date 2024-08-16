@@ -8,27 +8,32 @@ import math
 
 
 def StokesDrift(particle, fieldset, time):
-    """Stokes drift kernel
+    """Stokes drift kernel.
 
     Description
     ----------
-    Using the approach in [1] assuming a Phillips wave spectrum to determine the depth dependent Stokes drift.
-    Specifically, the 'Stokes drift velocity' (u_s) is computed as per Eq. (19) in [1]
+    Using the approach in [1] assuming a Phillips wave spectrum to determine
+    the depth dependent Stokes drift. Specifically, the 'Stokes drift velocity'
+    $u_s$ is computed as per Eq. (19) in [1].
 
     We treat the Stokes drift as a linear addition to the velocity field
-        u(x,t) = u_c(x,t) + C_s * u_s(x,t)
-    where u_c is the current velocity, u_s is the Stokes drift velocity, and C_s is the depth-varying decay factor.
+        $u(x,t) = u_c(x,t) + C_s * u_s(x,t)$
+    where $u_c$ is the current velocity, $u_s$ is the Stokes drift velocity,
+    and $C_s$ is the depth-varying decay factor.
+
+    For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#stokes-drift
 
     Parameter Requirements
     ----------
     fieldset :
-        - Stokes drift field (U,V)  [m s-1]
-        - Peak wave period (T_p)    [s]
+        - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift
+        velocity field. Units [m s-1]
+        - `fieldset.wave_Tp`, the peak wave period field ($T_p$). Units [s].
 
     Kernel Requirements
     ----------
     Order of Operations:
-        None
+        None - can be applied at any time.
 
     References
     ----------
@@ -67,32 +72,37 @@ def StokesDrift(particle, fieldset, time):
 
 # Wind related kernels
 def WindageDrift(particle, fieldset, time):
-    """Leeway windage kernel
+    """Leeway windage kernel.
 
     Description
     ----------
-    A simple windage kernel that applies a linear 'wind velocity' to the particle.
+    A simple windage kernel that applies a linear relative 'wind velocity'
+    to the particle.
 
     We treat the windage drift as a linear addition to the velocity field
-        u(x,t) = u_c(x,t) + C_w * u_w(x,t)
-    where u_c is the current velocity, u_w is the wind velocity at 10m height, and C_w is the windage coefficient (usually taken to be between 0.01 and 0.05,
-    depending on particle size)
+        $u(x,t) = u_c(x,t) + C_w * (u_w(x,t)-u_c(x,t))$
+    where $u_c$ is the ocean current velocity, $u_w$ is the wind velocity
+    at 10m height, and $C_w$ is the windage coefficient (usually taken to
+    be in [1%,5%], depending on particle size)
 
-    See https://doi.org/10.1007/s10652-016-9499-3 for impact of windage on LCS detection
-    or https://doi.org/10.1016/j.apor.2011.01.005 for Breivik et al 2011
+    
+    For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#wind-induced-drift-leeway
 
     Parameter Requirements
     ----------
     particle :
-        - wind_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
+        - wind_coefficient - the particle windage coefficient in decimals
+        (usually taken to be between 0.01 and 0.05,
+        depending on particle size).
     fieldset :
-        - Wind field (U,V) at 10m height above sea surface [m s-1]
+        - `fieldset.Wind_U` and `fieldset.Wind_V`, the wind velocity field at
+        10m height above sea surface. Units [m s-1].
 
 
     Kernel Requirements
     ----------
     Order of Operations:
-        None
+        None - can be applied at any time.
 
     """
     # Sample ocean velocities
@@ -105,104 +115,31 @@ def WindageDrift(particle, fieldset, time):
 
     # Apply windage to particles that have some exposed surface above the ocean surface
     # Use a basic approach to only apply windage to particle in the ocean
-    if particle.depth < 0.5*particle.plastic_diameter and ocean_speed > 1E-10:
+    if particle.depth < 0.5*particle.plastic_diameter and ocean_speed > 1E-12:
         # Compute particle displacement
-        particle_dlon += particle.wind_coefficient * wind_U * particle.dt  # noqa
-        particle_dlat += particle.wind_coefficient * wind_V * particle.dt  # noqa
-
-
-# Decay is hard to justify. Use on/off kernel as above, and maybe create a windage function that is depth/diameter dependent?
-# def windage_drift_decay(particle, fieldset, time):
-#     """
-#     Windage kernel with a sqrt decay profile
-
-#     Description:
-#         using
-#         ?????TODO the best I can find so far is eq 1 from Impact of windage on ocean surface Lagrangian coherent structures but follow the references more
-
-#         We treat the windage drift as a linear addition to the velocity field
-#             u(x,t) = u_c(x,t) + D * C_w * u_w(x,t)
-#         where u_c is the current velocity, u_w is the wind velocity at 10m height, and C_w is the windage coefficient (usually taken to be between 0.01 and 0.05,
-#         depending on particle size) and D is a depth-varying decay factor.
-
-#         See https://doi.org/10.1007/s10652-016-9499-3 for impact of windage on LCS detection
-
-#     Requirements:
-#         Fieldset:
-#             - Wind field (U,V) at 10m height above sea surface
-#         Particle:
-#             - windage_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
-#         Order of Operations:
-#             None
-
-
-#     ## TODO: is a decay necessary? we should really just apply this at the surface
-#     """
-
-#     # U / V components of wind
-#     U_wind = fieldset.wind_U[time, particle.depth, particle.lat, particle.lon]
-#     V_wind = fieldset.wind_V[time, particle.depth, particle.lat, particle.lon]
-
-#     # Where to apply decay rate
-#     decay_depth = 0.2 # meters, point at which decay is 0%
-
-#     # Apply to top layer only using a linear decay between 0 and 0.2m depth
-#     if particle.depth > decay_depth or particle.depth < 0: # If the particle depth is above the surface, set to 0
-#         pass # No change to particle position
-
-#     else: # The particle depth is in [0, decay_depth], compute a sqrt decay
-#         # Compute decay factor where decay = m * sqrt(depth) + b, passing through points (depth,decay) = (0,1) and (decay_depth,0)
-#         decay = 1. - (1. / math.sqrt(decay_depth)) * math.sqrt(particle.depth)
-
-#         # Compute particle displacement
-#         dlon = decay * particle.windage_coefficient * U_wind * particle.dt
-#         dlat = decay * particle.windage_coefficient * V_wind * particle.dt
-
-#         # Update particle position
-#         particle.lon += dlon
-#         particle.lat += dlat
-
-# Vertical diffusion related kernels
-
-# ## TODO: Is this required? Why not just set v_s = 0 from the beginning??
-# def NeutralBuoyancy(particle, fieldset, time):
-#     """Neutral buoyancy kernel
-
-#     Description
-#     ----------
-#     A kernel to treat the particle as neutrally buoyant by setting the sinking/rising velocity of a particle to 0 [m s-1]
-
-#     Parameter Requirements
-#     ----------
-#     particle :
-#         sinking_velocity
-
-#     Kernel Requirements
-#     ----------
-#     Order of Operations:
-#         Apply this kernel before any other vertical mixing kernels
-#     """
-
-
-#     # Set the particle's settling velocity to 0 [m s-1]
-#     particle.settling_velocity = 0.
+        particle_dlon += particle.wind_coefficient * (wind_U - ocean_U) * particle.dt  # noqa
+        particle_dlat += particle.wind_coefficient * (wind_V - ocean_V) * particle.dt  # noqa
 
 
 def SettlingVelocity(particle, fieldset, time):
-    """Settling velocity kernel
+    """Settling velocity kernel.
 
     Description
     ----------
-    A kernel to calculate the settling velocity of a particle based on its size and density,
-    and the surrounding seawater properties (density and kinematic viscosity). Based on the
-    settling velocity paper of [1] as implemented in [2].
+    A kernel to calculate the settling velocity of a particle based on its
+    size and density,and the surrounding seawater properties (density and
+    kinematic viscosity). Based on the settling velocity paper of [1] as
+    implemented in [2].
 
     Calculation steps:
         1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
         2. Compute the kinematic viscosity from Eq. (25) in [2]
-        3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
-        4. Compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1]
-        5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
+        3. Compute the dimensionless particle diameter from Eq. (4) in [2],
+        equivalent to Eq. (6) in [1]
+        4. Compute the dimensionless settling velocity from Eq. (3) in [2],
+        equivalent to Eq. (8) in [1]
+        5. Compute the settling velocity of the particle from Eq. (2) in [2],
+        equivalent to Eq. (9) in [1]
 
 
     Parameter Requirements
@@ -210,18 +147,20 @@ def SettlingVelocity(particle, fieldset, time):
     particle :
         - diameter
         - density
-        - seawater_density Surrounding seawater density
+        - seawater_density
     fieldset :
-        - G - Gravity constant [m s-2]
-        - conservative_temperature - Conservative temperature field
-        - absolute_salinity - Absolute salinity field
+        - `fieldset.G` - Gravity constant. Units [m s-2].
+        - `fieldset.conservative_temperature` - The conservative temperature
+        field. Units [C].
+        - `fieldset.absolute_salinity' - The absolute salinity field.
+        Units [g/kg].
 
 
     Kernel Requirements:
     ----------
     Order of Operations:
-        - Must run after the PolyTEOS kernel which sets the surrounding particle.seawater_density variable which this kernel relies on
-        - Must run before any kernel that uses the particle.settling_velocty variable
+        - This kernel must run after the PolyTEOS10_bsq kernel, which sets the
+        particle.seawater_density variable, relied on by this.
 
 
     References
@@ -229,18 +168,17 @@ def SettlingVelocity(particle, fieldset, time):
     [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
     [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
 
-    TODO: Add units to each variable, and the TODO's below.
     """
     # Define constants and sample fieldset variables
     g = fieldset.G  # gravitational acceleration [m s-2]
     seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
-    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000  # TODO: Check that we should convert here and not in the fieldset
+    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000
     particle_diameter = particle.plastic_diameter
     particle_density = particle.plastic_density
 
     # Compute the kinematic viscosity of seawater
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
+    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
@@ -262,7 +200,7 @@ def SettlingVelocity(particle, fieldset, time):
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
 
     # Compute the settling velocity of the particle using Eq. (5) from [1] (solving for the settling velocity)
-    sign_of_density_difference = math.copysign(1., normalised_density_difference)  # normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
+    sign_of_density_difference = math.copysign(1., normalised_density_difference)
     settling_velocity = sign_of_density_difference * (g * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
     # Update the settling velocity
@@ -273,7 +211,7 @@ def SettlingVelocity(particle, fieldset, time):
 
 
 def Biofouling(particle, fieldset, time):
-    """Settling velocity due to biofouling kernel
+    """Settling velocity due to biofouling kernel.
 
     Description
     ----------
