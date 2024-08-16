@@ -10,17 +10,19 @@ from plasticparcels.utils import select_files
 
 
 def create_hydrodynamic_fieldset(settings):
-    """A constructor method to create a Parcels.Fieldset from hydrodynamic model data
+    """A constructor method to create a `Parcels.Fieldset` from hydrodynamic
+    model data.
 
     Parameters
     ----------
     settings :
-        A dictionary of settings used to create the fieldset
+        A dictionary of settings that contains an ocean model directory, a filename style,
+        and the location of the ocean model mesh file, used to create the fieldset.
 
     Returns
     -------
     fieldset
-        A parcels.FieldSet object
+        A `parcels.FieldSet` object.
     """
     # Location of hydrodynamic data
     dirread_model = os.path.join(settings['ocean']['directory'], settings['ocean']['filename_style'])
@@ -86,17 +88,21 @@ def create_hydrodynamic_fieldset(settings):
 
 
 def create_fieldset(settings):
-    """A constructor method to create a Parcels.Fieldset with all fields necessary for a plasticparcels simulation
+    """A constructor method to create a `Parcels.Fieldset` with all fields
+    necessary for a plasticparcels simulation (e.g., a hydrodynamic model
+    velocity field, biogeochemical model variable fields, a wind field, etc.).
 
     Parameters
     ----------
     settings :
-        A dictionary of model settings used to create the fieldset
+        A dictionary of settings that contains an ocean model information,
+        biogeochemical model information, wind model information,
+        and other optional settings.
 
     Returns
     -------
     fieldset
-        A parcels.FieldSet object
+        A `parcels.FieldSet` object.
     """
     # First create the hydrodynamic fieldset
     fieldset = create_hydrodynamic_fieldset(settings)
@@ -201,21 +207,22 @@ def create_fieldset(settings):
 
 
 def create_particleset(fieldset, settings, release_locations):
-    """A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation
+    """A constructor method to create a `Parcels.ParticleSet` for a
+    `plasticparcels` simulation.
 
     Parameters
     ----------
     fieldset :
-        A Parcels.FieldSet object
+        A `Parcels.FieldSet` object.
     settings :
-        A dictionary of model settings, simulation settings, and release settings and plastic-type settings
+        A dictionary containing the plastic-type settings.
     release_locations :
-        A dictionary of release locations for particles
+        A dictionary containing release locations for particles.
 
     Returns
     -------
     particleset
-        A parcels.ParticleSet object
+        A parcels.ParticleSet object.
     """
     # Set the longitude, latitude, and plastic amount per particle
     lons = np.array(release_locations['lons'])
@@ -230,18 +237,6 @@ def create_particleset(fieldset, settings, release_locations):
     plastic_diameters = np.full(lons.shape, settings['plastictype']['plastic_diameter'])
     wind_coefficients = np.full(lons.shape, settings['plastictype']['wind_coefficient'])
 
-    # Create a PlasticParticle class
-    # TODO: Update to the new add_variables() approach for 3.0.2
-    # PlasticParticle = JITParticle.add_variables([
-    #     Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
-    #     Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
-    #     Variable('wind_coefficient', dtype=np.float32, initial=0., to_write=False),
-    #     Variable('settling_velocity', dtype=np.float64, initial=0., to_write=False),
-    #     Variable('seawater_density', dtype=np.float32, initial=np.nan, to_write=False),
-    #     Variable('absolute_salinity', dtype=np.float64, initial=np.nan, to_write=False),
-    #     Variable('algae_amount', dtype=np.float64, initial=0., to_write=False),
-    #     Variable('plastic_amount', dtype=np.float32, initial=0., to_write=True)
-    # ])
     PlasticParticle = JITParticle
     variables = [Variable('plastic_diameter', dtype=np.float32, initial=np.nan, to_write=False),
                  Variable('plastic_density', dtype=np.float32, initial=np.nan, to_write=False),
@@ -268,19 +263,20 @@ def create_particleset(fieldset, settings, release_locations):
 
 
 def create_particleset_from_map(fieldset, settings):
-    """A constructor method to create a Parcels.ParticleSet for a plasticparcels simulation from one of the available initialisation maps
+    """A constructor method to create a `Parcels.ParticleSet` for a
+    `plasticparcels` simulation using one of the available initialisation maps.
 
     Parameters
     ----------
     fieldset :
-        A Parcels.FieldSet object
+        A `Parcels.FieldSet` object.
     settings :
-        A dictionary of model settings, simulation settings, and release settings and plastic-type settings
+        A dictionary containing release settings and plastic-type settings.
 
     Returns
     -------
     particleset
-        A parcels.ParticleSet object
+        A `parcels.ParticleSet` object.
     """
     # Load release type information
     release_type = settings['release']['initialisation_type']
@@ -322,21 +318,22 @@ def create_particleset_from_map(fieldset, settings):
 
 
 def create_kernel(fieldset):
-    """A constructor method to create a list of kernels for a plasticparcels simulation
+    """A constructor method to create a list of kernels for a `plasticparcels`
+    simulation.
 
     Parameters
     ----------
     fieldset :
-        A parcels.FieldSet object containing a range of constants to turn on/off different kernel behaviours
+        A `parcels.FieldSet` object containing constants used to turn on/off
+        different kernel behaviours.
 
     Returns
     -------
     kernels :
-        A list of kernels used in the execution of the particle set
+        A list of kernels used in the execution of the particle set.
     """
     kernels = []
-
-    kernels.append(PolyTEOS10_bsq)  # To set the seawater_density variable  # TODO do we need this always? Or only for some kernels?
+    kernels.append(PolyTEOS10_bsq)  # To set the seawater_density variable
 
     if fieldset.use_3D:
         kernels.append(AdvectionRK4_3D)
@@ -347,20 +344,23 @@ def create_kernel(fieldset):
         kernels.append(SettlingVelocity)
     elif fieldset.use_biofouling and fieldset.use_3D:  # Must be in 3D to use biofouling mode
         kernels.append(Biofouling)
+    elif fieldset.use_biofouling and not fieldset.use_3D:
+        print('Biofouling mode is only available in 3D mode. Please set use_3D\
+              to True in the settings file.')
 
     if fieldset.use_stokes:
-        kernels.append(StokesDrift)
+        kernels.append(StokesDrift) 
     if fieldset.use_wind:
         kernels.append(WindageDrift)
 
     if fieldset.use_mixing:
         kernels.append(VerticalMixing)
 
-    # Add the unbeaching kernel to the beginning
+    # Add the unbeaching kernel
     if fieldset.use_stokes or fieldset.use_wind:
         kernels.append(unbeaching)
 
-    if fieldset.use_3D:
+    if fieldset.use_3D: # Add statuscode kernels for 3D advection
         kernels.append(checkThroughBathymetry)
         kernels.append(checkErrorThroughSurface)
 
