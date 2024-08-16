@@ -85,7 +85,7 @@ def WindageDrift(particle, fieldset, time):
     at 10m height, and $C_w$ is the windage coefficient (usually taken to
     be in [1%,5%], depending on particle size)
 
-    
+
     For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#wind-induced-drift-leeway
 
     Parameter Requirements
