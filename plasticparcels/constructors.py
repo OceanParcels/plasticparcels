@@ -349,7 +349,7 @@ def create_kernel(fieldset):
               to True in the settings file.')
 
     if fieldset.use_stokes:
-        kernels.append(StokesDrift) 
+        kernels.append(StokesDrift)
     if fieldset.use_wind:
         kernels.append(WindageDrift)
 
