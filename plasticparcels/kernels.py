@@ -416,7 +416,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
       Accurate and computationally efficient algorithms for potential
       temperature and density of seawater.  Journal of Atmospheric and
       Oceanic Technology, 20, 730-741.
-      
+
     """
     Z = - particle.depth  # note: use negative depths!
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
@@ -502,8 +502,8 @@ def VerticalMixing(particle, fieldset, time):
             - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
         Particle:
             - settling_velocity
-    
-    
+
+
     Order of Operations:
             To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
             Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
