@@ -384,25 +384,28 @@ def Biofouling(particle, fieldset, time):
 
 
 def PolyTEOS10_bsq(particle, fieldset, time):
-    """A seawater density kernel
+    """A seawater density kernel.
 
     Description:
     ----------
-    A kernel to calculate the seawater density surrounding a particle based on the polyTEOS10-bsq algorithm
-    from Appendix A.2 of https://doi.org/10.1016/j.ocemod.2015.04.002
+    A kernel to calculate the seawater density surrounding a particle based on
+    the polyTEOS10-bsq algorithm from Appendix A.2 of
+    https://doi.org/10.1016/j.ocemod.2015.04.002
 
     Parameter Requirements
     ----------
     particle :
-        seawater_density
-    fieldset : _type_
-        absolute_salinity
-        conservative_temperature
+        - seawater_density
+    fieldset :
+        - `fieldset.conservative_temperature` - The conservative temperature
+        field. Units [C].
+        - `fieldset.absolute_salinity' - The absolute salinity field.
+        Units [g/kg].
 
     Kernel Requirements:
     ----------
     Order of Operations:
-        This kernel must be run before any kernel that requires particle.seawater_density
+        This kernel must be run before any kernel that requires an updated particle.seawater_density
 
     References
     ----------
@@ -413,6 +416,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
       Accurate and computationally efficient algorithms for potential
       temperature and density of seawater.  Journal of Atmospheric and
       Oceanic Technology, 20, 730-741.
+      
     """
     Z = - particle.depth  # note: use negative depths!
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
@@ -486,23 +490,24 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 
 
 def VerticalMixing(particle, fieldset, time):
-    """A markov-0 kernel for vertical mixing
+    """A markov-0 kernel for vertical mixing.
 
     Description:
-        A simple verticle mixing kernel that uses a markov-0 process to determine the vertical displacement of a particle.
-        Ross & Sharples 2004
+        A simple verticle mixing kernel that uses a markov-0 process to determine
+        the vertical displacement of a particle. Ross & Sharples 2004
         The deterministic component is determined using forward-difference with a given delta_z.
 
     Requirements:
         Fieldset:
-            ---
+            - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
         Particle:
-            settling_velocity -
-        Order of Operations:
+            - settling_velocity
+    
+    
+    Order of Operations:
             To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
             Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
 
-    NOTES: previously called markov_0_mixing
     """
     # Sample the ocean vertical eddy diffusivity field KZ
     delta_z = 0.5  # [m], used to compute the gradient of kz using a forward-difference
