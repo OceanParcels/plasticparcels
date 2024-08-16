@@ -13,6 +13,19 @@ The tool is based on the [`Parcels`](https://oceanparcels.org/) computational La
 conda install conda-forge::plasticparcels
 ```
 
+### Community contributions and support
+#### Contributing code
+We welcome contributions to `plasticparcels`, especially example workbooks and analyses for our [public examples page](https://plastic.oceanparcels.org/en/latest/examples.html). To contribute to the project, please submit a [pull request](https://github.com/OceanParcels/plasticparcels/pulls).
+
+#### Requesting features and reporting issues/bugs
+If you want to request a new feature, or if you find an issue or bug in the code, please open an issue in the [`plasticparcels` issue tracker](https://github.com/OceanParcels/plasticparcels/issues).
+
+#### Seeking support?
+If you would like support using `plasticparcels`, or are have any questions about your `plasticparcels` simulations, please start a discussion in the [`plasticparcels` discussion page](https://github.com/OceanParcels/plasticparcels/discussions).
+
+
+
+
 ### Further information
 For more information and documentation, see the [plasticparcels documentation](https://plastic.oceanparcels.org/).
 
