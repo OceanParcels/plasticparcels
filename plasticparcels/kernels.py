@@ -39,7 +39,6 @@ def StokesDrift(particle, fieldset, time):
     ----------
     [1] Breivik (2016) - https://doi.org/10.1016/j.ocemod.2016.01.005
 
-
     """
     # Sample the U / V components of Stokes drift
     stokes_U = fieldset.Stokes_U[time, particle.depth, particle.lat, particle.lon]
@@ -215,32 +214,33 @@ def Biofouling(particle, fieldset, time):
 
     Description
     ----------
-    Kernel to compute the settling velocity of particles due to changes in ambient algal concentrations, growth and death of attached algae based on [2].
-    The settling velocity of the particle is computed as per [1], however the particle size and density is affected by a biofouling process. The algae attached
-    to the particle (A) has a growth rate described by
-        dA/dt = C + G - M - R
+    Kernel to compute the settling velocity of particles due to changes in ambient algal
+    concentrations, growth and death of attached algae based on [2]. The settling velocity
+    of the particle is computed as per [1], however the particle size and density is
+    affected by a biofouling process. The algae attached to the particle $A$ has a growth
+    rate described by
+        $dA/dt = C + G - M - R$
 
-    Here, C models fouling of the plastic through collision with algae
-        C = beta_A * A_A / theta_pl
-            beta_A   -> Encounter rate
-            A_A      -> Ambient algal concentration
-            theta_pl -> Surface area of plastic particle
+    Here, $C$ models fouling of the plastic through collision with algae
+        $C = beta_A * A_A / theta_pl$,
+    where $beta_A$ is the encounter rate, $A_A$ is the ambient algal concentration, and
+    $theta_pl$ is the surface area of plastic particle.
 
-    G models the growth of the algae attached to the surface of the particle
-        G = mu_A * A
-            mu_A -> Algal growth rate
-            A    -> Amount of algae attached to a particle
+    $G$ models the growth of the algae attached to the surface of the particle
+        $G = mu_A * A$,
+    where $mu_A$ is the algal growth rate.
 
-    M models the grazing mortality of the algae attached to the surface of the particle
-        M = m_A * A
-            m_A -> Algal mortality rate
-            A   -> Amount of algae attached to a particle
+    $M$ models the grazing mortality of the algae attached to the surface of the particle
+        $M = m_A * A$,
+    where $m_A$ is the algal mortality rate.
 
-    R models the respiration  of the algae attached to the surface of the particle
-        R = Q_10
+    $R$ models the respiration of the algae attached to the surface of the particle
+        $R = Q_{10}^{(T-20)/10}R_{20}A$,
+    where $Q_{10}$ is the temperature coefficient, which indicates how much the respiration
+    increases when the temperature increases by 10C. $T$ is the temperature, and $R_{20}$
+    is the respiration rate.
 
-
-    TODO:Calculation steps:
+    Calculation steps:
         1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
         2. Compute the kinematic viscosity from Eq. (25) in [2]
         3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
@@ -248,31 +248,27 @@ def Biofouling(particle, fieldset, time):
         5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
 
 
-
-
     Parameter Requirements
     ----------
     particle :
-        - Particle diameter 'diameter'
-        - Particle density 'density'
-        - Surrounding seawater density 'seawater_density'
-    fieldset : _type_
-        - Gravity constant 'G' [m s-2]
-        - Conservative temperature field 'conservative_temperature'
-        - Absolute salinity field 'absolute_salinity'
-        - Algae cell volume 'algae_cell_volume'
-        - Biofilm density 'biofilm_density'
+        - diameter
+        - density
+        - seawater_density
+    fieldset :
+        - `fieldset.G` - Gravity constant. Units [m s-2].
+        - `fieldset.conservative_temperature` - The conservative temperature
+        field. Units [C].
+        - `fieldset.absolute_salinity' - The absolute salinity field.
+        Units [g/kg].
+        - 'fieldset.algae_cell_volume' - The volume of 1 algal cell [m-3]
+        - 'fieldset.biofilm_density' - The density of the biofilm [kg m-3]
 
 
     Kernel Requirements
     ----------
         Order of Operations:
-
-    TODO: Add units to each variable
-    Hard to generalise this without something like fieldset.biofouling == True? to determine if we need to compute the biofilm component
-     ----- WELL we don't since anything with biofouling would use the biofouling kernel....
-
-
+        - This kernel must run after the PolyTEOS10_bsq kernel, which sets the
+        particle.seawater_density variable, relied on by this.
 
     References
     ----------
@@ -281,27 +277,15 @@ def Biofouling(particle, fieldset, time):
     [3] Menden-Deuer and Lessard (2000) - https://doi.org/10.4319/lo.2000.45.3.0569
     [4] Bernard and Remond (2012) - https://doi.org/10.1016/j.biortech.2012.07.022
     """
-    # Define constants and algal properties, and sample fieldset variables
-    # g = fieldset.G  # gravitational acceleration [m s-2]
-    # k = fieldset.K  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
-
-    # algae_cell_volume = fieldset.algae_cell_volume  # Volume of 1 algal cell [m-3]    - V_a
-    # algae_amount = particle.algae_amount  # Number of attached algae per square meter of particle surface [number m-2]
-    # algae_mortality_rate = fieldset.algae_mortality_rate
-    # biofilm_density = fieldset.biofilm_density
-    # r20 = fieldset.R20  # respiration rate [s-1]
-    # q10 = fieldset.Q10  # temperature coefficient respiration [-]
-    # gamma = fieldset.Gamma  # shear rate [s-1]
-
     # seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
-    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000.  # TODO: Check that we should convert here and not in the fieldset
+    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000.
     particle_radius = 0.5 * particle.plastic_diameter
     # particle_density = particle.plastic_density
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
     # Compute the seawater dynamic viscosity and kinematic viscosity
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
+    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
@@ -342,7 +326,6 @@ def Biofouling(particle, fieldset, time):
 
     total_volume = biofilm_volume + particle_volume  # volume of total (biofilm + plastic) [m3]
     total_radius = ((total_volume * (3. / (4. * math.pi))) ** (1. / 3.))  # total radius [m]
-    # biofilm_thickness = total_radius - particle_radius  # biofilm thickness [m]  # TODO this is not used?
 
     # Compute diffusivities
     total_density = (particle_volume * particle.plastic_density + biofilm_volume * fieldset.biofilm_density) / total_volume  # total density [kg m-3]
@@ -390,7 +373,7 @@ def Biofouling(particle, fieldset, time):
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
 
     # Compute the settling velocity of the particle using Eq. (5) from [1] (solving for the settling velocity)
-    sign_of_density_difference = math.copysign(1., normalised_density_difference)  # normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
+    sign_of_density_difference = math.copysign(1., normalised_density_difference)
     settling_velocity = sign_of_density_difference * (fieldset.G * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
     # Update the settling velocity
