@@ -39,6 +39,8 @@ For the wind and wave data, we recommend using the `CDS API <https://cds.climate
 To run the examples, you will need to update the data directories in settings ``.json`` files.
 
 Just like the ``parcels`` framework, ``plasticparcels`` can be adapted to use other hydrodynamic, biogeochemical, wave, and atmospheric models. If you require assistance, please contact us through the [Discussions page on GitHub](https://github.com/OceanParcels/plasticparcels/discussions).
+If you want to request a new feature, or if you find an issue or bug in the code, please open an issue in the [`plasticparcels` issue tracker](https://github.com/OceanParcels/plasticparcels/issues).
+We welcome contributions to `plasticparcels`, especially example workbooks and analyses for our [public examples page](https://plastic.oceanparcels.org/en/latest/examples.html). To contribute to the project, please submit a [pull request](https://github.com/OceanParcels/plasticparcels/pulls).
 
 .. toctree::
    :maxdepth: 2
