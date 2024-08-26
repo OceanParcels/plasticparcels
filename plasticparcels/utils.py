@@ -18,6 +18,7 @@ def getclosest_ij(lats, lons, latpt, lonpt):
 
 
 def select_files(dirread, string_, date_current, dt_sim, i_date_s=-13, i_date_e=-3, dt_margin=8):
+    """Function to select files in a directory based on a current date and a simulation duration."""
     # set dt_margin to e.g. 32 when dealing with monthly data, or 8 when dealing with weekly data
     yr0 = date_current.year
 
@@ -47,15 +48,15 @@ def select_files(dirread, string_, date_current, dt_sim, i_date_s=-13, i_date_e=
 
 
 def create_directory(directory):
+    """Function to create a directory if it does not exist."""
     if not os.path.exists(directory):
         print('Creating directory %s' % directory)
         os.makedirs(directory)
 
 
 def distance(lon1, lat1, lon2, lat2):
-    """
-    Calculate the great circle distance between two points
-    on the earth (specified in decimal degrees)
+    """Function to calculate the great circle distance between two points
+    on the earth (specified in decimal degrees).
     """
     # Convert decimal degrees to Radians:
     lon1r = np.radians(lon1)
@@ -79,9 +80,8 @@ def distance(lon1, lat1, lon2, lat2):
 
 
 def get_coords_from_polygon(shape):
-    """
-    Get a list of coordinate points on a Polygon
-    (or MultiPolygon) shape
+    """Function to return a list of coordinate points on a Polygon
+    (or MultiPolygon) shape.
 
     Based on: https://stackoverflow.com/questions/58844463/how-to-get-a-list-of-every-point-inside-a-multipolygon-using-shapely
     """
@@ -99,14 +99,14 @@ def get_coords_from_polygon(shape):
 
 
 def load_settings(filename):
-    """A function to load a settings file in json format"""
+    """Function to load a settings file in json format."""
     with open(filename, "r") as file:
         settings = json.load(file)
     return settings
 
 
 def download_plasticparcels_dataset(dataset: str, settings, data_home=None):
-    """Load an example dataset from the parcels website.
+    """Function to load an example dataset from the parcels website.
 
     This function provides quick access to a small number of example datasets
     that are useful in documentation and testing in parcels.
