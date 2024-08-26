@@ -396,7 +396,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
         - seawater_density
     fieldset :
         - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
-        - `fieldset.absolute_salinity' - The absolute salinity field. Units [g/kg].
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
 
     Kernel Requirements:
     ----------
