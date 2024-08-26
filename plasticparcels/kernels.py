@@ -26,8 +26,7 @@ def StokesDrift(particle, fieldset, time):
     Parameter Requirements
     ----------
     fieldset :
-        - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift
-        velocity fields. Units [m s-1]
+        - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift velocity fields. Units [m s-1]
         - `fieldset.wave_Tp`, the peak wave period field (:math:`T_p`). Units [s].
 
     Kernel Requirements
@@ -133,12 +132,9 @@ def SettlingVelocity(particle, fieldset, time):
     Calculation steps:
         1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
         2. Compute the kinematic viscosity from Eq. (25) in [2]
-        3. Compute the dimensionless particle diameter from Eq. (4) in [2],
-        equivalent to Eq. (6) in [1]
-        4. Compute the dimensionless settling velocity from Eq. (3) in [2],
-        equivalent to Eq. (8) in [1]
-        5. Compute the settling velocity of the particle from Eq. (2) in [2],
-        equivalent to Eq. (9) in [1]
+        3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
+        4. Compute the dimensionless settling velocity from Eq. (3) in [2], equivalent to Eq. (8) in [1]
+        5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
 
 
     Parameter Requirements
@@ -227,8 +223,8 @@ def Biofouling(particle, fieldset, time):
     :math:`\theta_{pl}` is the surface area of plastic particle.
 
     :math:`G` models the growth of the algae attached to the surface of the particle
-        :math:`G = mu_A \cdot A`,
-    where :math:`mu_A` is the algal growth rate.
+        :math:`G = \mu_A \cdot A`,
+    where :math:`\mu_A` is the algal growth rate.
 
     :math:`M` models the grazing mortality of the algae attached to the surface of the particle
         :math:`M = m_A \cdot A`,
@@ -264,7 +260,7 @@ def Biofouling(particle, fieldset, time):
 
     Kernel Requirements
     ----------
-        Order of Operations:
+    Order of Operations:
         - This kernel must run after the PolyTEOS10_bsq kernel, which sets the
         particle.seawater_density variable, relied on by this.
 
@@ -618,9 +614,9 @@ def periodicBC(particle, fieldset, time):
 
     Kernel Requirements
     ----------
-        Order of Operations:
-            This kernel should be performed after all other movement kernels, as it sets the updated particle
-            longitude to be within the [-180,180] longitudinal range.
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it sets the updated particle
+        longitude to be within the [-180,180] longitudinal range.
     """
     if particle.lon + particle_dlon <= -180.:  # noqa
         particle_dlon += 360.  # noqa
@@ -637,8 +633,8 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
     Kernel Requirements
     ----------
-        Order of Operations:
-            This kernel should be performed after all other movement kernels, as it is an error kernel.
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
         # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
@@ -655,8 +651,8 @@ def deleteParticle(particle, fieldset, time):
 
     Kernel Requirements
     ----------
-        Order of Operations:
-            This kernel should be performed after all other movement kernels, as it is an error kernel.
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state >= 50 and particle.state != StatusCode.ErrorThroughSurface:
         particle.delete()
@@ -671,8 +667,8 @@ def delete_particle_interp(particle, fieldset, time):
 
     Kernel Requirements
     ----------
-        Order of Operations:
-            This kernel should be performed after all other movement kernels, as it is an error kernel.
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if fieldset.verbose_delete == 1:
         print('particle is deleted due to an interpolation error at lon = ' + str(particle.lon) + ', lat =' + str(
