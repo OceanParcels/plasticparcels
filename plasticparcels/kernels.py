@@ -14,12 +14,12 @@ def StokesDrift(particle, fieldset, time):
     ----------
     Using the approach in [1] assuming a Phillips wave spectrum to determine
     the depth dependent Stokes drift. Specifically, the 'Stokes drift velocity'
-    $u_s$ is computed as per Eq. (19) in [1].
+    `u_s` is computed as per Eq. (19) in [1].
 
     We treat the Stokes drift as a linear addition to the velocity field
-        $u(x,t) = u_c(x,t) + C_s * u_s(x,t)$
-    where $u_c$ is the current velocity, $u_s$ is the Stokes drift velocity,
-    and $C_s$ is the depth-varying decay factor.
+        `u(x,t) = u_c(x,t) + C_s * u_s(x,t)`
+    where `u_c` is the current velocity, `u_s` is the Stokes drift velocity,
+    and `C_s` is the depth-varying decay factor.
 
     For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#stokes-drift
 
@@ -28,7 +28,7 @@ def StokesDrift(particle, fieldset, time):
     fieldset :
         - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift
         velocity field. Units [m s-1]
-        - `fieldset.wave_Tp`, the peak wave period field ($T_p$). Units [s].
+        - `fieldset.wave_Tp`, the peak wave period field (`T_p`). Units [s].
 
     Kernel Requirements
     ----------
@@ -79,9 +79,9 @@ def WindageDrift(particle, fieldset, time):
     to the particle.
 
     We treat the windage drift as a linear addition to the velocity field
-        $u(x,t) = u_c(x,t) + C_w * (u_w(x,t)-u_c(x,t))$
-    where $u_c$ is the ocean current velocity, $u_w$ is the wind velocity
-    at 10m height, and $C_w$ is the windage coefficient (usually taken to
+        `u(x,t) = u_c(x,t) + C_w * (u_w(x,t)-u_c(x,t))`
+    where `u_c` is the ocean current velocity, `u_w` is the wind velocity
+    at 10m height, and `C_w` is the windage coefficient (usually taken to
     be in [1%,5%], depending on particle size)
 
 
@@ -217,27 +217,27 @@ def Biofouling(particle, fieldset, time):
     Kernel to compute the settling velocity of particles due to changes in ambient algal
     concentrations, growth and death of attached algae based on [2]. The settling velocity
     of the particle is computed as per [1], however the particle size and density is
-    affected by a biofouling process. The algae attached to the particle $A$ has a growth
+    affected by a biofouling process. The algae attached to the particle `A` has a growth
     rate described by
-        $dA/dt = C + G - M - R$
+        `dA/dt = C + G - M - R`
 
-    Here, $C$ models fouling of the plastic through collision with algae
-        $C = beta_A * A_A / theta_pl$,
-    where $beta_A$ is the encounter rate, $A_A$ is the ambient algal concentration, and
-    $theta_pl$ is the surface area of plastic particle.
+    Here, `C` models fouling of the plastic through collision with algae
+        `C = beta_A * A_A / theta_pl`,
+    where `beta_A` is the encounter rate, `A_A` is the ambient algal concentration, and
+    `theta_pl` is the surface area of plastic particle.
 
-    $G$ models the growth of the algae attached to the surface of the particle
-        $G = mu_A * A$,
-    where $mu_A$ is the algal growth rate.
+    `G` models the growth of the algae attached to the surface of the particle
+        `G = mu_A * A`,
+    where `mu_A` is the algal growth rate.
 
-    $M$ models the grazing mortality of the algae attached to the surface of the particle
-        $M = m_A * A$,
-    where $m_A$ is the algal mortality rate.
+    `M` models the grazing mortality of the algae attached to the surface of the particle
+        `M = m_A * A`,
+    where `m_A` is the algal mortality rate.
 
-    $R$ models the respiration of the algae attached to the surface of the particle
-        $R = Q_{10}^{(T-20)/10}R_{20}A$,
-    where $Q_{10}$ is the temperature coefficient, which indicates how much the respiration
-    increases when the temperature increases by 10C. $T$ is the temperature, and $R_{20}$
+    `R` models the respiration of the algae attached to the surface of the particle
+        `R = Q_{10}^{(T-20)/10}R_{20}A`,
+    where `Q_{10}` is the temperature coefficient, which indicates how much the respiration
+    increases when the temperature increases by 10C. `T` is the temperature, and `R_{20}`
     is the respiration rate.
 
     Calculation steps:
@@ -256,10 +256,8 @@ def Biofouling(particle, fieldset, time):
         - seawater_density
     fieldset :
         - `fieldset.G` - Gravity constant. Units [m s-2].
-        - `fieldset.conservative_temperature` - The conservative temperature
-        field. Units [C].
-        - `fieldset.absolute_salinity' - The absolute salinity field.
-        Units [g/kg].
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity' - The absolute salinity field. Units [g/kg].
         - 'fieldset.algae_cell_volume' - The volume of 1 algal cell [m-3]
         - 'fieldset.biofilm_density' - The density of the biofilm [kg m-3]
 
@@ -397,10 +395,8 @@ def PolyTEOS10_bsq(particle, fieldset, time):
     particle :
         - seawater_density
     fieldset :
-        - `fieldset.conservative_temperature` - The conservative temperature
-        field. Units [C].
-        - `fieldset.absolute_salinity' - The absolute salinity field.
-        Units [g/kg].
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity' - The absolute salinity field. Units [g/kg].
 
     Kernel Requirements:
     ----------
@@ -500,16 +496,16 @@ def VerticalMixing(particle, fieldset, time):
 
     Parameter Requirements
     ----------
-     Fieldset:
-            - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
-        Particle:
-            - settling_velocity
+    particle:
+        - settling_velocity
+    fieldset:
+        - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
 
     Kernel Requirements
     ----------
     Order of Operations:
-            To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
-            Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
+        To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
+        Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
 
     References
     ----------
@@ -554,9 +550,9 @@ def unbeaching(particle, fieldset, time):
 
     Parameter Requirements
     ----------
-     Fieldset:
-            - `fieldset.unbeach_U` - The zonal unbeaching velocity. Units [m s-1].
-            - `fieldset.unbeach_V` - The meridional unbeaching velocity. Units [m s-1].
+    Fieldset:
+        - `fieldset.unbeach_U` - The zonal unbeaching velocity. Units [m s-1].
+        - `fieldset.unbeach_V` - The meridional unbeaching velocity. Units [m s-1].
 
     Kernel Requirements
     ----------
