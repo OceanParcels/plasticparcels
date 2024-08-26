@@ -151,7 +151,7 @@ def SettlingVelocity(particle, fieldset, time):
         - `fieldset.G` - Gravity constant. Units [m s-2].
         - `fieldset.conservative_temperature` - The conservative temperature
         field. Units [C].
-        - `fieldset.absolute_salinity' - The absolute salinity field.
+        - `fieldset.absolute_salinity` - The absolute salinity field.
         Units [g/kg].
 
 
