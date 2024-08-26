@@ -492,21 +492,28 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 def VerticalMixing(particle, fieldset, time):
     """A markov-0 kernel for vertical mixing.
 
-    Description:
-        A simple verticle mixing kernel that uses a markov-0 process to determine
-        the vertical displacement of a particle. Ross & Sharples 2004
-        The deterministic component is determined using forward-difference with a given delta_z.
+    Description
+    ----------
+    A simple verticle mixing kernel that uses a markov-0 process to determine the vertical
+    displacement of a particle [1]. The deterministic component is determined
+    using forward-difference with a given delta_z.
 
-    Requirements:
-        Fieldset:
+    Parameter Requirements
+    ----------
+     Fieldset:
             - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
         Particle:
             - settling_velocity
 
-
+    Kernel Requirements
+    ----------
     Order of Operations:
             To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
             Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
+
+    References
+    ----------
+    [1] Ross & Sharples (2004) - https://doi.org/10.4319/lom.2004.2.289
 
     """
     # Sample the ocean vertical eddy diffusivity field KZ
@@ -533,28 +540,30 @@ def VerticalMixing(particle, fieldset, time):
     # Update particle position
     particle_ddepth += ddepth  # noqa
 
-    # bathymetry_local = fieldset.bathymetry[time, fieldset.z_start, particle.lat, particle.lon]
-
-    # Have to think about how to do boundary conditions below...
-    # if potential < fieldset.z_start:
-    #     particle.depth = fieldset.z_start
-    # elif potential > bathymetry_local:
-    #     particle.depth += 0 #TODO: keep particles 'beached'
-    #     particle.hit_bottom = 1
-    # elif particle.depth > 100 and potential > (bathymetry_local*0.99): # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
-    #     particle.depth += 0
-    #     particle.hit_bottom = 1
-    # elif potential > 3900:
-    #     particle.depth += 0
-    #     particle.hit_bottom = 1
-    # else:
-    #     particle.depth = potential
-
 # Biofouling related kernels
 
 
 def unbeaching(particle, fieldset, time):
-    """A kernel to unbeach particles"""
+    """Unbeaching kernel.
+    
+    Description
+    ----------
+    A simple kernel to 'unbeach' particles that have been advected onto non-ocean grid cells.
+    This kernel uses a simple 'unbeaching' field, that provides (U,V) velocities with a magnitude
+    of 1 m/s, normal to the grid cell face between an ocean and non-ocean grid cell.
+
+    Parameter Requirements
+    ----------
+     Fieldset:
+            - `fieldset.unbeach_U` - The zonal unbeaching velocity. Units [m s-1].
+            - `fieldset.unbeach_V` - The meridional unbeaching velocity. Units [m s-1].
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+            This kernel should be performed after all other movement kernels, as it samples the
+            unbeaching field using the updated particle position.
+    """
     # Measure the velocity field at the final particle location
     (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
 
@@ -570,6 +579,24 @@ def unbeaching(particle, fieldset, time):
 
 
 def checkThroughBathymetry(particle, fieldset, time):
+    """Bathymetry error kernel.
+    
+    Description
+    ----------
+    A simple kernel to ensure particles are not advected below the bathymetry field.
+
+    Parameter Requirements
+    ----------
+     Fieldset:
+            - `fieldset.z_start` - A field constant representing the minimum depth. Units [m].
+            - `fieldset.bathymetry` - A 2D field containing the ocean bathymetry. Units [m].
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+            This kernel should be performed after all other movement kernels, as it samples the
+            bathymetry field using the updated particle position.
+    """
     bathymetry_local = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
     potential_depth = particle.depth + particle_ddepth  # noqa
     min_depth = 0.5  # meters - maybe set this as a fieldset variable?
@@ -585,14 +612,19 @@ def checkThroughBathymetry(particle, fieldset, time):
         particle_ddepth = 3900 - particle.depth  # noqa
 
 
-# A list of kernels used to 'recover' particles after --- status codes ---
-
-# @author: denes001
-# @date: 2023-08-09
 
 def periodicBC(particle, fieldset, time):
-    """Kernel to keep the particle between [-180,180] longitude
-    To be run after all movement kernels
+    """A periodic boundary condition kernel.
+    
+    Description
+    ----------
+    Kernel to keep the particle between [-180,180] longitude
+    
+    Kernel Requirements
+    ----------
+        Order of Operations:
+            This kernel should be performed after all other movement kernels, as it sets the updated particle
+            longitude to be within the [-180,180] longitudinal range.
     """
     if particle.lon + particle_dlon <= -180.:  # noqa
         particle_dlon += 360.  # noqa
@@ -601,7 +633,16 @@ def periodicBC(particle, fieldset, time):
 
 
 def checkErrorThroughSurface(particle, fieldset, time):
-    """Kernel to set the particle depth to the particle surface if it goes through the surface
+    """Surface error kernel.
+    
+    Description
+    ----------
+    Kernel to delete a particle if it goes through the surface.
+
+    Kernel Requirements
+    ----------
+        Order of Operations:
+            This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
         # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
@@ -610,14 +651,33 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
 
 def deleteParticle(particle, fieldset, time):
-    """Kernel for deleting particles if they throw an error other than through the surface
+    """General error kernel.
+    
+    Description
+    ----------
+    Kernel to delete a particle if it throws an error other than `ErrorThroughSurface`.
+
+    Kernel Requirements
+    ----------
+        Order of Operations:
+            This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state >= 50 and particle.state != StatusCode.ErrorThroughSurface:
         particle.delete()
 
 
 def delete_particle_interp(particle, fieldset, time):
-    """Kernel for deleting particles if they throw an interpolation error."""
+    """DEPRECATED: Interpolation error kernel.
+    
+    Description
+    ----------
+    Kernel to delete a particle if it throws an interpolation error.
+
+    Kernel Requirements
+    ----------
+        Order of Operations:
+            This kernel should be performed after all other movement kernels, as it is an error kernel.
+    """
     if fieldset.verbose_delete == 1:
         print('particle is deleted due to an interpolation error at lon = ' + str(particle.lon) + ', lat =' + str(
             particle.lat) + ', depth =' + str(particle.depth))
