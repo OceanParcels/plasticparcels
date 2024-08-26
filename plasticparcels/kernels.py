@@ -545,7 +545,7 @@ def VerticalMixing(particle, fieldset, time):
 
 def unbeaching(particle, fieldset, time):
     """Unbeaching kernel.
-    
+
     Description
     ----------
     A simple kernel to 'unbeach' particles that have been advected onto non-ocean grid cells.
@@ -580,7 +580,7 @@ def unbeaching(particle, fieldset, time):
 
 def checkThroughBathymetry(particle, fieldset, time):
     """Bathymetry error kernel.
-    
+
     Description
     ----------
     A simple kernel to ensure particles are not advected below the bathymetry field.
@@ -615,11 +615,11 @@ def checkThroughBathymetry(particle, fieldset, time):
 
 def periodicBC(particle, fieldset, time):
     """A periodic boundary condition kernel.
-    
+
     Description
     ----------
     Kernel to keep the particle between [-180,180] longitude
-    
+
     Kernel Requirements
     ----------
         Order of Operations:
@@ -634,7 +634,7 @@ def periodicBC(particle, fieldset, time):
 
 def checkErrorThroughSurface(particle, fieldset, time):
     """Surface error kernel.
-    
+
     Description
     ----------
     Kernel to delete a particle if it goes through the surface.
@@ -652,7 +652,7 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
 def deleteParticle(particle, fieldset, time):
     """General error kernel.
-    
+
     Description
     ----------
     Kernel to delete a particle if it throws an error other than `ErrorThroughSurface`.
@@ -668,7 +668,7 @@ def deleteParticle(particle, fieldset, time):
 
 def delete_particle_interp(particle, fieldset, time):
     """DEPRECATED: Interpolation error kernel.
-    
+
     Description
     ----------
     Kernel to delete a particle if it throws an interpolation error.
