@@ -27,7 +27,7 @@ def StokesDrift(particle, fieldset, time):
     ----------
     fieldset :
         - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift
-        velocity field. Units [m s-1]
+        velocity fields. Units [m s-1]
         - `fieldset.wave_Tp`, the peak wave period field (:math:`T_p`). Units [s].
 
     Kernel Requirements
@@ -210,7 +210,7 @@ def SettlingVelocity(particle, fieldset, time):
 
 
 def Biofouling(particle, fieldset, time):
-    """Settling velocity due to biofouling kernel.
+    r"""Settling velocity due to biofouling kernel.
 
     Description
     ----------
@@ -219,19 +219,19 @@ def Biofouling(particle, fieldset, time):
     of the particle is computed as per [1], however the particle size and density is
     affected by a biofouling process. The algae attached to the particle :math:`A` has a growth
     rate described by
-        :math:`dA/dt = C + G - M - R`
+        :math:`\frac{dA}{dt} = C + G - M - R`
 
     Here, :math:`C` models fouling of the plastic through collision with algae
-        :math:`C = beta_A * A_A / theta_pl`,
-    where :math:`beta_A` is the encounter rate, :math:`A_A` is the ambient algal concentration, and
-    :math:`theta_pl` is the surface area of plastic particle.
+        :math:`C = \beta_A \cdot A_A / \theta_{pl}`,
+    where :math:`\beta_A` is the encounter rate, :math:`A_A` is the ambient algal concentration, and
+    :math:`\theta_{pl}` is the surface area of plastic particle.
 
     :math:`G` models the growth of the algae attached to the surface of the particle
-        :math:`G = mu_A * A`,
+        :math:`G = mu_A \cdot A`,
     where :math:`mu_A` is the algal growth rate.
 
     :math:`M` models the grazing mortality of the algae attached to the surface of the particle
-        :math:`M = m_A * A`,
+        :math:`M = m_A \cdot A`,
     where :math:`m_A` is the algal mortality rate.
 
     :math:`R` models the respiration of the algae attached to the surface of the particle
@@ -257,9 +257,9 @@ def Biofouling(particle, fieldset, time):
     fieldset :
         - `fieldset.G` - Gravity constant. Units [m s-2].
         - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
-        - `fieldset.absolute_salinity' - The absolute salinity field. Units [g/kg].
-        - 'fieldset.algae_cell_volume' - The volume of 1 algal cell [m-3]
-        - 'fieldset.biofilm_density' - The density of the biofilm [kg m-3]
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
+        - `fieldset.algae_cell_volume` - The volume of 1 algal cell [m-3]
+        - `fieldset.biofilm_density` - The density of the biofilm [kg m-3]
 
 
     Kernel Requirements
