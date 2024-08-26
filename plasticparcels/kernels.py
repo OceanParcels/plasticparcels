@@ -83,19 +83,14 @@ def WindageDrift(particle, fieldset, time):
     at 10m height, and :math:`C_w` is the windage coefficient (usually taken to
     be in [1%,5%], depending on particle size)
 
-
     For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#wind-induced-drift-leeway
 
     Parameter Requirements
     ----------
     particle :
-        - wind_coefficient - the particle windage coefficient in decimals
-        (usually taken to be between 0.01 and 0.05,
-        depending on particle size).
+        - wind_coefficient - the particle windage coefficient in decimals (usually taken to be between 0.01 and 0.05, depending on particle size).
     fieldset :
-        - `fieldset.Wind_U` and `fieldset.Wind_V`, the wind velocity field at
-        10m height above sea surface. Units [m s-1].
-
+        - `fieldset.Wind_U` and `fieldset.Wind_V`, the wind velocity field at 10m height above sea surface. Units [m s-1].
 
     Kernel Requirements
     ----------
@@ -145,16 +140,14 @@ def SettlingVelocity(particle, fieldset, time):
         - seawater_density
     fieldset :
         - `fieldset.G` - Gravity constant. Units [m s-2].
-        - `fieldset.conservative_temperature` - The conservative temperature
-        field. Units [C].
-        - `fieldset.absolute_salinity` - The absolute salinity field.
-        Units [g/kg].
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
 
 
     Kernel Requirements:
     ----------
     Order of Operations:
-        - This kernel must run after the PolyTEOS10_bsq kernel, which sets the
+        This kernel must run after the PolyTEOS10_bsq kernel, which sets the
         particle.seawater_density variable, relied on by this.
 
 
@@ -261,8 +254,7 @@ def Biofouling(particle, fieldset, time):
     Kernel Requirements
     ----------
     Order of Operations:
-        - This kernel must run after the PolyTEOS10_bsq kernel, which sets the
-        particle.seawater_density variable, relied on by this.
+        This kernel must run after the PolyTEOS10_bsq kernel, which sets the particle.seawater_density variable, relied on by this.
 
     References
     ----------
@@ -397,7 +389,7 @@ def PolyTEOS10_bsq(particle, fieldset, time):
     Kernel Requirements:
     ----------
     Order of Operations:
-        This kernel must be run before any kernel that requires an updated particle.seawater_density
+        This kernel must be run before any kernel that requires an updated `particle.seawater_density` value.
 
     References
     ----------
@@ -553,8 +545,8 @@ def unbeaching(particle, fieldset, time):
     Kernel Requirements
     ----------
     Order of Operations:
-            This kernel should be performed after all other movement kernels, as it samples the
-            unbeaching field using the updated particle position.
+        This kernel should be performed after all other movement kernels, as it samples the
+        unbeaching field using the updated particle position.
     """
     # Measure the velocity field at the final particle location
     (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
@@ -579,15 +571,15 @@ def checkThroughBathymetry(particle, fieldset, time):
 
     Parameter Requirements
     ----------
-     Fieldset:
-            - `fieldset.z_start` - A field constant representing the minimum depth. Units [m].
-            - `fieldset.bathymetry` - A 2D field containing the ocean bathymetry. Units [m].
+    Fieldset:
+        - `fieldset.z_start` - A field constant representing the minimum depth. Units [m].
+        - `fieldset.bathymetry` - A 2D field containing the ocean bathymetry. Units [m].
 
     Kernel Requirements
     ----------
     Order of Operations:
-            This kernel should be performed after all other movement kernels, as it samples the
-            bathymetry field using the updated particle position.
+        This kernel should be performed after all other movement kernels, as it samples the
+        bathymetry field using the updated particle position.
     """
     bathymetry_local = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
     potential_depth = particle.depth + particle_ddepth  # noqa
