@@ -80,6 +80,8 @@ ignore = [
     "B007",
     # Remove unused `noqa` directive
     "RUF100",
+    # Ignore public module docstring
+    "D100",
 ]
 
 [tool.ruff.lint.pydocstyle]
