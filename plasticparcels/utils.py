@@ -115,6 +115,8 @@ def download_plasticparcels_dataset(dataset: str, settings, data_home=None):
     ----------
     dataset : str
         Name of the dataset to load.
+    settings : dict
+        Dictionary containing the settings for the simulation.
     data_home : pathlike, optional
         The directory in which to cache data. If not specified, the value
         of the ``PLASTICPARCELS_DATA`` environment variable, if any, is used.
