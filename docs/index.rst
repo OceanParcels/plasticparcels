@@ -55,5 +55,5 @@ If you would like support using ``plasticparcels``, or are have any questions ab
    Examples <examples>
    Physics kernels <physicskernels>
    Plastic initialisation maps <initialisationmaps>
-   API reference <reference>
+   API reference <reference/index>
    OceanParcels website <https://oceanparcels.org/>

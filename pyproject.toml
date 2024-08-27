@@ -58,6 +58,11 @@ select = [
     "DOC", # pydoclint
 ]
 
+exclude = [
+    "docs/*",
+    "plasticparcels/scripts/*",
+]
+
 # If updating to use a formatter, look at https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules for rules to add to ignore
 ignore = [
     # line too long (82 > 79 characters)
