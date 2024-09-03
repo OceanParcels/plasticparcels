@@ -55,6 +55,7 @@ Here, we briefly demonstrate how `plasticparcels` can be used for a microplastic
 We start by importing `plasticparcels`, loading pre-defined settings that include information about the models and parameter settings for our simulation, and defining the start date, runtime, simulation timestep and output timestep.
 
 ```python
+from datetime import datetime, timedelta
 import plasticparcels as pp
 settings_file = 'docs/examples/example_Italy_coast_settings.json'
 settings = pp.utils.load_settings(settings_file)
