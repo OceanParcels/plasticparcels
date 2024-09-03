@@ -2,12 +2,12 @@
 
 
 """
-    TODO:
-    Come back to this on the advice from Daan:
+TODO:
+Come back to this on the advice from Daan:
 
-    https://www.mercator-ocean.eu/static-files-description/
-    Mask files can be found in /storage2/oceanparcels/data/input_data/MOi/domain_ORCA0083-N006/
-    These are downloaded directly from MOi - where though?
+https://www.mercator-ocean.eu/static-files-description/
+Mask files can be found in /storage2/oceanparcels/data/input_data/MOi/domain_ORCA0083-N006/
+These are downloaded directly from MOi - where though?
 
 
 """
@@ -37,10 +37,9 @@ def NEMO_select_section(extent, lon, lat, val):
 
 
 def to_netcdf(output_filename, data, data_name, lons, lats, explanation=''):
-    '''
+    """
     All data is written to netcdf files to speed up computations
-    '''
-
+    """
     dict_data = {}
     for data_, name_ in zip(data, data_name):
         dict_data[name_] = (["x", "y"], data_)
@@ -58,9 +57,9 @@ def to_netcdf(output_filename, data, data_name, lons, lats, explanation=''):
 
 
 def get_mask_land(field, lons, lats, outfile='./tmp_mask_land'):
-    '''
+    """
     Mask with true on land cells, false on ocean cells
-    '''
+    """
     if os.path.exists(outfile):
         ds = xr.open_dataset(outfile)
         mask_land = np.array(ds['mask_land'], dtype=bool)
@@ -120,7 +119,6 @@ def create_displacement_field(landmask, lons, lats, double_cell=False, outfile='
 
     Output: two 2D arrays, one for each camponent of the velocity.
     """
-
     if os.path.exists(outfile):
         ds = xr.open_dataset(outfile)
         v_x = np.array(ds['land_current_u'], dtype=float)
@@ -165,9 +163,9 @@ def create_displacement_field(landmask, lons, lats, double_cell=False, outfile='
 
 
 def get_mask_coast(mask_land, lons, lats, outfile='./tmp_mask_coast'):
-    '''
+    """
     calculate the coast mask. With coastal cells, we mean cells in the water, adjacent to land
-    '''
+    """
     if os.path.exists(outfile):
         ds = xr.open_dataset(outfile)
         mask_coast = np.array(ds['mask_coast'], dtype=bool)

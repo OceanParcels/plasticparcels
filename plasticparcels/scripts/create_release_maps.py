@@ -39,7 +39,6 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
 
     Parameters
     ----------
-
     mask_coast_filepath : str
         File path to the coastal mask generated in ...py TODO
     coords_filepath : str
@@ -66,7 +65,6 @@ def create_coastal_mpw_jambeck_release_map(mask_coast_filepath, coords_filepath,
     coastal_density_mpw_df
         A pandas dataframe containing the coastal grid cells, associated countries, and associated mismanaged plastic waste in kg/day.
     """
-
     # Open the Natural Earth coastline vector dataset
     shpfilename = shpreader.natural_earth(resolution='50m',
                                           category='cultural',
@@ -406,7 +404,6 @@ def create_global_concentrations_kaandorp_release_map(mask_land_filepath, mask_c
     We match this data to the model coastal and ocean cells for a better coverage release.
     We use only the 2020 data for all plastic class sizes, and for the ocean cells we only use the surface 0-5m depth.
     """
-
     # Load in the data and select year 2020, all plastic sizes, and for ocean concentrations take the surface layer
     ds = xr.open_dataset(kaandorp_filepath)
     beach = ds['concentration_beach_mass_log10'].sel({'size_nominal': 'all', 'time': 2020})

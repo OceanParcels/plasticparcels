@@ -8,35 +8,37 @@ import math
 
 
 def StokesDrift(particle, fieldset, time):
-    """Stokes drift kernel
+    """Stokes drift kernel.
 
     Description
     ----------
-    Using the approach in [1] assuming a Phillips wave spectrum to determine the depth dependent Stokes drift.
-    Specifically, the 'Stokes drift velocity' (u_s) is computed as per Eq. (19) in [1]
+    Using the approach in [1] assuming a Phillips wave spectrum to determine
+    the depth dependent Stokes drift. Specifically, the 'Stokes drift velocity'
+    :math:`u_s` is computed as per Eq. (19) in [1].
 
     We treat the Stokes drift as a linear addition to the velocity field
-        u(x,t) = u_c(x,t) + C_s * u_s(x,t)
-    where u_c is the current velocity, u_s is the Stokes drift velocity, and C_s is the depth-varying decay factor.
+        :math:`u(x,t) = u_c(x,t) + C_s * u_s(x,t)`
+    where :math:`u_c` is the current velocity, :math:`u_s` is the Stokes drift velocity,
+    and :math:`C_s` is the depth-varying decay factor.
+
+    For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#stokes-drift
 
     Parameter Requirements
     ----------
     fieldset :
-        - Stokes drift field (U,V)  [m s-1]
-        - Peak wave period (T_p)    [s]
+        - `fieldset.Stokes_U` and `fieldset.Stokes_V`, the Stokes drift velocity fields. Units [m s-1]
+        - `fieldset.wave_Tp`, the peak wave period field (:math:`T_p`). Units [s].
 
     Kernel Requirements
     ----------
     Order of Operations:
-        None
+        None - can be applied at any time.
 
     References
     ----------
     [1] Breivik (2016) - https://doi.org/10.1016/j.ocemod.2016.01.005
 
-
     """
-
     # Sample the U / V components of Stokes drift
     stokes_U = fieldset.Stokes_U[time, particle.depth, particle.lat, particle.lon]
     stokes_V = fieldset.Stokes_V[time, particle.depth, particle.lat, particle.lon]
@@ -68,35 +70,34 @@ def StokesDrift(particle, fieldset, time):
 
 # Wind related kernels
 def WindageDrift(particle, fieldset, time):
-    """Leeway windage kernel
+    """Leeway windage kernel.
 
     Description
     ----------
-    A simple windage kernel that applies a linear 'wind velocity' to the particle.
+    A simple windage kernel that applies a linear relative 'wind velocity'
+    to the particle.
 
     We treat the windage drift as a linear addition to the velocity field
-        u(x,t) = u_c(x,t) + C_w * u_w(x,t)
-    where u_c is the current velocity, u_w is the wind velocity at 10m height, and C_w is the windage coefficient (usually taken to be between 0.01 and 0.05,
-    depending on particle size)
+        :math:`u(x,t) = u_c(x,t) + C_w * (u_w(x,t)-u_c(x,t))`
+    where :math:`u_c` is the ocean current velocity, :math:`u_w` is the wind velocity
+    at 10m height, and :math:`C_w` is the windage coefficient (usually taken to
+    be in [1%,5%], depending on particle size)
 
-    See https://doi.org/10.1007/s10652-016-9499-3 for impact of windage on LCS detection
-    or https://doi.org/10.1016/j.apor.2011.01.005 for Breivik et al 2011
+    For further description, see https://plastic.oceanparcels.org/en/latest/physicskernels.html#wind-induced-drift-leeway
 
     Parameter Requirements
     ----------
     particle :
-        - wind_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
+        - wind_coefficient - the particle windage coefficient in decimals (usually taken to be between 0.01 and 0.05, depending on particle size).
     fieldset :
-        - Wind field (U,V) at 10m height above sea surface [m s-1]
-
+        - `fieldset.Wind_U` and `fieldset.Wind_V`, the wind velocity field at 10m height above sea surface. Units [m s-1].
 
     Kernel Requirements
     ----------
     Order of Operations:
-        None
+        None - can be applied at any time.
 
     """
-
     # Sample ocean velocities
     (ocean_U, ocean_V) = fieldset.UV[particle]
     ocean_speed = math.sqrt(ocean_U**2 + ocean_V**2)
@@ -107,97 +108,21 @@ def WindageDrift(particle, fieldset, time):
 
     # Apply windage to particles that have some exposed surface above the ocean surface
     # Use a basic approach to only apply windage to particle in the ocean
-    if particle.depth < 0.5*particle.plastic_diameter and ocean_speed > 1E-10:
+    if particle.depth < 0.5*particle.plastic_diameter and ocean_speed > 1E-12:
         # Compute particle displacement
-        particle_dlon += particle.wind_coefficient * wind_U * particle.dt  # noqa
-        particle_dlat += particle.wind_coefficient * wind_V * particle.dt  # noqa
-
-
-# Decay is hard to justify. Use on/off kernel as above, and maybe create a windage function that is depth/diameter dependent?
-# def windage_drift_decay(particle, fieldset, time):
-#     """
-#     Windage kernel with a sqrt decay profile
-
-#     Description:
-#         using
-#         ?????TODO the best I can find so far is eq 1 from Impact of windage on ocean surface Lagrangian coherent structures but follow the references more
-
-#         We treat the windage drift as a linear addition to the velocity field
-#             u(x,t) = u_c(x,t) + D * C_w * u_w(x,t)
-#         where u_c is the current velocity, u_w is the wind velocity at 10m height, and C_w is the windage coefficient (usually taken to be between 0.01 and 0.05,
-#         depending on particle size) and D is a depth-varying decay factor.
-
-#         See https://doi.org/10.1007/s10652-016-9499-3 for impact of windage on LCS detection
-
-#     Requirements:
-#         Fieldset:
-#             - Wind field (U,V) at 10m height above sea surface
-#         Particle:
-#             - windage_coefficient - the particle windage coefficient (usually taken to be between 0.01 and 0.05, depending on particle size)
-#         Order of Operations:
-#             None
-
-
-#     ## TODO: is a decay necessary? we should really just apply this at the surface
-#     """
-
-#     # U / V components of wind
-#     U_wind = fieldset.wind_U[time, particle.depth, particle.lat, particle.lon]
-#     V_wind = fieldset.wind_V[time, particle.depth, particle.lat, particle.lon]
-
-#     # Where to apply decay rate
-#     decay_depth = 0.2 # meters, point at which decay is 0%
-
-#     # Apply to top layer only using a linear decay between 0 and 0.2m depth
-#     if particle.depth > decay_depth or particle.depth < 0: # If the particle depth is above the surface, set to 0
-#         pass # No change to particle position
-
-#     else: # The particle depth is in [0, decay_depth], compute a sqrt decay
-#         # Compute decay factor where decay = m * sqrt(depth) + b, passing through points (depth,decay) = (0,1) and (decay_depth,0)
-#         decay = 1. - (1. / math.sqrt(decay_depth)) * math.sqrt(particle.depth)
-
-#         # Compute particle displacement
-#         dlon = decay * particle.windage_coefficient * U_wind * particle.dt
-#         dlat = decay * particle.windage_coefficient * V_wind * particle.dt
-
-#         # Update particle position
-#         particle.lon += dlon
-#         particle.lat += dlat
-
-# Vertical diffusion related kernels
-
-# ## TODO: Is this required? Why not just set v_s = 0 from the beginning??
-# def NeutralBuoyancy(particle, fieldset, time):
-#     """Neutral buoyancy kernel
-
-#     Description
-#     ----------
-#     A kernel to treat the particle as neutrally buoyant by setting the sinking/rising velocity of a particle to 0 [m s-1]
-
-#     Parameter Requirements
-#     ----------
-#     particle :
-#         sinking_velocity
-
-#     Kernel Requirements
-#     ----------
-#     Order of Operations:
-#         Apply this kernel before any other vertical mixing kernels
-#     """
-
-
-#     # Set the particle's settling velocity to 0 [m s-1]
-#     particle.settling_velocity = 0.
+        particle_dlon += particle.wind_coefficient * (wind_U - ocean_U) * particle.dt  # noqa
+        particle_dlat += particle.wind_coefficient * (wind_V - ocean_V) * particle.dt  # noqa
 
 
 def SettlingVelocity(particle, fieldset, time):
-    """Settling velocity kernel
+    """Settling velocity kernel.
 
     Description
     ----------
-    A kernel to calculate the settling velocity of a particle based on its size and density,
-    and the surrounding seawater properties (density and kinematic viscosity). Based on the
-    settling velocity paper of [1] as implemented in [2].
+    A kernel to calculate the settling velocity of a particle based on its
+    size and density,and the surrounding seawater properties (density and
+    kinematic viscosity). Based on the settling velocity paper of [1] as
+    implemented in [2].
 
     Calculation steps:
         1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
@@ -212,38 +137,36 @@ def SettlingVelocity(particle, fieldset, time):
     particle :
         - diameter
         - density
-        - seawater_density Surrounding seawater density
+        - seawater_density
     fieldset :
-        - G - Gravity constant [m s-2]
-        - conservative_temperature - Conservative temperature field
-        - absolute_salinity - Absolute salinity field
+        - `fieldset.G` - Gravity constant. Units [m s-2].
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
 
 
     Kernel Requirements:
     ----------
     Order of Operations:
-        - Must run after the PolyTEOS kernel which sets the surrounding particle.seawater_density variable which this kernel relies on
-        - Must run before any kernel that uses the particle.settling_velocty variable
+        This kernel must run after the PolyTEOS10_bsq kernel, which sets the
+        particle.seawater_density variable, relied on by this.
 
 
-    References:
+    References
     ----------
     [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
     [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
 
-    TODO: Add units to each variable, and the TODO's below.
     """
-
     # Define constants and sample fieldset variables
     g = fieldset.G  # gravitational acceleration [m s-2]
     seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
-    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000  # TODO: Check that we should convert here and not in the fieldset
+    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000
     particle_diameter = particle.plastic_diameter
     particle_density = particle.plastic_density
 
     # Compute the kinematic viscosity of seawater
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
+    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
@@ -265,7 +188,7 @@ def SettlingVelocity(particle, fieldset, time):
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
 
     # Compute the settling velocity of the particle using Eq. (5) from [1] (solving for the settling velocity)
-    sign_of_density_difference = math.copysign(1., normalised_density_difference)  # normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
+    sign_of_density_difference = math.copysign(1., normalised_density_difference)
     settling_velocity = sign_of_density_difference * (g * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
     # Update the settling velocity
@@ -276,36 +199,37 @@ def SettlingVelocity(particle, fieldset, time):
 
 
 def Biofouling(particle, fieldset, time):
-    """ Settling velocity due to biofouling kernel
+    r"""Settling velocity due to biofouling kernel.
 
     Description
     ----------
-    Kernel to compute the settling velocity of particles due to changes in ambient algal concentrations, growth and death of attached algae based on [2].
-    The settling velocity of the particle is computed as per [1], however the particle size and density is affected by a biofouling process. The algae attached
-    to the particle (A) has a growth rate described by
-        dA/dt = C + G - M - R
+    Kernel to compute the settling velocity of particles due to changes in ambient algal
+    concentrations, growth and death of attached algae based on [2]. The settling velocity
+    of the particle is computed as per [1], however the particle size and density is
+    affected by a biofouling process. The algae attached to the particle :math:`A` has a growth
+    rate described by
+        :math:`\frac{dA}{dt} = C + G - M - R`
 
-    Here, C models fouling of the plastic through collision with algae
-        C = beta_A * A_A / theta_pl
-            beta_A   -> Encounter rate
-            A_A      -> Ambient algal concentration
-            theta_pl -> Surface area of plastic particle
+    Here, :math:`C` models fouling of the plastic through collision with algae
+        :math:`C = \beta_A \cdot A_A / \theta_{pl}`,
+    where :math:`\beta_A` is the encounter rate, :math:`A_A` is the ambient algal concentration, and
+    :math:`\theta_{pl}` is the surface area of plastic particle.
 
-    G models the growth of the algae attached to the surface of the particle
-        G = mu_A * A
-            mu_A -> Algal growth rate
-            A    -> Amount of algae attached to a particle
+    :math:`G` models the growth of the algae attached to the surface of the particle
+        :math:`G = \mu_A \cdot A`,
+    where :math:`\mu_A` is the algal growth rate.
 
-    M models the grazing mortality of the algae attached to the surface of the particle
-        M = m_A * A
-            m_A -> Algal mortality rate
-            A   -> Amount of algae attached to a particle
+    :math:`M` models the grazing mortality of the algae attached to the surface of the particle
+        :math:`M = m_A \cdot A`,
+    where :math:`m_A` is the algal mortality rate.
 
-    R models the respiration  of the algae attached to the surface of the particle
-        R = Q_10
+    :math:`R` models the respiration of the algae attached to the surface of the particle
+        :math:`R = Q_{10}^{(T-20)/10}R_{20}A`,
+    where :math:`Q_{10}` is the temperature coefficient, which indicates how much the respiration
+    increases when the temperature increases by 10C. :math:`T` is the temperature, and :math:`R_{20}`
+    is the respiration rate.
 
-
-    TODO:Calculation steps:
+    Calculation steps:
         1. Compute the seawater dynamic viscosity from Eq. (27) in [2]
         2. Compute the kinematic viscosity from Eq. (25) in [2]
         3. Compute the dimensionless particle diameter from Eq. (4) in [2], equivalent to Eq. (6) in [1]
@@ -313,61 +237,41 @@ def Biofouling(particle, fieldset, time):
         5. Compute the settling velocity of the particle from Eq. (2) in [2], equivalent to Eq. (9) in [1]
 
 
-
-
     Parameter Requirements
     ----------
     particle :
-        - Particle diameter 'diameter'
-        - Particle density 'density'
-        - Surrounding seawater density 'seawater_density'
-    fieldset : _type_
-        - Gravity constant 'G' [m s-2]
-        - Conservative temperature field 'conservative_temperature'
-        - Absolute salinity field 'absolute_salinity'
-        - Algae cell volume 'algae_cell_volume'
-        - Biofilm density 'biofilm_density'
+        - diameter
+        - density
+        - seawater_density
+    fieldset :
+        - `fieldset.G` - Gravity constant. Units [m s-2].
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
+        - `fieldset.algae_cell_volume` - The volume of 1 algal cell [m-3]
+        - `fieldset.biofilm_density` - The density of the biofilm [kg m-3]
 
 
     Kernel Requirements
     ----------
-        Order of Operations:
+    Order of Operations:
+        This kernel must run after the PolyTEOS10_bsq kernel, which sets the particle.seawater_density variable, relied on by this.
 
-    TODO: Add units to each variable
-    Hard to generalise this without something like fieldset.biofouling == True? to determine if we need to compute the biofilm component
-     ----- WELL we don't since anything with biofouling would use the biofouling kernel....
-
-
-
-    References:
+    References
     ----------
     [1] Dietrich (1982) - https://doi.org/10.1029/WR018i006p01615
     [2] Kooi et al. (2017) - https://doi.org/10.1021/acs.est.6b04702
     [3] Menden-Deuer and Lessard (2000) - https://doi.org/10.4319/lo.2000.45.3.0569
     [4] Bernard and Remond (2012) - https://doi.org/10.1016/j.biortech.2012.07.022
     """
-
-    # Define constants and algal properties, and sample fieldset variables
-    # g = fieldset.G  # gravitational acceleration [m s-2]
-    # k = fieldset.K  # Boltzmann constant [m2 kg d-2 K-1] now [s-2] (=1.3804E-23)
-
-    # algae_cell_volume = fieldset.algae_cell_volume  # Volume of 1 algal cell [m-3]    - V_a
-    # algae_amount = particle.algae_amount  # Number of attached algae per square meter of particle surface [number m-2]
-    # algae_mortality_rate = fieldset.algae_mortality_rate
-    # biofilm_density = fieldset.biofilm_density
-    # r20 = fieldset.R20  # respiration rate [s-1]
-    # q10 = fieldset.Q10  # temperature coefficient respiration [-]
-    # gamma = fieldset.Gamma  # shear rate [s-1]
-
     # seawater_density = particle.seawater_density  # [kg m-3]
     temperature = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
-    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000.  # TODO: Check that we should convert here and not in the fieldset
+    seawater_salinity = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon] / 1000.
     particle_radius = 0.5 * particle.plastic_diameter
     # particle_density = particle.plastic_density
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
     # Compute the seawater dynamic viscosity and kinematic viscosity
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.157 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2] #TODO: check this is correct, constants aren't the same... - 0.156?
+    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
     seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
@@ -408,7 +312,6 @@ def Biofouling(particle, fieldset, time):
 
     total_volume = biofilm_volume + particle_volume  # volume of total (biofilm + plastic) [m3]
     total_radius = ((total_volume * (3. / (4. * math.pi))) ** (1. / 3.))  # total radius [m]
-    # biofilm_thickness = total_radius - particle_radius  # biofilm thickness [m]  # TODO this is not used?
 
     # Compute diffusivities
     total_density = (particle_volume * particle.plastic_density + biofilm_volume * fieldset.biofilm_density) / total_volume  # total density [kg m-3]
@@ -456,7 +359,7 @@ def Biofouling(particle, fieldset, time):
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
 
     # Compute the settling velocity of the particle using Eq. (5) from [1] (solving for the settling velocity)
-    sign_of_density_difference = math.copysign(1., normalised_density_difference)  # normalised_density_difference/math.fabs(normalised_density_difference) ## maybe use math.copysign(1,normalised_density_difference)? does copysign work in cgen?
+    sign_of_density_difference = math.copysign(1., normalised_density_difference)
     settling_velocity = sign_of_density_difference * (fieldset.G * seawater_kinematic_viscosity * dimensionless_velocity * math.fabs(normalised_density_difference)) ** (1. / 3.)  # m s-1
 
     # Update the settling velocity
@@ -467,27 +370,29 @@ def Biofouling(particle, fieldset, time):
 
 
 def PolyTEOS10_bsq(particle, fieldset, time):
-    """ A seawater density kernel
+    """A seawater density kernel.
 
     Description:
     ----------
-    A kernel to calculate the seawater density surrounding a particle based on the polyTEOS10-bsq algorithm
-    from Appendix A.2 of https://doi.org/10.1016/j.ocemod.2015.04.002
+    A kernel to calculate the seawater density surrounding a particle based on
+    the polyTEOS10-bsq algorithm from Appendix A.2 of
+    https://doi.org/10.1016/j.ocemod.2015.04.002
 
     Parameter Requirements
     ----------
     particle :
-        seawater_density
-    fieldset : _type_
-        absolute_salinity
-        conservative_temperature
+        - seawater_density
+    fieldset :
+        - `fieldset.conservative_temperature` - The conservative temperature field. Units [C].
+        - `fieldset.absolute_salinity` - The absolute salinity field. Units [g/kg].
 
     Kernel Requirements:
     ----------
     Order of Operations:
-        This kernel must be run before any kernel that requires particle.seawater_density
+        This kernel must be run before any kernel that requires an updated `particle.seawater_density` value.
 
-    References:
+    References
+    ----------
      Roquet, F., Madec, G., McDougall, T. J., Barker, P. M., 2014: Accurate
       polynomial expressions for the density and specific volume of
       seawater using the TEOS-10 standard. Ocean Modelling.
@@ -495,8 +400,8 @@ def PolyTEOS10_bsq(particle, fieldset, time):
       Accurate and computationally efficient algorithms for potential
       temperature and density of seawater.  Journal of Atmospheric and
       Oceanic Technology, 20, 730-741.
-    """
 
+    """
     Z = - particle.depth  # note: use negative depths!
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
     CT = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
@@ -569,25 +474,32 @@ def PolyTEOS10_bsq(particle, fieldset, time):
 
 
 def VerticalMixing(particle, fieldset, time):
-    """ A markov-0 kernel for vertical mixing
+    """A markov-0 kernel for vertical mixing.
 
-    Description:
-        A simple verticle mixing kernel that uses a markov-0 process to determine the vertical displacement of a particle.
-        Ross & Sharples 2004
-        The deterministic component is determined using forward-difference with a given delta_z.
+    Description
+    ----------
+    A simple verticle mixing kernel that uses a markov-0 process to determine the vertical
+    displacement of a particle [1]. The deterministic component is determined
+    using forward-difference with a given `delta_z`.
 
-    Requirements:
-        Fieldset:
-            ---
-        Particle:
-            settling_velocity -
-        Order of Operations:
-            To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
-            Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
+    Parameter Requirements
+    ----------
+    particle:
+        - settling_velocity
+    fieldset:
+        - `fieldset.mixing_kz` - The vertical eddy diffusivity field. Units [m2 s-1].
 
-    NOTES: previously called markov_0_mixing
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        To ensure the reflecting boundary condition of the random walk component, this kernel should be performed at the very end.
+        Additionally, this kernel should be performed after the rising/sinking velocity of the particle has been computed.
+
+    References
+    ----------
+    [1] Ross & Sharples (2004) - https://doi.org/10.4319/lom.2004.2.289
+
     """
-
     # Sample the ocean vertical eddy diffusivity field KZ
     delta_z = 0.5  # [m], used to compute the gradient of kz using a forward-difference
     kz = fieldset.mixing_kz[time, particle.depth, particle.lat, particle.lon]
@@ -612,28 +524,30 @@ def VerticalMixing(particle, fieldset, time):
     # Update particle position
     particle_ddepth += ddepth  # noqa
 
-    # bathymetry_local = fieldset.bathymetry[time, fieldset.z_start, particle.lat, particle.lon]
-
-    # Have to think about how to do boundary conditions below...
-    # if potential < fieldset.z_start:
-    #     particle.depth = fieldset.z_start
-    # elif potential > bathymetry_local:
-    #     particle.depth += 0 #TODO: keep particles 'beached'
-    #     particle.hit_bottom = 1
-    # elif particle.depth > 100 and potential > (bathymetry_local*0.99): # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
-    #     particle.depth += 0
-    #     particle.hit_bottom = 1
-    # elif potential > 3900:
-    #     particle.depth += 0
-    #     particle.hit_bottom = 1
-    # else:
-    #     particle.depth = potential
-
 # Biofouling related kernels
 
 
 def unbeaching(particle, fieldset, time):
-    """ A kernel to unbeach particles"""
+    """Unbeaching kernel.
+
+    Description
+    ----------
+    A simple kernel to 'unbeach' particles that have been advected onto non-ocean grid cells.
+    This kernel uses a simple 'unbeaching' field, that provides (U,V) velocities with a magnitude
+    of 1 m/s, normal to the grid cell face between an ocean and non-ocean grid cell.
+
+    Parameter Requirements
+    ----------
+    Fieldset:
+        - `fieldset.unbeach_U` - The zonal unbeaching velocity. Units [m s-1].
+        - `fieldset.unbeach_V` - The meridional unbeaching velocity. Units [m s-1].
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it samples the
+        unbeaching field using the updated particle position.
+    """
     # Measure the velocity field at the final particle location
     (vel_u, vel_v, vel_w) = fieldset.UVW[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
 
@@ -649,6 +563,24 @@ def unbeaching(particle, fieldset, time):
 
 
 def checkThroughBathymetry(particle, fieldset, time):
+    """Bathymetry error kernel.
+
+    Description
+    ----------
+    A simple kernel to ensure particles are not advected below the bathymetry field.
+
+    Parameter Requirements
+    ----------
+    Fieldset:
+        - `fieldset.z_start` - A field constant representing the minimum depth. Units [m].
+        - `fieldset.bathymetry` - A 2D field containing the ocean bathymetry. Units [m].
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it samples the
+        bathymetry field using the updated particle position.
+    """
     bathymetry_local = fieldset.bathymetry[time, particle.depth + particle_ddepth, particle.lat + particle_dlat, particle.lon + particle_dlon]  # noqa
     potential_depth = particle.depth + particle_ddepth  # noqa
     min_depth = 0.5  # meters - maybe set this as a fieldset variable?
@@ -664,14 +596,19 @@ def checkThroughBathymetry(particle, fieldset, time):
         particle_ddepth = 3900 - particle.depth  # noqa
 
 
-# A list of kernels used to 'recover' particles after --- status codes ---
-
-# @author: denes001
-# @date: 2023-08-09
 
 def periodicBC(particle, fieldset, time):
-    """ Kernel to keep the particle between [-180,180] longitude
-        To be run after all movement kernels
+    """A periodic boundary condition kernel.
+
+    Description
+    ----------
+    Kernel to keep the particle between [-180,180] longitude
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it sets the updated particle
+        longitude to be within the [-180,180] longitudinal range.
     """
     if particle.lon + particle_dlon <= -180.:  # noqa
         particle_dlon += 360.  # noqa
@@ -680,7 +617,16 @@ def periodicBC(particle, fieldset, time):
 
 
 def checkErrorThroughSurface(particle, fieldset, time):
-    """ Kernel to set the particle depth to the particle surface if it goes through the surface
+    """Surface error kernel.
+
+    Description
+    ----------
+    Kernel to delete a particle if it goes through the surface.
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
         # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
@@ -689,14 +635,33 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
 
 def deleteParticle(particle, fieldset, time):
-    """ Kernel for deleting particles if they throw an error other than through the surface
+    """General error kernel.
+
+    Description
+    ----------
+    Kernel to delete a particle if it throws an error other than `ErrorThroughSurface`.
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state >= 50 and particle.state != StatusCode.ErrorThroughSurface:
         particle.delete()
 
 
 def delete_particle_interp(particle, fieldset, time):
-    """Kernel for deleting particles if they throw an interpolation error."""
+    """DEPRECATED: Interpolation error kernel.
+
+    Description
+    ----------
+    Kernel to delete a particle if it throws an interpolation error.
+
+    Kernel Requirements
+    ----------
+    Order of Operations:
+        This kernel should be performed after all other movement kernels, as it is an error kernel.
+    """
     if fieldset.verbose_delete == 1:
         print('particle is deleted due to an interpolation error at lon = ' + str(particle.lon) + ', lat =' + str(
             particle.lat) + ', depth =' + str(particle.depth))
