@@ -111,6 +111,6 @@ A trajectory plot of the simulated plastic particles is shown in Fig. \ref{fig:e
 ![The results of a simple simulation to identify the pathways of coastal mismanaged plastic waste [@Jambeck2015] along Italian coastlines. a) Trajectories of simulated plastic particles, b) The number of particles that enter a $0.1^\circ \times 0.1^\circ$ grid cell over the duration of the simulation.\label{fig:example}](example.png){width=100%}
 
 # Acknowledgments
-We would like to thank the OceanParcels team at Utrecht University for their helpful suggestions developing the tool. MCD was supported by the NECCTON project, which has received funding from Horizon Europe RIA under grant agreement No 101081273. EvS was supported by the project Tracing Marine Macroplastics by Unraveling the Ocean’s Multiscale Transport Processes with project number VI.C.222.025 of the research programme Talent Programme Vici 2022 which is financed by the Dutch Research Council (NWO).
+We would like to thank the Lagrangian Ocean Analysis team at Utrecht University for their helpful suggestions developing the tool. MCD was supported by the NECCTON project, which has received funding from Horizon Europe RIA under grant agreement No 101081273. EvS was supported by the project Tracing Marine Macroplastics by Unraveling the Ocean’s Multiscale Transport Processes with project number VI.C.222.025 of the research programme Talent Programme Vici 2022 which is financed by the Dutch Research Council (NWO).
 
 # References
