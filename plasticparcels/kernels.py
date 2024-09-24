@@ -621,7 +621,7 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
     Description
     ----------
-    Kernel to delete a particle if it goes through the surface.
+    Kernel to place a particle back on the surface if it goes through the surface.
 
     Kernel Requirements
     ----------
@@ -629,9 +629,8 @@ def checkErrorThroughSurface(particle, fieldset, time):
         This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
-        # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
-        # particle.state = StatusCode.Success
-        particle.delete()
+        particle_ddepth = fieldset.z_start - particle.depth # Set ddepth so that final depth is the ocean surface
+        particle.state = StatusCode.Success
 
 
 def deleteParticle(particle, fieldset, time):
