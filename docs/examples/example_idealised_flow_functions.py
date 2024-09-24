@@ -87,8 +87,8 @@ def bickleyjet_fieldset_3d(times, xdim=51, ydim=51, zdim=11):
     unbeach_U = np.zeros((lat.size, lon.size), dtype=np.float32)
     unbeach_V = np.zeros((lat.size, lon.size), dtype=np.float32)
 
-    unbeach_V[0,:] = -1.0 # Meridional unbeaching at the top and bottom of the domain
-    unbeach_V[-1,:] = 1.0
+    unbeach_V[0,:] = 1.0 # Meridional unbeaching at the top and bottom of the domain
+    unbeach_V[-1,:] = -1.0
 
     data = {"unbeach_U": unbeach_U, "unbeach_V": unbeach_V}
     dimensions = {"lon": lon, "lat": lat}
@@ -210,10 +210,8 @@ def add_wind_field(fieldset, times):
 
     return fieldset
 
-
-
 def add_stokes_field(fieldset, times):
-    """ Horizontal wave field invariant in time."""
+    """ Horizontal wave field that varies in time."""
     lon = fieldset.U.grid.lon # Is this right?
     lat = fieldset.U.grid.lat
 
@@ -227,6 +225,11 @@ def add_stokes_field(fieldset, times):
 
     stokes_U[0, :, :] = 5. * np.sin(xx * np.pi / (dx) )
     wave_Tp[0, :, :] = 10. * np.cos(yy/dy)
+
+    # Vary in time
+    for time in range(1, times.size):
+        stokes_U[time, :, :] = stokes_U[0, :, :] * np.sin(2. * np.pi * time / times.size)
+        wave_Tp[time, :, :] = wave_Tp[0, :, :]
 
     data = {"Stokes_U": stokes_U, "Stokes_V": stokes_V, 'wave_Tp': wave_Tp}
     
@@ -242,3 +245,10 @@ def add_stokes_field(fieldset, times):
     fieldset.add_field(fieldsetStokes.wave_Tp)
 
     return fieldset
+
+# Define a custom kernel to handle the periodic boundary conditions
+def ZonalBC(particle, fieldset, time):
+    if particle.lon < fieldset.halo_west:
+        particle_dlon += fieldset.halo_east - fieldset.halo_west
+    elif particle.lon > fieldset.halo_east:
+        particle_dlon -= fieldset.halo_east - fieldset.halo_west
