@@ -5,6 +5,20 @@ from datetime import timedelta, datetime
 import numpy as np
 import xarray as xr
 
+def create_fieldset(indices=None):
+    """ Create a fieldset with a Bickley Jet, temperature/salinity, biogeochemistry, wind and Stokes drift fields.
+    To be used with the parcels.FieldSet.from_modulefile() method."""
+    # List of times the analytic fieldset is evaluated on
+    times = np.arange(0, 5.1, 0.1) * 86400
+    
+    # Create the fieldset object
+    fieldset = bickleyjet_fieldset_3d(times=times)
+    fieldset = add_uniform_temp_salt_field(fieldset, times)
+    fieldset = add_biogeochemistry_field(fieldset, times)
+    fieldset = add_wind_field(fieldset, times)
+    fieldset = add_stokes_field(fieldset, times)
+
+    return fieldset
 
 def bickleyjet_fieldset_3d(times, xdim=51, ydim=51, zdim=11):
     """ A Bickley Jet Field based on Hadjighasem et al 2017, 10.1063/1.4982720,
@@ -245,10 +259,3 @@ def add_stokes_field(fieldset, times):
     fieldset.add_field(fieldsetStokes.wave_Tp)
 
     return fieldset
-
-# Define a custom kernel to handle the periodic boundary conditions
-def ZonalBC(particle, fieldset, time):
-    if particle.lon < fieldset.halo_west:
-        particle_dlon += fieldset.halo_east - fieldset.halo_west
-    elif particle.lon > fieldset.halo_east:
-        particle_dlon -= fieldset.halo_east - fieldset.halo_west
