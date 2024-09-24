@@ -629,7 +629,8 @@ def checkErrorThroughSurface(particle, fieldset, time):
         This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
-        particle_ddepth = fieldset.z_start - particle.depth # Set ddepth so that final depth is the ocean surface
+        particle_ddepth = 0. # Set the summed displacement to 0.
+        particle_ddepth += fieldset.z_start - particle.depth # Set ddepth so that final depth is the ocean surface
         particle.state = StatusCode.Success
 
 
