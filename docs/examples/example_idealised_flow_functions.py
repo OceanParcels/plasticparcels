@@ -53,7 +53,7 @@ def bickleyjet_fieldset_3d(times, xdim=51, ydim=51, zdim=11):
                     + 2 * U0 * np.sinh(x2 / L) / (np.cosh(x2 / L) ** 3) * G
                 )
                 V[t, 0, j, i] = U0 * L * (1.0 / np.cosh(x2 / L)) ** 2 * G_x
-    
+
     # Add a linear decay in depth
     for k in range(1, depth.size):
         U[:, k, :, :] = U[:, 0, :, :] * ( (depth.size - k) / depth.size)
@@ -197,7 +197,7 @@ def add_wind_field(fieldset, times):
         wind_U[time, :, :] = wind_U[0, :, :] * np.sin(2. * np.pi * time / times.size)
 
     data = {"Wind_U": wind_U, "Wind_V": wind_V}
-    
+
     dimensions = {"lon": lon, "lat": lat, "time": times}
     allow_time_extrapolation = True if len(times) == 1 else False
     fieldsetwind = parcels.FieldSet.from_data(
@@ -232,7 +232,7 @@ def add_stokes_field(fieldset, times):
         wave_Tp[time, :, :] = wave_Tp[0, :, :]
 
     data = {"Stokes_U": stokes_U, "Stokes_V": stokes_V, 'wave_Tp': wave_Tp}
-    
+
     dimensions = {"lon": lon, "lat": lat, "time": times}
     allow_time_extrapolation = True if len(times) == 1 else False
     fieldsetStokes = parcels.FieldSet.from_data(
