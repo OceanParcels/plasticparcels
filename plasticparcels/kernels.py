@@ -589,11 +589,11 @@ def checkThroughBathymetry(particle, fieldset, time):
         particle_ddepth = fieldset.z_start - particle.depth  # noqa # Stick particle to surface
     elif potential_depth > bathymetry_local:
         particle_ddepth = bathymetry_local - particle.depth  # noqa # Stick particle at bottom of ocean
-    elif particle.depth > 100 and potential_depth > (bathymetry_local*0.99):  # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
+    elif particle.depth > 100. and potential_depth > (bathymetry_local*0.99):  # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
         particle_ddepth = bathymetry_local*0.99 - particle.depth  # noqa # Stick particle at the 99% point
 
-    elif potential_depth > 3900:  # If particle >3.9km deep, stick it there
-        particle_ddepth = 3900 - particle.depth  # noqa
+    elif potential_depth > 3900.:  # If particle >3.9km deep, stick it there
+        particle_ddepth = 3900. - particle.depth  # noqa
 
 
 
