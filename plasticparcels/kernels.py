@@ -406,10 +406,10 @@ def PolyTEOS10_bsq(particle, fieldset, time):
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
     CT = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
 
-    SAu = 40 * 35.16504 / 35
-    CTu = 40
-    Zu = 1e4
-    deltaS = 32
+    SAu = 40. * 35.16504 / 35.
+    CTu = 40.
+    Zu = 1.0e+04
+    deltaS = 32.
     R000 = 8.0189615746e+02
     R100 = 8.6672408165e+02
     R200 = -1.7864682637e+03
