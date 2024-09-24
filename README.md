@@ -13,6 +13,21 @@ The tool is based on the [`Parcels`](https://oceanparcels.org/) computational La
 conda install conda-forge::plasticparcels
 ```
 
+### Required data
+
+`plasticparcels` has been developed for use with data from the Copernicus Marine Service, and requires the following data to run:
+
+* Hydrodynamic model data: [MOI GLO12 (psy4v3r1)](https://www.mercator-ocean.eu/en/solutions-expertise/accessing-digital-data/product-details/?offer=4217979b-2662-329a-907c-602fdc69c3a3&system=d35404e4-40d3-59d6-3608-581c9495d86a)
+* Biogeochemical model data: [MOI BIO4 (biomer4v2r1)](https://www.mercator-ocean.eu/en/solutions-expertise/accessing-digital-data/product-details/?offer=8d0c01f3-81c7-0a59-0d06-602fdf63c5b6&system=dc40b324-7de7-0732-880b-5d9dcf7d344a)
+* Wave data: [ECMWF ERA5 Wave](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels) (specifically, the variables `mean_wave_period`, `peak_wave_period`, `u_component_stokes_drift`, and `v_component_stokes_drift`.)
+* Wind data: [ECMWF ERA5 Wind](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels) (specifically, the variables `10m_u_component_of_wind` and `10m_v_component_of_wind`)
+
+For the wind and wave data, we recommend using the [CDS API](https://cds.climate.copernicus.eu/api-how-to).
+
+To run the examples, you will need to update the data directories in settings `.json` files.
+
+Just like the `parcels` framework, `plasticparcels` can be adapted to use other hydrodynamic, biogeochemical, wave, and atmospheric models. If you require assistance, please contact us through the [Discussions page on GitHub](https://github.com/OceanParcels/plasticparcels/discussions).
+
 ### Community contributions and support
 #### Contributing code
 We welcome contributions to `plasticparcels`, especially example workbooks and analyses for our [public examples page](https://plastic.oceanparcels.org/en/latest/examples.html). To contribute to the project, please submit a [pull request](https://github.com/OceanParcels/plasticparcels/pulls).
