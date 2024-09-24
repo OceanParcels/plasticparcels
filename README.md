@@ -22,7 +22,7 @@ conda install conda-forge::plasticparcels
 * Wave data: [ECMWF ERA5 Wave](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels) (specifically, the variables `mean_wave_period`, `peak_wave_period`, `u_component_stokes_drift`, and `v_component_stokes_drift`.)
 * Wind data: [ECMWF ERA5 Wind](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels) (specifically, the variables `10m_u_component_of_wind` and `10m_v_component_of_wind`)
 
-For the wind and wave data, we recommend using the [CDS API](https://cds.climate.copernicus.eu/api-how-to).
+For downloading the wind and wave data, we recommend using the [CDS API](https://cds.climate.copernicus.eu/api-how-to).
 
 To run most of the examples, you will need to update the data directories in settings `.json` files.
 
