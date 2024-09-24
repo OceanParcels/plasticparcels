@@ -166,10 +166,10 @@ def SettlingVelocity(particle, fieldset, time):
     particle_density = particle.plastic_density
 
     # Compute the kinematic viscosity of seawater
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
+    water_dynamic_viscosity = 4.2844E-5 + (1. / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
-    seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
+    seawater_dynamic_viscosity = water_dynamic_viscosity * (1. + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / seawater_density  # Eq. (25) from [2]
 
     # Compute the density difference of the particle
@@ -182,7 +182,7 @@ def SettlingVelocity(particle, fieldset, time):
     if dimensionless_diameter > 5E9:  # "The boundary layer around the sphere becomes fully turbulent, causing a reduction in drag and an increase in settling velocity" - [1]
         dimensionless_velocity = 265000.  # Set a maximum dimensionless settling velocity
     elif dimensionless_diameter < 0.05:  # "At values of D_* less than 0.05, (9) deviates signficantly ... from Stokes' law and (8) should be used." - [1]
-        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832  # Using Eq. (8) in [1]
+        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832.  # Using Eq. (8) in [1]
     else:
         dimensionless_velocity = 10. ** (-3.76715 + (1.92944 * math.log10(dimensionless_diameter)) - (0.09815 * math.log10(dimensionless_diameter) ** 2.) - (
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
@@ -271,10 +271,10 @@ def Biofouling(particle, fieldset, time):
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
     # Compute the seawater dynamic viscosity and kinematic viscosity
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
+    water_dynamic_viscosity = 4.2844E-5 + (1. / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
-    seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
+    seawater_dynamic_viscosity = water_dynamic_viscosity * (1. + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / particle.seawater_density  # Eq. (25) from [2]
 
     # Compute the algal growth component
@@ -406,10 +406,10 @@ def PolyTEOS10_bsq(particle, fieldset, time):
     SA = fieldset.absolute_salinity[time, particle.depth, particle.lat, particle.lon]
     CT = fieldset.conservative_temperature[time, particle.depth, particle.lat, particle.lon]
 
-    SAu = 40 * 35.16504 / 35
-    CTu = 40
-    Zu = 1e4
-    deltaS = 32
+    SAu = 40. * 35.16504 / 35.
+    CTu = 40.
+    Zu = 1.0e+04
+    deltaS = 32.
     R000 = 8.0189615746e+02
     R100 = 8.6672408165e+02
     R200 = -1.7864682637e+03
@@ -589,11 +589,11 @@ def checkThroughBathymetry(particle, fieldset, time):
         particle_ddepth = fieldset.z_start - particle.depth  # noqa # Stick particle to surface
     elif potential_depth > bathymetry_local:
         particle_ddepth = bathymetry_local - particle.depth  # noqa # Stick particle at bottom of ocean
-    elif particle.depth > 100 and potential_depth > (bathymetry_local*0.99):  # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
+    elif particle.depth > 100. and potential_depth > (bathymetry_local*0.99):  # for deeper particles; since bathymetry can be quite rough (and is interpolated linearly) look at the 99% value instead
         particle_ddepth = bathymetry_local*0.99 - particle.depth  # noqa # Stick particle at the 99% point
 
-    elif potential_depth > 3900:  # If particle >3.9km deep, stick it there
-        particle_ddepth = 3900 - particle.depth  # noqa
+    elif potential_depth > 3900.:  # If particle >3.9km deep, stick it there
+        particle_ddepth = 3900. - particle.depth  # noqa
 
 
 
@@ -621,7 +621,7 @@ def checkErrorThroughSurface(particle, fieldset, time):
 
     Description
     ----------
-    Kernel to delete a particle if it goes through the surface.
+    Kernel to place a particle back on the surface if it goes through the surface.
 
     Kernel Requirements
     ----------
@@ -629,9 +629,9 @@ def checkErrorThroughSurface(particle, fieldset, time):
         This kernel should be performed after all other movement kernels, as it is an error kernel.
     """
     if particle.state == StatusCode.ErrorThroughSurface:
-        # particle_ddepth = - particle.depth # Set so that final depth = 0  # TODO why not use this instead of delete?
-        # particle.state = StatusCode.Success
-        particle.delete()
+        particle_ddepth = 0. # Set the summed displacement to 0.
+        particle_ddepth += fieldset.z_start - particle.depth # Set ddepth so that final depth is the ocean surface
+        particle.state = StatusCode.Success
 
 
 def deleteParticle(particle, fieldset, time):
