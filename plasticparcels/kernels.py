@@ -271,10 +271,10 @@ def Biofouling(particle, fieldset, time):
     initial_settling_velocity = particle.settling_velocity  # settling velocity [m s-1]
 
     # Compute the seawater dynamic viscosity and kinematic viscosity
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
+    water_dynamic_viscosity = 4.2844E-5 + (1. / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
-    seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
+    seawater_dynamic_viscosity = water_dynamic_viscosity * (1. + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / particle.seawater_density  # Eq. (25) from [2]
 
     # Compute the algal growth component
