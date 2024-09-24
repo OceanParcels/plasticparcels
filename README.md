@@ -24,7 +24,7 @@ conda install conda-forge::plasticparcels
 
 For downloading the wind and wave data, we recommend using the [CDS API](https://cds.climate.copernicus.eu/api-how-to).
 
-To run most of the examples, you will need to update the data directories in settings `.json` files.
+To run most of the examples, you will need to update the data directories in the relevant settings `.json` file.
 
 Just like the `parcels` framework, `plasticparcels` can be adapted to use other hydrodynamic, biogeochemical, wave, and atmospheric models. If you require assistance, please contact us through the [`plasticparcels` discussions page](https://github.com/OceanParcels/plasticparcels/discussions).
 
