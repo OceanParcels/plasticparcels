@@ -10,7 +10,7 @@ def create_fieldset(indices=None):
     To be used with the parcels.FieldSet.from_modulefile() method."""
     # List of times the analytic fieldset is evaluated on
     times = np.arange(0, 5.1, 0.1) * 86400
-    
+
     # Create the fieldset object
     fieldset = bickleyjet_fieldset_3d(times=times)
     fieldset = add_uniform_temp_salt_field(fieldset, times)
