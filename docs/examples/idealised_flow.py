@@ -121,19 +121,19 @@ def add_uniform_temp_salt_field(fieldset, times):
     """ Add a uniform temperature and salinity field to the fieldset.
     The temperature/salinity field is time-invariant and has a linear decay with depth.
     Of course, this makes no sense in reality, but it is a simple example."""
-    lon = fieldset.U.grid.lon #TODO Given the Bickley Jet above is C-Grid, is this the right approach to create the other velocity fields??
+    lon = fieldset.U.grid.lon
     lat = fieldset.U.grid.lat
     depth = fieldset.U.grid.depth
 
     T = np.zeros((times.size, depth.size, lat.size, lon.size), dtype=np.float32)
     S = np.zeros((times.size, depth.size, lat.size, lon.size), dtype=np.float32)
 
-    T[:, 0, :, :] = 25.0 # TODO: make sure the units are correct!
+    T[:, 0, :, :] = 25.0
     S[:, 0, :, :] = 35.0
 
     for d in range(1, depth.size):
-        T[:, d, :, :] = T[:, 0, :, :] #* ( (depth.size - 0.5 * d) / depth.size)
-        S[:, d, :, :] = S[:, 0, :, :] #* ( (depth.size - 0.5 * d) / depth.size)
+        T[:, d, :, :] = T[:, 0, :, :]
+        S[:, d, :, :] = S[:, 0, :, :]
 
     data = {"conservative_temperature": T, "absolute_salinity": S}
 
@@ -183,7 +183,6 @@ def add_biogeochemistry_field(fieldset, times):
         data, dimensions, mesh="flat", allow_time_extrapolation=allow_time_extrapolation
     )
 
-    #fieldsetbgc.add_periodic_halo(zonal=True)
     fieldset.add_field(fieldsetbgc.pp_phyto)
     fieldset.add_field(fieldsetbgc.bio_nanophy)
     fieldset.add_field(fieldsetbgc.bio_diatom)
@@ -193,7 +192,7 @@ def add_biogeochemistry_field(fieldset, times):
 
 def add_wind_field(fieldset, times):
     """ Horizontal wind field with a sinusoidal variation in time."""
-    lon = fieldset.U.grid.lon # Is this right?
+    lon = fieldset.U.grid.lon
     lat = fieldset.U.grid.lat
 
     wind_U = np.zeros((times.size, lat.size, lon.size), dtype=np.float32)
@@ -206,7 +205,7 @@ def add_wind_field(fieldset, times):
 
     wind_U[0, :, :] = 10. * f_wind
 
-    # vary the wind speed with time
+    # Vary the wind speed with time
     for time in range(1, times.size):
         wind_U[time, :, :] = wind_U[0, :, :] * np.sin(2. * np.pi * time / times.size)
 
@@ -218,7 +217,6 @@ def add_wind_field(fieldset, times):
         data, dimensions, mesh="flat", allow_time_extrapolation=allow_time_extrapolation
     )
 
-    #fieldsetwind.add_periodic_halo(zonal=True)
     fieldset.add_field(fieldsetwind.Wind_U)
     fieldset.add_field(fieldsetwind.Wind_V)
 
@@ -226,7 +224,7 @@ def add_wind_field(fieldset, times):
 
 def add_stokes_field(fieldset, times):
     """ Horizontal wave field that varies in time."""
-    lon = fieldset.U.grid.lon # Is this right?
+    lon = fieldset.U.grid.lon
     lat = fieldset.U.grid.lat
 
     stokes_U = np.zeros((times.size, lat.size, lon.size), dtype=np.float32)
@@ -253,7 +251,6 @@ def add_stokes_field(fieldset, times):
         data, dimensions, mesh="flat", allow_time_extrapolation=allow_time_extrapolation
     )
 
-    #fieldsetStokes.add_periodic_halo(zonal=True)
     fieldset.add_field(fieldsetStokes.Stokes_U)
     fieldset.add_field(fieldsetStokes.Stokes_V)
     fieldset.add_field(fieldsetStokes.wave_Tp)
