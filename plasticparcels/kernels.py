@@ -166,10 +166,10 @@ def SettlingVelocity(particle, fieldset, time):
     particle_density = particle.plastic_density
 
     # Compute the kinematic viscosity of seawater
-    water_dynamic_viscosity = 4.2844E-5 + (1 / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
+    water_dynamic_viscosity = 4.2844E-5 + (1. / ((0.156 * (temperature + 64.993) ** 2) - 91.296))  # Eq. (26) from [2]
     A = 1.541 + 1.998E-2 * temperature - 9.52E-5 * temperature ** 2  # Eq. (28) from [2]
     B = 7.974 - 7.561E-2 * temperature + 4.724E-4 * temperature ** 2  # Eq. (29) from [2]
-    seawater_dynamic_viscosity = water_dynamic_viscosity * (1 + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
+    seawater_dynamic_viscosity = water_dynamic_viscosity * (1. + A * seawater_salinity + B * seawater_salinity ** 2)  # Eq. (27) from [2]
     seawater_kinematic_viscosity = seawater_dynamic_viscosity / seawater_density  # Eq. (25) from [2]
 
     # Compute the density difference of the particle
@@ -182,7 +182,7 @@ def SettlingVelocity(particle, fieldset, time):
     if dimensionless_diameter > 5E9:  # "The boundary layer around the sphere becomes fully turbulent, causing a reduction in drag and an increase in settling velocity" - [1]
         dimensionless_velocity = 265000.  # Set a maximum dimensionless settling velocity
     elif dimensionless_diameter < 0.05:  # "At values of D_* less than 0.05, (9) deviates signficantly ... from Stokes' law and (8) should be used." - [1]
-        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832  # Using Eq. (8) in [1]
+        dimensionless_velocity = (dimensionless_diameter ** 2.) / 5832.  # Using Eq. (8) in [1]
     else:
         dimensionless_velocity = 10. ** (-3.76715 + (1.92944 * math.log10(dimensionless_diameter)) - (0.09815 * math.log10(dimensionless_diameter) ** 2.) - (
                                          0.00575 * math.log10(dimensionless_diameter) ** 3.) + (0.00056 * math.log10(dimensionless_diameter) ** 4.))  # Using Eq. (9) in [1]
