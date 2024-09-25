@@ -1,7 +1,7 @@
 Examples
 ========
 
-``plasticparcels`` has a few example notebooks, see below.
+``plasticparcels`` has a few example notebooks, see below. Most of these examples require hydrodynamic, physical, and biogeochemical model data, however, the idealised flow example requires no additional data.
 
 
 
@@ -14,4 +14,5 @@ Examples
    examples/example_Croatian_fisheries.ipynb
    examples/example_add_your_own_kernel.ipynb
    examples/example_initialisation_maps.ipynb
+   examples/example_idealised_flow.ipynb
 
