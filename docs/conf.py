@@ -86,6 +86,13 @@ extensions = [
 
 myst_enable_extensions = ["dollarmath", "amsmath"]
 
+def is_non_standard_version(version):
+    """
+    Determine if the given version string has more than 3 components (e.g., from a developer version).
+    """
+
+    return len(version.split(".")) > 3
+
 # based on pandas doc/source/conf.py
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to Python object."""
@@ -136,10 +143,10 @@ def linkcode_resolve(domain, info):
 
     fn = os.path.relpath(fn, start=os.path.dirname(plasticparcels.__file__))
 
-    if "-" in plasticparcels.__version__:
-        return f"https://github.com/OceanParcels/plasticparcels/blob/master/plasticparcels/{fn}{linespec}"
+    if is_non_standard_version(plasticparcels.__version__):
+        return f"https://github.com/OceanParcels/plasticparcels/blob/main/plasticparcels/{fn}{linespec}"
     else:
         return (
             f"https://github.com/OceanParcels/plasticparcels/blob/"
-            f"{plasticparcels.__version__}/plasticparcels/{fn}{linespec}"
+            f"v{plasticparcels.__version__}/plasticparcels/{fn}{linespec}"
         )
