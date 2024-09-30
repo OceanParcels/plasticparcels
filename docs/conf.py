@@ -91,7 +91,7 @@ def is_non_standard_version(version):
     Determine if the given version string has more than 3 components (e.g., from a developer version).
     """
 
-    return len(version.split(".")) > 3
+    return len(version.split(".")) != 3
 
 # based on pandas doc/source/conf.py
 def linkcode_resolve(domain, info):
