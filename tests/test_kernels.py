@@ -19,7 +19,7 @@ def make_standard_plastictype_settings():
     # Use tiny wind percentage because test data set is not large and wind speeds are quick!
     plastictype_settings = {'wind_coefficient': 0.0001,     # Percentage of wind to apply to particles
                             'plastic_diameter': 0.001,  # Plastic particle diameter (m)
-                            'plastic_density': 1030.,   # Plastic particle density (kg/m^3)
+                            'plastic_density': 1027.67,   # Plastic particle density (kg/m^3)
                             }
     return plastictype_settings
 
