@@ -159,7 +159,6 @@ def test_Stokes():
 
     start_lons = pset.lon.copy()
     start_lats = pset.lat.copy()
-    print(pset[0].dt)
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
 
     # Assert that the particles move from their initial location
@@ -226,8 +225,11 @@ def test_mixing():
     pset = make_standard_particleset(fieldset, settings)
     pset_mixing = make_standard_particleset(fieldset, settings)
 
+    # Because vertical mixing can vertically push the particle large distances, let's set the simulation time to 1 hour
+    settings['simulation']['runtime'] = timedelta(hours=1)
+
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
-    pset.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
+    pset_mixing.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
 
     # Assert that the particles move from their initial location
     assert (np.sum(np.abs(pset.lon - pset_mixing.lon)) > 0.) & (np.sum(np.abs(pset.lat - pset_mixing.lat)) > 0.)
