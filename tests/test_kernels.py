@@ -225,8 +225,11 @@ def test_mixing():
     pset = make_standard_particleset(fieldset, settings)
     pset_mixing = make_standard_particleset(fieldset, settings)
 
-    # Because vertical mixing can vertically push the particle large distances, let's set the simulation time to 1 hour
-    settings['simulation']['runtime'] = timedelta(hours=1)
+    # Because vertical mixing can vertically push the particle large distances,
+    # let's set the simulation time to 20 mins, and outputdt and dt to 10 mins
+    settings['simulation']['runtime'] = timedelta(minutes=20)
+    settings['simulation']['outputdt'] = timedelta(minutes=10)
+    settings['simulation']['dt'] = timedelta(minutes=10)
 
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
     pset_mixing.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
