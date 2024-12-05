@@ -32,6 +32,12 @@ def make_standard_particleset(fieldset, settings):
 
     return pset
 
+def checkBelowDataDepth(particle, fieldset, time):
+    # The vertical mixing kernel can push particles below the test dataset depth, throwing an
+    # out of bounds error. This kernel will keep particles above the max depth.
+    if particle.depth + particle_ddepth >= fieldset.max_depth:
+        particle_ddepth = fieldset.max_depth -  particle.depth - 0.5 # move half a meter above the max depth
+
 
 @pytest.mark.parametrize('use_3D', [True, False])
 def test_advection_only(use_3D):
@@ -215,21 +221,17 @@ def test_mixing():
     settings['use_stokes'] = False
 
     fieldset = pp.constructors.create_fieldset(settings)
+    fieldset.add_constant('max_depth', fieldset.U.depth[-1])
+    
     kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry,
                pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
     kernels_mixing = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.VerticalMixing,
-                      pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface,
-                      pp.kernels.deleteParticle]
+                      checkBelowDataDepth, pp.kernels.checkThroughBathymetry,
+                      pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
     pset = make_standard_particleset(fieldset, settings)
     pset_mixing = make_standard_particleset(fieldset, settings)
-
-    # Because vertical mixing can vertically push the particle large distances,
-    # let's set the simulation time to 20 mins, and outputdt and dt to 10 mins
-    settings['simulation']['runtime'] = timedelta(minutes=20)
-    settings['simulation']['outputdt'] = timedelta(minutes=10)
-    settings['simulation']['dt'] = timedelta(minutes=10)
 
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
     pset_mixing.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
