@@ -35,8 +35,9 @@ def make_standard_particleset(fieldset, settings):
 def checkBelowDataDepth(particle, fieldset, time):
     # The vertical mixing kernel can push particles below the test dataset depth, throwing an
     # out of bounds error. This kernel will keep particles above the max depth.
-    if particle.depth + particle_ddepth >= fieldset.max_depth:
-        particle_ddepth = fieldset.max_depth -  particle.depth - 0.5 # move half a meter above the max depth
+    if particle.depth + particle_ddepth >= fieldset.max_depth: # noqa
+        # move half a meter above the max depth
+        particle_ddepth = fieldset.max_depth -  particle.depth - 0.5 # noqa
 
 
 @pytest.mark.parametrize('use_3D', [True, False])
