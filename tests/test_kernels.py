@@ -222,7 +222,7 @@ def test_mixing():
 
     fieldset = pp.constructors.create_fieldset(settings)
     fieldset.add_constant('max_depth', fieldset.U.depth[-1])
-    
+
     kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry,
                pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
