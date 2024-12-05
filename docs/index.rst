@@ -10,7 +10,7 @@ Welcome to the documentation of ``plasticparcels``.
 
 ``plasticparcels`` is a python package for simulating the transport and dispersion of plastics in the ocean. The tool is based on the ``parcels`` computational Lagrangian ocean analysis framework, providing a modular and customisable collection of methods, notebooks, and tutorials for advecting virtual plastic particles with a wide range of physical properties.
 
-The manuscript detailing the first release of ``plasticparcels``, version 0.3.1, has been published in `Journal of Open Source Software (JOSS) <https://doi.org/10.21105/joss.07094>`.
+The manuscript detailing the first release of ``plasticparcels``, version 0.3.1, has been published in `Journal of Open Source Software (JOSS) <https://doi.org/10.21105/joss.07094>`_.
 
 Installation
 ^^^^^^^^^^^^
