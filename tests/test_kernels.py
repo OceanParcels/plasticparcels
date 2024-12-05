@@ -36,8 +36,9 @@ def checkBelowDataDepth(particle, fieldset, time):
     # The vertical mixing kernel can push particles below the test dataset depth, throwing an
     # out of bounds error. This kernel will keep particles above the max depth.
     if particle.depth + particle_ddepth >= fieldset.max_depth: # noqa
-        # move half a meter above the max depth
-        particle_ddepth = fieldset.max_depth -  particle.depth - 0.5 # noqa
+        # move a meter above the max depth
+        particle_ddepth = fieldset.max_depth -  particle.depth - 1.0 # noqa
+        particle.state = parcels.StatusCode.Success
 
 
 @pytest.mark.parametrize('use_3D', [True, False])
@@ -223,6 +224,9 @@ def test_mixing():
 
     fieldset = pp.constructors.create_fieldset(settings)
     fieldset.add_constant('max_depth', fieldset.U.depth[-1])
+
+    # Set the simulation runtime to just 1 day so particles aren't kicked around significantly
+    settings['simulation']['runtime'] = timedelta(days=1)
 
     kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry,
                pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
