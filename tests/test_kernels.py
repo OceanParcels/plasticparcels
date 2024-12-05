@@ -19,7 +19,7 @@ def make_standard_plastictype_settings():
     # Use tiny wind percentage because test data set is not large and wind speeds are quick!
     plastictype_settings = {'wind_coefficient': 0.0001,     # Percentage of wind to apply to particles
                             'plastic_diameter': 0.001,  # Plastic particle diameter (m)
-                            'plastic_density': 1030.,   # Plastic particle density (kg/m^3)
+                            'plastic_density': 1027.67,   # Plastic particle density (kg/m^3)
                             }
     return plastictype_settings
 
@@ -31,6 +31,14 @@ def make_standard_particleset(fieldset, settings):
     pset = pp.constructors.create_particleset(fieldset, settings, release_locations)
 
     return pset
+
+def checkBelowDataDepth(particle, fieldset, time):
+    # The vertical mixing kernel can push particles below the test dataset depth, throwing an
+    # out of bounds error. This kernel will keep particles above the max depth.
+    if particle.depth + particle_ddepth >= fieldset.max_depth: # noqa
+        # move a meter above the max depth
+        particle_ddepth = fieldset.max_depth -  particle.depth - 1.0 # noqa
+        particle.state = parcels.StatusCode.Success
 
 
 @pytest.mark.parametrize('use_3D', [True, False])
@@ -159,7 +167,6 @@ def test_Stokes():
 
     start_lons = pset.lon.copy()
     start_lats = pset.lat.copy()
-    print(pset[0].dt)
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
 
     # Assert that the particles move from their initial location
@@ -216,18 +223,23 @@ def test_mixing():
     settings['use_stokes'] = False
 
     fieldset = pp.constructors.create_fieldset(settings)
+    fieldset.add_constant('max_depth', fieldset.U.depth[-1])
+
+    # Set the simulation runtime to just 1 day so particles aren't kicked around significantly
+    settings['simulation']['runtime'] = timedelta(days=1)
+
     kernels = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.checkThroughBathymetry,
                pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
     kernels_mixing = [parcels.application_kernels.AdvectionRK4_3D, pp.kernels.VerticalMixing,
-                      pp.kernels.checkThroughBathymetry, pp.kernels.checkErrorThroughSurface,
-                      pp.kernels.deleteParticle]
+                      checkBelowDataDepth, pp.kernels.checkThroughBathymetry,
+                      pp.kernels.checkErrorThroughSurface, pp.kernels.deleteParticle]
 
     pset = make_standard_particleset(fieldset, settings)
     pset_mixing = make_standard_particleset(fieldset, settings)
 
     pset.execute(kernels, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
-    pset.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
+    pset_mixing.execute(kernels_mixing, runtime=settings['simulation']['runtime'], dt=settings['simulation']['dt'])
 
     # Assert that the particles move from their initial location
     assert (np.sum(np.abs(pset.lon - pset_mixing.lon)) > 0.) & (np.sum(np.abs(pset.lat - pset_mixing.lat)) > 0.)

@@ -26,8 +26,8 @@ dependencies:
   - ipython
   - numpydoc
   - nbsphinx
-  - sphinx<6
-  - pandoc>3,<4
+  - sphinx
+  - pandoc
   - pydata-sphinx-theme
   - sphinx-autobuild
   - myst-parser
