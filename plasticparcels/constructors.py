@@ -508,7 +508,7 @@ def create_particleset(fieldset, settings, release_locations):
 
     PlasticParticle = parcels.Particle.add_variable(variables)
 
-    pset = parcels.ParticleSet.from_list(fieldset,
+    pset = parcels.ParticleSet(fieldset,
                                  PlasticParticle,
                                  lon=lons,
                                  lat=lats,
